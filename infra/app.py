@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """CDK app entrypoint for the multimodal video RAG platform."""
+
 import os
 
 import aws_cdk as cdk
-
 from video_rag_infra.core_stack import CoreStack
 
 app = cdk.App()
