@@ -77,8 +77,8 @@ Checks: `uv run pytest` · `uvx ruff check .` · `pnpm --filter web lint && pnpm
   real committed eval JSON, and dashboard rendering over the current indexed video.
 - **Phase 6 — Deployment and observability:** complete — FastAPI deployed as an ARM64 Lambda
   container behind API Gateway, Fargate worker dispatcher on EventBridge, Secrets Manager runtime
-  overlay, CloudWatch dashboard/alarms/logging, query cache/rate-limit DynamoDB tables, and Vercel
-  production web deployment.
+  overlay, CloudWatch dashboard/alarms/logging, query cache/rate-limit DynamoDB tables, Vercel
+  production web deployment, same-origin admin proxying, and live exact transcript rerank smoke.
 - **Live endpoints:** API `https://fsd8xleob9.execute-api.us-east-1.amazonaws.com/`; web
   `https://multimodal-video-rag-web.vercel.app`.
 - **Next:** expand the indexed video library, then deepen eval with more videos, ablations, and

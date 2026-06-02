@@ -23,7 +23,8 @@ citations. A portfolio-grade AI engineering project aimed at AI/ML roles.
   currently indexed video.
 - **Phase 6 (deployment and observability): COMPLETE** — FastAPI Lambda container + API Gateway,
   Fargate worker task/dispatcher, Secrets Manager runtime overlay, DynamoDB query controls,
-  CloudWatch dashboard/alarms/logging, and Vercel production web deployment are live-smoked.
+  CloudWatch dashboard/alarms/logging, Vercel production web deployment, same-origin admin proxying,
+  and exact transcript rerank behavior are live-smoked.
 - **Next:** expand the demo library/indexes, then deepen eval with more videos, ablations, and
   RAGAS/LLM-judge metrics.
 

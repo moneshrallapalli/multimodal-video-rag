@@ -19,6 +19,9 @@ Engineering gotchas hit while building this repo, with the rule to avoid repeati
 - **Production admin cookies break when the browser calls API Gateway directly.** Rule: keep
   production browser calls same-origin via Next/Vercel rewrites (`API_PROXY_TARGET`), not
   `NEXT_PUBLIC_API_BASE_URL`, so the admin session cookie is first-party.
+- **Query cache can preserve stale proof ordering after retrieval changes.** Rule: after changing
+  ranking logic, smoke a cache-busted query and clear only the targeted stale `query_cache` item for
+  any user-reported exact prompt before declaring the live UX fixed.
 
 ## Framework
 
