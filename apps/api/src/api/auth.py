@@ -40,8 +40,8 @@ def issue_session(response: Response) -> None:
         token,
         max_age=_MAX_AGE,
         httponly=True,
-        samesite="lax",
-        secure=False,  # set True behind HTTPS in the deployment phase
+        samesite=settings.session_cookie_samesite,
+        secure=settings.session_cookie_secure,
         path="/",
     )
 

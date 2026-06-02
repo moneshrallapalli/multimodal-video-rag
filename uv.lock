@@ -52,6 +52,7 @@ dependencies = [
     { name = "fastapi" },
     { name = "graph" },
     { name = "itsdangerous" },
+    { name = "mangum" },
     { name = "pydantic" },
     { name = "shared" },
     { name = "uvicorn", extra = ["standard"] },
@@ -64,6 +65,7 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.115" },
     { name = "graph", editable = "packages/graph" },
     { name = "itsdangerous", specifier = ">=2.2" },
+    { name = "mangum", specifier = ">=0.19" },
     { name = "pydantic", specifier = ">=2.7" },
     { name = "shared", editable = "packages/shared" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.30" },
@@ -592,6 +594,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/2f/93/28df12b3b3c776077983b92f1299c623592b5999695af2a755fb90ff048b/langsmith-0.8.8.tar.gz", hash = "sha256:9d00e54f54d833c1914003527ff03ad0364741034330da72f0adbeaba852b6cf", size = 4468035, upload-time = "2026-05-31T22:14:57.698Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8d/71/94a8f2b573278a0b0b7dfd37663c0ddd36867f9e2bba69addd183de0cd56/langsmith-0.8.8-py3-none-any.whl", hash = "sha256:9d60d724c0d187c036e184b3ffdf9fa5c6822aa0bb88144a5fb898e79be645af", size = 402712, upload-time = "2026-05-31T22:14:55.908Z" },
+]
+
+[[package]]
+name = "mangum"
+version = "0.21.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/89/cb/d9f4d685a0b8eceac10991e15ac471d9568e4e42c2489ae9bf072828c1c2/mangum-0.21.0.tar.gz", hash = "sha256:e31ed72d67f9958fa4379f65df77729906dec6dfa00afa6ed4e06c77833000de", size = 89130, upload-time = "2026-02-01T17:17:42.816Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b7/50/e3c694b8e122551e4557450219283771334dee2ed5734a8398c8b8018c50/mangum-0.21.0-py3-none-any.whl", hash = "sha256:309e48f5c629542516c5106ecf079f4ec08809ed50df882238d98fe1392820c7", size = 17146, upload-time = "2026-02-01T17:17:41.553Z" },
 ]
 
 [[package]]
