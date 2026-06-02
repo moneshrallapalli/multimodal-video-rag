@@ -18,8 +18,10 @@ pnpm install                       # from the repo root (pnpm workspace)
 pnpm --filter web dev              # http://localhost:3000
 ```
 
-The app talks to the FastAPI backend at `NEXT_PUBLIC_API_BASE_URL`
-(default `http://localhost:8000`; see `.env.example`). Start the API with
+By default, the browser calls the API same-origin and Next proxies `/api/*` to
+the FastAPI backend at `http://127.0.0.1:8000` (override with
+`API_PROXY_TARGET`). Set `NEXT_PUBLIC_API_BASE_URL` only when the browser should
+call a deployed API directly. Start the local API with
 `uv run uvicorn api.main:app --reload` from the repo root.
 
 ## Checks

@@ -10,8 +10,10 @@ citations. A portfolio-grade AI engineering project aimed at AI/ML roles.
 ## Current status
 - **Phase 0 (foundations): COMPLETE** — AWS account + Bedrock verified, Pinecone (2 indexes),
   LangSmith, repo scaffolded, uv workspace, infra deployed via CDK and smoke-tested.
-- **Phase 1 (product skeleton): NEXT** — FastAPI + Next.js against mocked contracts, plus the
-  shared shadcn/ui design system.
+- **Phase 1 (product skeleton): COMPLETE** — FastAPI + Next.js against typed mocked contracts,
+  plus one shared shadcn/ui design system across public search, admin, and eval surfaces.
+- **Next: Phase 2 (ingestion pipeline)** — submit YouTube jobs, write DynamoDB status, enqueue SQS,
+  and process artifacts with the Fargate worker.
 
 ## Architecture
 Next.js -> FastAPI (Lambda) -> SQS -> Fargate worker -> S3 / Pinecone / DynamoDB,
