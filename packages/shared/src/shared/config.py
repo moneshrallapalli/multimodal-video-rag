@@ -7,6 +7,7 @@ place and is validated at startup.
 from __future__ import annotations
 
 import json
+import os
 from functools import lru_cache
 from typing import Any
 
@@ -105,12 +106,20 @@ def _load_secrets_manager_values(base: Settings) -> dict[str, Any]:
     return _coerce_secret_fields(raw_secret)
 
 
+def _hydrate_secret_environment(secret_values: dict[str, Any]) -> None:
+    for env_name, field_name in _SECRET_ENV_TO_FIELD.items():
+        value = secret_values.get(field_name)
+        if value:
+            os.environ[env_name] = str(value)
+
+
 @lru_cache
 def get_settings() -> Settings:
     base = Settings()
     secret_values = _load_secrets_manager_values(base)
     if not secret_values:
         return base
+    _hydrate_secret_environment(secret_values)
     merged = base.model_dump()
     merged.update(secret_values)
     return Settings(**merged)
