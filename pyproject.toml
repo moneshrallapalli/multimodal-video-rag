@@ -14,7 +14,7 @@ dev = ["pytest>=8", "httpx>=0.27"]
 members = ["packages/*", "apps/api", "workers/ingest"]
 
 [tool.pytest.ini_options]
-testpaths = ["apps/api/tests"]
+testpaths = ["apps/api/tests", "workers/ingest/tests"]
 
 [tool.ruff]
 line-length = 100
