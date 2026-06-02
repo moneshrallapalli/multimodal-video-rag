@@ -4,6 +4,7 @@ Pulls a job from SQS and runs the pipeline: download -> keyframes ->
 transcribe -> chunk + align timestamps -> embed (Titan) -> upsert (Pinecone)
 -> update job status (DynamoDB). Implemented in Phase 2.
 """
+
 from __future__ import annotations
 
 

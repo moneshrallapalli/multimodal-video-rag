@@ -4,13 +4,12 @@ The graph orchestrates: validate -> classify intent -> rewrite -> retrieve
 (visual / transcript) -> fuse (RRF) -> rerank -> build context -> generate
 (Bedrock) -> validate grounding -> respond. See the design docs.
 """
+
 from __future__ import annotations
 
 from typing import Literal, TypedDict
 
-QueryIntent = Literal[
-    "visual", "transcript", "hybrid", "timestamp", "summary", "no_answer"
-]
+QueryIntent = Literal["visual", "transcript", "hybrid", "timestamp", "summary", "no_answer"]
 
 
 class Citation(TypedDict):

@@ -3,6 +3,7 @@
 Run locally with `uvicorn api.main:app --reload`. In production this is
 deployed behind API Gateway via Mangum (added in the deployment phase).
 """
+
 from __future__ import annotations
 
 from fastapi import FastAPI

@@ -3,6 +3,7 @@
 Every service imports `settings` from here so configuration lives in one
 place and is validated at startup.
 """
+
 from __future__ import annotations
 
 from functools import lru_cache
@@ -11,9 +12,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     # AWS
     aws_region: str = "us-east-1"
