@@ -1,0 +1,98 @@
+"""Typed request/response contracts shared by the API and mirrored in the web app.
+
+These models are the single source of truth for the Phase 1 mocked endpoints. Later
+phases replace the mock implementations behind these exact shapes, so the frontend does
+not change when real ingestion, retrieval, and generation land.
+"""
+
+from __future__ import annotations
+
+from typing import Literal
+
+from pydantic import BaseModel, Field
+
+Modality = Literal["visual", "transcript"]
+QueryIntent = Literal["visual", "transcript", "hybrid", "timestamp", "summary", "no_answer"]
+JobStatus = Literal["queued", "downloading", "transcribing", "embedding", "completed", "failed"]
+
+
+# ── Public: demo library + search ─────────────────────────────────────
+
+
+class DemoVideo(BaseModel):
+    """A video in the read-only public demo library."""
+
+    id: str  # YouTube video id
+    title: str
+    author: str
+    thumbnail_url: str
+    youtube_url: str
+    duration_seconds: int | None = None
+
+
+class SearchRequest(BaseModel):
+    query: str = Field(min_length=1, max_length=500)
+    video_id: str | None = None  # optional single-video filter
+    top_k: int = Field(default=8, ge=1, le=20)
+
+
+class SearchResult(BaseModel):
+    """One rich result card: a timestamped, cited moment in a video."""
+
+    rank: int
+    video_id: str
+    title: str
+    start_seconds: float
+    end_seconds: float
+    modality: Modality
+    score: float = Field(ge=0.0, le=1.0)
+    snippet: str
+    thumbnail_url: str
+    seek_url: str  # e.g. https://youtu.be/<id>?t=<start_seconds>
+
+
+class SearchResponse(BaseModel):
+    query: str
+    rewritten_query: str | None = None
+    intent: QueryIntent
+    answer: str | None = None
+    refused: bool = False
+    confidence: float = Field(ge=0.0, le=1.0)
+    results: list[SearchResult] = Field(default_factory=list)
+
+
+# ── Admin: auth + ingestion ───────────────────────────────────────────
+
+
+class LoginRequest(BaseModel):
+    password: str = Field(min_length=1)
+
+
+class SessionStatus(BaseModel):
+    authenticated: bool
+
+
+class IngestRequest(BaseModel):
+    youtube_url: str = Field(min_length=1)
+
+
+class Job(BaseModel):
+    """An ingestion job tracked in the admin console."""
+
+    id: str
+    youtube_url: str
+    video_id: str | None = None
+    title: str | None = None
+    status: JobStatus
+    progress: int = Field(default=0, ge=0, le=100)
+    created_at: str
+    updated_at: str
+    error: str | None = None
+
+
+class IngestResponse(BaseModel):
+    job: Job
+
+
+class JobsResponse(BaseModel):
+    jobs: list[Job]

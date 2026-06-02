@@ -1,3 +1,35 @@
 from .config import Settings, get_settings, settings
+from .schemas import (
+    DemoVideo,
+    IngestRequest,
+    IngestResponse,
+    Job,
+    JobsResponse,
+    JobStatus,
+    LoginRequest,
+    Modality,
+    QueryIntent,
+    SearchRequest,
+    SearchResponse,
+    SearchResult,
+    SessionStatus,
+)
 
-__all__ = ["Settings", "get_settings", "settings"]
+__all__ = [
+    "Settings",
+    "get_settings",
+    "settings",
+    "DemoVideo",
+    "IngestRequest",
+    "IngestResponse",
+    "Job",
+    "JobStatus",
+    "JobsResponse",
+    "LoginRequest",
+    "Modality",
+    "QueryIntent",
+    "SearchRequest",
+    "SearchResponse",
+    "SearchResult",
+    "SessionStatus",
+]
