@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from shared import settings
+from shared.embedding import BedrockEmbedder
 from shared.indexing import chunk_transcript, frame_vector_id
+from shared.pinecone_client import PineconeIndexClient
 from shared.schemas import (
     FrameArtifact,
     IndexingSummary,
@@ -13,9 +15,7 @@ from shared.schemas import (
     VideoMetadataArtifact,
 )
 
-from .embedding import BedrockEmbedder
 from .media import FrameFile
-from .pinecone_client import PineconeIndexClient
 
 
 class VideoIndexer:

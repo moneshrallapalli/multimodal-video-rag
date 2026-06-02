@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from ingest.pinecone_client import PineconeIndexClient, PineconeIndexInfo
+from shared.pinecone_client import PineconeIndexClient, PineconeIndexInfo
 from shared.schemas import VectorRecord
 
 
@@ -29,7 +29,7 @@ def test_upsert_posts_vector_records(monkeypatch):
         calls.append((req, timeout))
         return FakeResponse({"upsertedCount": 1})
 
-    monkeypatch.setattr("ingest.pinecone_client.urlopen", fake_urlopen)
+    monkeypatch.setattr("shared.pinecone_client.urlopen", fake_urlopen)
     client = PineconeIndexClient(
         api_key="test-key",
         info=PineconeIndexInfo(
@@ -70,7 +70,7 @@ def test_query_returns_retrieval_hits(monkeypatch):
             }
         )
 
-    monkeypatch.setattr("ingest.pinecone_client.urlopen", fake_urlopen)
+    monkeypatch.setattr("shared.pinecone_client.urlopen", fake_urlopen)
     client = PineconeIndexClient(
         api_key="test-key",
         info=PineconeIndexInfo(

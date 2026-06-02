@@ -9,9 +9,9 @@ from __future__ import annotations
 
 import argparse
 
-from ingest.embedding import BedrockEmbedder
-from ingest.pinecone_client import PineconeIndexClient
 from shared import settings
+from shared.embedding import BedrockEmbedder
+from shared.pinecone_client import PineconeIndexClient
 
 
 def main() -> None:

@@ -6,7 +6,7 @@ import io
 import json
 
 import pytest
-from ingest.embedding import BedrockEmbedder
+from shared.embedding import BedrockEmbedder
 
 
 class FakeBedrock:
