@@ -48,8 +48,8 @@ export function IngestForm({ onSubmit }: { onSubmit: (url: string) => Promise<vo
           </Button>
         </form>
         <p className="mt-2 text-xs text-muted-foreground">
-          Phase 1 enqueues a mock job. Real ingestion (download → frames → transcribe →
-          embed → upsert) lands in Phase 2.
+          Queues a YouTube job for download, frame extraction, transcription, and artifact storage.
+          Embeddings and Pinecone upsert land in Phase 3.
         </p>
       </CardContent>
     </Card>

@@ -66,7 +66,9 @@ Checks: `uv run pytest` · `uvx ruff check .` · `pnpm --filter web lint && pnpm
 - **Phase 0 — Foundations:** complete (AWS + Bedrock verified, Pinecone, CDK infra deployed and smoke-tested).
 - **Phase 1 — Product skeleton:** complete — Next.js + FastAPI over typed, mocked contracts, with
   one shared shadcn/ui design system across the public search, admin console, and eval dashboard.
-- **Next:** Phase 2 — the asynchronous ingestion pipeline.
+- **Phase 2 — Ingestion pipeline:** core complete — admin API -> DynamoDB/SQS -> worker -> S3/DynamoDB
+  smoke-tested locally against deployed AWS resources.
+- **Next:** Phase 3 — Bedrock embeddings and Pinecone upserts.
 
 ## License
 
