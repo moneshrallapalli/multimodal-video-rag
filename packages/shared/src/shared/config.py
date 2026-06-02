@@ -68,7 +68,10 @@ class Settings(BaseSettings):
     session_cookie_samesite: str = "lax"
 
     # Local dev / CORS (comma-separated origins allowed to call the API)
-    cors_allow_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
+    cors_allow_origins: str = (
+        "http://localhost:3000,http://127.0.0.1:3000,"
+        "https://multimodal-video-rag-web.vercel.app"
+    )
 
     # Public query cost controls. Disabled unless tables are configured.
     query_cache_ttl_seconds: int = 3600
