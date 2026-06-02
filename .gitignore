@@ -31,6 +31,7 @@ build/
 
 # Infrastructure as code
 cdk.out/
+cdk.context.json
 .terraform/
 *.tfstate
 *.tfstate.*
