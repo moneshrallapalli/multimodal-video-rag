@@ -6,9 +6,17 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
 
-from shared.ingestion import audio_key, frame_key, metadata_key, transcript_key, utc_now_iso
+from shared.ingestion import (
+    artifact_prefix,
+    audio_key,
+    frame_key,
+    metadata_key,
+    transcript_key,
+    utc_now_iso,
+)
 from shared.schemas import IngestJobMessage, JobStatus, VideoMetadataArtifact
 
+from .indexing import VideoIndexer
 from .media import MediaProcessor, frame_artifacts
 
 
@@ -21,12 +29,14 @@ class IngestionWorker:
         videos_table: Any,
         s3_client: Any,
         media: MediaProcessor | None = None,
+        indexer: VideoIndexer | None = None,
     ) -> None:
         self.bucket = bucket
         self.jobs_table = jobs_table
         self.videos_table = videos_table
         self.s3 = s3_client
         self.media = media or MediaProcessor()
+        self.indexer = indexer
 
     def process(self, message: IngestJobMessage) -> None:
         """Process one SQS ingestion message.
@@ -71,6 +81,19 @@ class IngestionWorker:
                     transcript_key(message.video_id),
                     transcript.model_dump_json(indent=2),
                 )
+
+                if self.indexer:
+                    self._update_job(message.job_id, status="embedding", progress=85)
+                    summary = self.indexer.index_video(
+                        metadata=metadata,
+                        transcript=transcript,
+                        frames=frames,
+                        frame_keys=frame_keys,
+                    )
+                    self._upload_json(
+                        f"{artifact_prefix(message.video_id)}/vectors/indexing_summary.json",
+                        summary.model_dump_json(indent=2),
+                    )
 
                 self._put_video_record(message, metadata)
                 self._update_job(

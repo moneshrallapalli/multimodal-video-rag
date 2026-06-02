@@ -8,6 +8,7 @@ import boto3
 from shared import settings
 from shared.schemas import IngestJobMessage
 
+from .indexing import VideoIndexer
 from .media import MediaProcessor
 from .pipeline import IngestionWorker
 
@@ -67,6 +68,7 @@ def build_poller() -> SqsWorkerPoller:
             max_frames=settings.ingest_max_frames,
             whisper_model_size=settings.whisper_model_size,
         ),
+        indexer=VideoIndexer.from_settings(bucket=settings.s3_bucket),
     )
     return SqsWorkerPoller(queue_url=settings.sqs_queue_url, sqs_client=sqs, worker=worker)
 

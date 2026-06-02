@@ -9,6 +9,7 @@ import pytest
 from ingest.media import FrameFile
 from ingest.pipeline import IngestionWorker
 from shared.schemas import (
+    IndexingSummary,
     IngestJobMessage,
     TranscriptArtifact,
     TranscriptSegment,
@@ -84,6 +85,19 @@ class FakeMedia:
         )
 
 
+class FakeIndexer:
+    def __init__(self) -> None:
+        self.calls = []
+
+    def index_video(self, **kwargs) -> IndexingSummary:
+        self.calls.append(kwargs)
+        return IndexingSummary(
+            video_id=kwargs["metadata"].video_id,
+            transcript_vectors=1,
+            visual_vectors=len(kwargs["frames"]),
+        )
+
+
 def _message() -> IngestJobMessage:
     return IngestJobMessage(
         job_id="yt_QkdBXUikRQc",
@@ -97,18 +111,27 @@ def test_worker_process_writes_artifacts_and_completes_job():
     jobs = FakeTable()
     videos = FakeTable()
     s3 = FakeS3()
+    indexer = FakeIndexer()
     worker = IngestionWorker(
         bucket="test-bucket",
         jobs_table=jobs,
         videos_table=videos,
         s3_client=s3,
         media=FakeMedia(),
+        indexer=indexer,
     )
 
     worker.process(_message())
 
     statuses = [update["ExpressionAttributeValues"][":status"] for update in jobs.updates]
-    assert statuses == ["downloading", "downloading", "transcribing", "completed"]
+    assert statuses == ["downloading", "downloading", "transcribing", "embedding", "completed"]
+    assert indexer.calls[0]["metadata"].title == "Tiny Test Talk"
+    assert indexer.calls[0]["transcript"].segments[0].text == "hello world"
+    assert len(indexer.calls[0]["frames"]) == 2
+    assert indexer.calls[0]["frame_keys"] == [
+        "videos/QkdBXUikRQc/frames/frame_000001.jpg",
+        "videos/QkdBXUikRQc/frames/frame_000002.jpg",
+    ]
     assert videos.puts[0]["video_id"] == "QkdBXUikRQc"
     assert videos.puts[0]["status"] == "ingested"
     assert [file["key"] for file in s3.files] == [
@@ -120,6 +143,7 @@ def test_worker_process_writes_artifacts_and_completes_job():
         "videos/QkdBXUikRQc/source/metadata.json",
         "videos/QkdBXUikRQc/frames/frames.json",
         "videos/QkdBXUikRQc/transcript/transcript.json",
+        "videos/QkdBXUikRQc/vectors/indexing_summary.json",
     }
 
 
