@@ -58,6 +58,7 @@ class CoreStack(Stack):
         videos = ddb.Table(
             self,
             "Videos",
+            table_name="videos",
             partition_key=ddb.Attribute(name="video_id", type=ddb.AttributeType.STRING),
             billing_mode=ddb.BillingMode.PAY_PER_REQUEST,
             removal_policy=RemovalPolicy.DESTROY,
@@ -65,6 +66,7 @@ class CoreStack(Stack):
         jobs = ddb.Table(
             self,
             "Jobs",
+            table_name="jobs",
             partition_key=ddb.Attribute(name="job_id", type=ddb.AttributeType.STRING),
             billing_mode=ddb.BillingMode.PAY_PER_REQUEST,
             removal_policy=RemovalPolicy.DESTROY,
