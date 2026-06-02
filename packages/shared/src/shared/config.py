@@ -39,6 +39,11 @@ class Settings(BaseSettings):
     dynamodb_videos_table: str = "videos"
     dynamodb_jobs_table: str = "jobs"
 
+    # Ingestion worker tuning
+    ingest_frame_interval_seconds: int = 30
+    ingest_max_frames: int = 20
+    whisper_model_size: str = "tiny.en"
+
     # Admin auth
     admin_password_hash: str = ""
     session_secret: str = ""

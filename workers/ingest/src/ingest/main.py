@@ -8,6 +8,7 @@ import boto3
 from shared import settings
 from shared.schemas import IngestJobMessage
 
+from .media import MediaProcessor
 from .pipeline import IngestionWorker
 
 logger = logging.getLogger(__name__)
@@ -61,6 +62,11 @@ def build_poller() -> SqsWorkerPoller:
         jobs_table=dynamodb.Table(settings.dynamodb_jobs_table),
         videos_table=dynamodb.Table(settings.dynamodb_videos_table),
         s3_client=s3,
+        media=MediaProcessor(
+            frame_interval_seconds=settings.ingest_frame_interval_seconds,
+            max_frames=settings.ingest_max_frames,
+            whisper_model_size=settings.whisper_model_size,
+        ),
     )
     return SqsWorkerPoller(queue_url=settings.sqs_queue_url, sqs_client=sqs, worker=worker)
 
