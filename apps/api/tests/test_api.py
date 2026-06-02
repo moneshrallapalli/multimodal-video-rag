@@ -17,6 +17,7 @@ def _admin_secret(monkeypatch):
     monkeypatch.setattr(settings, "admin_password_hash", PasswordHasher().hash(TEST_PASSWORD))
     monkeypatch.setattr(settings, "session_secret", "test-secret-key")
     monkeypatch.setattr(settings, "sqs_queue_url", "")
+    monkeypatch.setattr(settings, "pinecone_api_key", "")
 
 
 @pytest.fixture

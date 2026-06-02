@@ -5,7 +5,8 @@ from __future__ import annotations
 from fastapi import APIRouter
 from shared.schemas import DemoVideo, SearchRequest, SearchResponse
 
-from .mock_data import DEMO_VIDEOS, mock_search
+from .mock_data import DEMO_VIDEOS
+from .search_service import search_videos
 
 router = APIRouter(prefix="/api", tags=["public"])
 
@@ -17,4 +18,4 @@ def list_videos() -> list[DemoVideo]:
 
 @router.post("/search", response_model=SearchResponse)
 def search(req: SearchRequest) -> SearchResponse:
-    return mock_search(req)
+    return search_videos(req)
