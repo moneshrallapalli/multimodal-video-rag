@@ -16,6 +16,7 @@ Conventions: granular conventional commits, push frequently, no `Co-Authored-By`
 - [x] G. Production CORS for the Vercel origin
 - [x] H. Live smoke tests over API, web, search, dispatcher, worker, and alarms
 - [x] I. README, CLAUDE, and task log update after live smoke
+- [x] J. Production same-origin API proxy smoke for admin session routes
 
 ## Guardrails
 
@@ -34,14 +35,14 @@ dashboard, and alarm smoke checks passing.
 **Production endpoints**
 - API: `https://fsd8xleob9.execute-api.us-east-1.amazonaws.com/`
 - Web: `https://multimodal-video-rag-web.vercel.app`
-- Vercel deployment: `dpl_FTVMYUHNUpU4Zi9UhrEZXXXnods6`
+- Vercel deployment: `dpl_NPzSqsHBo3AXJzChm3Aw8FgVyWzA`
 
 **AWS resources**
 - Stack: `VideoRagCore` (`UPDATE_COMPLETE`)
 - API Lambda: `video-rag-api`
 - API Gateway: `video-rag-api`
 - Worker cluster: `video-rag-worker`
-- Worker task definition: `arn:aws:ecs:us-east-1:159480939084:task-definition/video-rag-ingest:5`
+- Worker task definition: `arn:aws:ecs:us-east-1:159480939084:task-definition/video-rag-ingest:6`
 - Dispatcher Lambda: `video-rag-worker-dispatcher`
 - Runtime secret: `video-rag/runtime`
 - Query controls: DynamoDB tables `query_cache` and `rate_limits`
@@ -51,13 +52,15 @@ dashboard, and alarm smoke checks passing.
 **Live smoke (2026-06-02)**
 - API health: `GET /health` -> `200 {"status":"ok"}`
 - Vercel page: `GET https://multimodal-video-rag-web.vercel.app/` -> `200`
+- Vercel same-origin API proxy: `GET /api/videos` on the web domain -> `200`, FastAPI JSON
+- Vercel admin proxy smoke: bad-password `POST /api/admin/login` on the web domain -> `401`
 - Production CORS preflight from Vercel origin: `OPTIONS /api/search` -> `200`, with
   `Access-Control-Allow-Origin: https://multimodal-video-rag-web.vercel.app`
-- Public library from Vercel origin: `GET /api/videos` -> `200`, 3 demo videos
-- Real search from Vercel origin: `POST /api/search` for `QkdBXUikRQc` -> `200`, grounded answer
+- Public library: `GET /api/videos` -> `200`, 3 demo videos, 1 currently indexed
+- Real search through Vercel proxy: `POST /api/search` for `QkdBXUikRQc` -> `200`, grounded answer
   with transcript/visual citations
 - Dispatcher smoke: invoke `video-rag-worker-dispatcher` -> `{"started": false, "reason": "empty_queue"}`
-- Worker smoke: manual Fargate run on task definition revision 5 -> container exit code `0`
+- Worker smoke: manual Fargate run on task definition revision 6 -> container exit code `0`
 - Worker logs: `worker_start`, `worker_poll_empty`, `worker_exit messages_processed=0`
 - API logs: request log lines for health, preflight, videos, and search all show status `200`
 
@@ -66,7 +69,8 @@ dashboard, and alarm smoke checks passing.
 - Root directory: `apps/web`
 - Build command: `pnpm --filter web build`
 - Install command: `pnpm install --frozen-lockfile --ignore-scripts`
-- Production env: `NEXT_PUBLIC_API_BASE_URL=https://fsd8xleob9.execute-api.us-east-1.amazonaws.com`
+- Production env: `API_PROXY_TARGET=https://fsd8xleob9.execute-api.us-east-1.amazonaws.com`
+- Browser API calls stay same-origin (`/api/*`) so admin cookies are first-party.
 
 **Known follow-up**
 - Production deploy is public-demo grade, not hardened multi-tenant auth. Add custom domain, WAF,

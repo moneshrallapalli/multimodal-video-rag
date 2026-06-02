@@ -16,6 +16,9 @@ Engineering gotchas hit while building this repo, with the rule to avoid repeati
   `globals.css` when the dep install step exited non-zero. Rule: re-run with `-f` and pipe `yes`.
 - Next's `apps/web/.gitignore` has `.env*` with no exception → blocks `.env.example`. Add
   `!.env.example`.
+- **Production admin cookies break when the browser calls API Gateway directly.** Rule: keep
+  production browser calls same-origin via Next/Vercel rewrites (`API_PROXY_TARGET`), not
+  `NEXT_PUBLIC_API_BASE_URL`, so the admin session cookie is first-party.
 
 ## Framework
 
