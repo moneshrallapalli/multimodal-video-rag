@@ -8,8 +8,9 @@ import type {
   SessionStatus,
 } from "./types";
 
-// Empty = same-origin (dev proxies to the backend via next.config rewrites).
-// Set NEXT_PUBLIC_API_BASE_URL to call a deployed API directly (production).
+// Empty = same-origin (Next proxies to the backend via next.config rewrites).
+// Direct API URLs are supported for public-only previews, but production admin
+// should stay same-origin so session cookies are first-party.
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
 export class ApiError extends Error {
