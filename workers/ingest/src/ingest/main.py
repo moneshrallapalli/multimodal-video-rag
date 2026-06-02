@@ -30,6 +30,7 @@ class SqsWorkerPoller:
         )
         messages = response.get("Messages", [])
         if not messages:
+            logger.info("worker_poll_empty queue_url=%s", self.queue_url)
             return False
 
         for raw in messages:
@@ -76,8 +77,11 @@ def build_poller() -> SqsWorkerPoller:
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     poller = build_poller()
+    processed = 0
+    logger.info("worker_start queue_url=%s", poller.queue_url)
     while poller.run_once():
-        pass
+        processed += 1
+    logger.info("worker_exit messages_processed=%s", processed)
 
 
 if __name__ == "__main__":

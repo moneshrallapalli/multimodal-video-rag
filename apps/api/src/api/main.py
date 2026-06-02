@@ -20,6 +20,7 @@ from .routes_public import router as public_router
 
 app = FastAPI(title="Multimodal Video RAG API", version="0.1.0")
 logger = logging.getLogger("video_rag.api")
+logger.setLevel(logging.INFO)
 
 app.add_middleware(
     CORSMiddleware,
@@ -37,14 +38,12 @@ async def log_requests(request: Request, call_next):
     response = await call_next(request)
     duration_ms = round((time.perf_counter() - start) * 1000, 2)
     logger.info(
-        "api_request",
-        extra={
-            "request_id": request_id,
-            "method": request.method,
-            "path": request.url.path,
-            "status_code": response.status_code,
-            "duration_ms": duration_ms,
-        },
+        "api_request request_id=%s method=%s path=%s status_code=%s duration_ms=%s",
+        request_id,
+        request.method,
+        request.url.path,
+        response.status_code,
+        duration_ms,
     )
     response.headers["x-request-id"] = request_id
     return response
