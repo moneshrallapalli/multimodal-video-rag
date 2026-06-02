@@ -21,8 +21,11 @@ citations. A portfolio-grade AI engineering project aimed at AI/ML roles.
 - **Phase 5 (seed evaluation): COMPLETE** — `eval/golden/seed.jsonl`, `eval/run_eval.py`,
   deterministic metrics, and real `apps/web/src/data/eval-results.json` dashboard data over the
   currently indexed video.
-- **Next:** expand the demo library/indexes, then deepen eval with full ablations/RAGAS or proceed
-  to Phase 6 deployment/observability.
+- **Phase 6 (deployment and observability): COMPLETE** — FastAPI Lambda container + API Gateway,
+  Fargate worker task/dispatcher, Secrets Manager runtime overlay, DynamoDB query controls,
+  CloudWatch dashboard/alarms/logging, and Vercel production web deployment are live-smoked.
+- **Next:** expand the demo library/indexes, then deepen eval with more videos, ablations, and
+  RAGAS/LLM-judge metrics.
 
 ## Architecture
 Next.js -> FastAPI (Lambda) -> SQS -> Fargate worker -> S3 / Pinecone / DynamoDB,
@@ -36,6 +39,12 @@ with a LangGraph query pipeline -> Bedrock (Claude Haiku 4.5), LangSmith tracing
 - `packages/graph` — LangGraph query pipeline (state schema)
 - `eval` — golden dataset + RAGAS / retrieval evaluation
 - `infra` — AWS CDK (Python); has its own `.venv`
+
+## Deployed Phase 6 endpoints
+- API: `https://fsd8xleob9.execute-api.us-east-1.amazonaws.com/`
+- Web: `https://multimodal-video-rag-web.vercel.app`
+- CloudWatch dashboard: `video-rag-phase6`
+- Runtime secret name: `video-rag/runtime`
 
 ## Conventions
 - **Python 3.12 via the uv workspace.** From the repo root: `uv sync --all-packages`, then `uv run <cmd>`.

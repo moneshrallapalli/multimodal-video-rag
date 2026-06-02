@@ -6,9 +6,9 @@ Engineering gotchas hit while building this repo, with the rule to avoid repeati
 
 - **Bash working directory persists between calls.** After `cd apps`, later commands stayed in
   `apps/`. Rule: use absolute paths, or `cd` back to the repo root in the same command.
-- **pnpm here exits non-zero on ignored build scripts** (`sharp`, `unrs-resolver`, `msw`) and a
-  hook injects an invalid `allowBuilds:` stub into `pnpm-workspace.yaml`. Rule: list every such
-  package under `ignoredBuiltDependencies` so installs stay non-interactive; delete the stub.
+- **pnpm 11/Vercel exits non-zero on ignored build scripts** (`sharp`, `unrs-resolver`, `msw`).
+  Rule: keep reviewed packages under `onlyBuiltDependencies` locally, and set Vercel's install
+  command to `pnpm install --frozen-lockfile --ignore-scripts` for this static Next app.
 - **`create-next-app` in a monorepo drops cruft**: a nested `pnpm-workspace.yaml` (fractures the
   workspace) plus `CLAUDE.md`/`AGENTS.md`. Rule: delete the nested workspace file (fold its
   `ignoredBuiltDependencies` into root) and the nested instruction files.

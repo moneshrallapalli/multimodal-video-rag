@@ -75,8 +75,14 @@ Checks: `uv run pytest` · `uvx ruff check .` · `pnpm --filter web lint && pnpm
   frontend contract.
 - **Phase 5 — Seed evaluation:** complete — hand-labeled seed golden set, deterministic metrics,
   real committed eval JSON, and dashboard rendering over the current indexed video.
-- **Next:** expand the indexed video library, then deepen Phase 5 with full ablations/RAGAS or move
-  into Phase 6 deployment/observability once the eval story is ready.
+- **Phase 6 — Deployment and observability:** complete — FastAPI deployed as an ARM64 Lambda
+  container behind API Gateway, Fargate worker dispatcher on EventBridge, Secrets Manager runtime
+  overlay, CloudWatch dashboard/alarms/logging, query cache/rate-limit DynamoDB tables, and Vercel
+  production web deployment.
+- **Live endpoints:** API `https://fsd8xleob9.execute-api.us-east-1.amazonaws.com/`; web
+  `https://multimodal-video-rag-web.vercel.app`.
+- **Next:** expand the indexed video library, then deepen eval with more videos, ablations, and
+  RAGAS/LLM-judge metrics.
 
 ## License
 
