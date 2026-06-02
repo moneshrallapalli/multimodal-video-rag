@@ -1,6 +1,8 @@
 from .config import Settings, get_settings, settings
 from .schemas import (
     DemoVideo,
+    FrameArtifact,
+    IngestJobMessage,
     IngestRequest,
     IngestResponse,
     Job,
@@ -13,6 +15,9 @@ from .schemas import (
     SearchResponse,
     SearchResult,
     SessionStatus,
+    TranscriptArtifact,
+    TranscriptSegment,
+    VideoMetadataArtifact,
 )
 
 __all__ = [
@@ -20,6 +25,8 @@ __all__ = [
     "get_settings",
     "settings",
     "DemoVideo",
+    "FrameArtifact",
+    "IngestJobMessage",
     "IngestRequest",
     "IngestResponse",
     "Job",
@@ -32,4 +39,7 @@ __all__ = [
     "SearchResponse",
     "SearchResult",
     "SessionStatus",
+    "TranscriptArtifact",
+    "TranscriptSegment",
+    "VideoMetadataArtifact",
 ]

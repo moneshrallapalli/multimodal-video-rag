@@ -96,3 +96,51 @@ class IngestResponse(BaseModel):
 
 class JobsResponse(BaseModel):
     jobs: list[Job]
+
+
+# ── Ingestion pipeline internals ─────────────────────────────────────
+
+
+class IngestJobMessage(BaseModel):
+    """SQS payload consumed by the Phase 2 worker."""
+
+    job_id: str
+    video_id: str
+    youtube_url: str
+    requested_at: str
+
+
+class VideoMetadataArtifact(BaseModel):
+    """Normalized YouTube metadata stored in S3."""
+
+    video_id: str
+    youtube_url: str
+    title: str | None = None
+    author: str | None = None
+    duration_seconds: int | None = None
+    thumbnail_url: str | None = None
+
+
+class FrameArtifact(BaseModel):
+    """One extracted frame artifact."""
+
+    frame_id: str
+    video_id: str
+    timestamp_seconds: float
+    s3_key: str
+
+
+class TranscriptSegment(BaseModel):
+    """A timestamp-aligned transcript segment."""
+
+    start_seconds: float
+    end_seconds: float
+    text: str
+
+
+class TranscriptArtifact(BaseModel):
+    """Transcript artifact written by the worker."""
+
+    video_id: str
+    language: str | None = None
+    segments: list[TranscriptSegment] = Field(default_factory=list)
