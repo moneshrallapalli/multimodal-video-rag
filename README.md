@@ -40,9 +40,33 @@ Next.js  ->  FastAPI  ->  SQS  ->  Fargate worker  ->  S3 / Pinecone / DynamoDB
 | `infra` | Infrastructure as code |
 | `docs` | Architecture and design notes |
 
+## Run locally
+
+Requires the [uv](https://docs.astral.sh/uv/) Python toolchain and [pnpm](https://pnpm.io/).
+
+```bash
+# Backend (FastAPI) — http://127.0.0.1:8000
+uv sync --all-packages
+uv run uvicorn api.main:app --reload
+
+# Frontend (Next.js) — http://localhost:3000  (in a second terminal)
+pnpm install
+pnpm --filter web dev
+```
+
+In dev the browser calls the API same-origin and Next proxies `/api/*` to the backend
+(see `apps/web/next.config.ts`), so no CORS setup is needed. Secrets load from `.env`
+(copy `.env.example`); the admin login verifies the argon2 `ADMIN_PASSWORD_HASH` produced
+by `scripts/init_secrets.py`.
+
+Checks: `uv run pytest` · `uvx ruff check .` · `pnpm --filter web lint && pnpm --filter web typecheck && pnpm --filter web build`.
+
 ## Status
 
-Early development — foundations and scaffolding in place.
+- **Phase 0 — Foundations:** complete (AWS + Bedrock verified, Pinecone, CDK infra deployed and smoke-tested).
+- **Phase 1 — Product skeleton:** complete — Next.js + FastAPI over typed, mocked contracts, with
+  one shared shadcn/ui design system across the public search, admin console, and eval dashboard.
+- **Next:** Phase 2 — the asynchronous ingestion pipeline.
 
 ## License
 
