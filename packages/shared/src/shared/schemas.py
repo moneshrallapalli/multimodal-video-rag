@@ -144,3 +144,37 @@ class TranscriptArtifact(BaseModel):
     video_id: str
     language: str | None = None
     segments: list[TranscriptSegment] = Field(default_factory=list)
+
+
+class TranscriptChunk(BaseModel):
+    """A sentence/segment-aware transcript chunk ready for embedding."""
+
+    chunk_id: str
+    video_id: str
+    start_seconds: float
+    end_seconds: float
+    text: str
+
+
+class VectorRecord(BaseModel):
+    """A dense vector plus Pinecone metadata."""
+
+    id: str
+    values: list[float]
+    metadata: dict[str, str | int | float | bool]
+
+
+class IndexingSummary(BaseModel):
+    """Counts from a Phase 3 indexing pass."""
+
+    video_id: str
+    transcript_vectors: int = 0
+    visual_vectors: int = 0
+
+
+class RetrievalHit(BaseModel):
+    """A timestamped hit returned by a Pinecone smoke query."""
+
+    id: str
+    score: float
+    metadata: dict[str, str | int | float | bool] = Field(default_factory=dict)

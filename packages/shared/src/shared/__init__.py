@@ -2,6 +2,7 @@ from .config import Settings, get_settings, settings
 from .schemas import (
     DemoVideo,
     FrameArtifact,
+    IndexingSummary,
     IngestJobMessage,
     IngestRequest,
     IngestResponse,
@@ -11,12 +12,15 @@ from .schemas import (
     LoginRequest,
     Modality,
     QueryIntent,
+    RetrievalHit,
     SearchRequest,
     SearchResponse,
     SearchResult,
     SessionStatus,
     TranscriptArtifact,
+    TranscriptChunk,
     TranscriptSegment,
+    VectorRecord,
     VideoMetadataArtifact,
 )
 
@@ -29,6 +33,7 @@ __all__ = [
     "IngestJobMessage",
     "IngestRequest",
     "IngestResponse",
+    "IndexingSummary",
     "Job",
     "JobStatus",
     "JobsResponse",
@@ -40,6 +45,9 @@ __all__ = [
     "SearchResult",
     "SessionStatus",
     "TranscriptArtifact",
+    "TranscriptChunk",
     "TranscriptSegment",
     "VideoMetadataArtifact",
+    "VectorRecord",
+    "RetrievalHit",
 ]
