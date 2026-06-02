@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import data from "@/data/eval-sample.json";
+import data from "@/data/eval-results.json";
 import { pct } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -40,11 +40,13 @@ export function EvalDashboard() {
   const ragas = ragasByConfig[selectedId];
   const maxR5 = Math.max(...data.configs.map((c) => c.recall_at_5));
   const na = data.no_answer;
+  const isSeed = data.meta.status === "real_seed";
 
   return (
     <div className="flex flex-col gap-6">
       <div className="rounded-lg border border-amber-300/60 bg-amber-50 px-4 py-2.5 text-sm text-amber-900">
-        <span className="font-medium">Sample data.</span> {data.meta.note}
+        <span className="font-medium">{isSeed ? "Seed evaluation." : "Sample data."}</span>{" "}
+        {data.meta.note}
       </div>
 
       <div className="flex flex-wrap items-center gap-1.5">
@@ -131,24 +133,8 @@ export function EvalDashboard() {
             </dl>
           ) : (
             <p className="mt-3 text-sm text-muted-foreground">
-              RAGAS runs on the baseline and final configs only (avoids 4× judge cost).
-              Select{" "}
-              <button
-                type="button"
-                className="text-primary underline"
-                onClick={() => setSelectedId("dense")}
-              >
-                Dense only
-              </button>{" "}
-              or{" "}
-              <button
-                type="button"
-                className="text-primary underline"
-                onClick={() => setSelectedId("rewrite")}
-              >
-                the final config
-              </button>
-              .
+              RAGAS / LLM judge metrics were not run for this seed evaluation. Deterministic
+              retrieval and no-answer metrics are real.
             </p>
           )}
         </div>
