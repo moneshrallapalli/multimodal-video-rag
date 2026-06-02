@@ -1,3 +1,10 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+# sharp (next/image) and unrs-resolver ship prebuilt binaries, and msw isn't used
+# at runtime; skip their install build scripts so pnpm stays non-interactive.
+ignoredBuiltDependencies:
+  - msw
+  - sharp
+  - unrs-resolver
