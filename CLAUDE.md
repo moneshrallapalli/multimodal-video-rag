@@ -18,8 +18,11 @@ citations. A portfolio-grade AI engineering project aimed at AI/ML roles.
   v2 / Titan Multimodal G1 and upserted to separate Pinecone transcript/visual indexes.
 - **Phase 4 (LangGraph query pipeline): COMPLETE** — `/api/search` uses LangGraph over Pinecone
   transcript/visual retrieval, RRF fusion, retrieval gating, and Bedrock grounded answers.
-- **Next: Phase 5 (evaluation)** — golden set, deterministic retrieval metrics, RAGAS, ablation
-  reporting, and threshold tuning.
+- **Phase 5 (seed evaluation): COMPLETE** — `eval/golden/seed.jsonl`, `eval/run_eval.py`,
+  deterministic metrics, and real `apps/web/src/data/eval-results.json` dashboard data over the
+  currently indexed video.
+- **Next:** expand the demo library/indexes, then deepen eval with full ablations/RAGAS or proceed
+  to Phase 6 deployment/observability.
 
 ## Architecture
 Next.js -> FastAPI (Lambda) -> SQS -> Fargate worker -> S3 / Pinecone / DynamoDB,

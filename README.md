@@ -73,7 +73,10 @@ Checks: `uv run pytest` · `uvx ruff check .` · `pnpm --filter web lint && pnpm
 - **Phase 4 — LangGraph query pipeline:** core complete — `/api/search` now runs real Pinecone
   retrieval, RRF fusion, no-answer gating, and Bedrock grounded answers behind the existing
   frontend contract.
-- **Next:** Phase 5 — evaluation: golden set, retrieval metrics, RAGAS, and ablation reporting.
+- **Phase 5 — Seed evaluation:** complete — hand-labeled seed golden set, deterministic metrics,
+  real committed eval JSON, and dashboard rendering over the current indexed video.
+- **Next:** expand the indexed video library, then deepen Phase 5 with full ablations/RAGAS or move
+  into Phase 6 deployment/observability once the eval story is ready.
 
 ## License
 
