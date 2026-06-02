@@ -25,8 +25,13 @@ class GraphState(TypedDict, total=False):
     incrementally."""
 
     query: str
+    video_id: str | None
+    top_k: int
     rewritten_query: str
     intent: QueryIntent
+    errors: list[str]
+    should_retrieve_transcript: bool
+    should_retrieve_visual: bool
     visual_hits: list[dict]
     transcript_hits: list[dict]
     fused: list[dict]
