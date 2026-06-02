@@ -16,8 +16,10 @@ citations. A portfolio-grade AI engineering project aimed at AI/ML roles.
   S3 audio/frame/transcript artifacts and video/job status.
 - **Phase 3 (embeddings and Pinecone): COMPLETE** — Phase 2 artifacts are embedded with Titan Text
   v2 / Titan Multimodal G1 and upserted to separate Pinecone transcript/visual indexes.
-- **Next: Phase 4 (LangGraph query pipeline)** — replace public search mocks with real retrieval,
-  RRF fusion, no-answer gating, and Bedrock answer generation.
+- **Phase 4 (LangGraph query pipeline): COMPLETE** — `/api/search` uses LangGraph over Pinecone
+  transcript/visual retrieval, RRF fusion, retrieval gating, and Bedrock grounded answers.
+- **Next: Phase 5 (evaluation)** — golden set, deterministic retrieval metrics, RAGAS, ablation
+  reporting, and threshold tuning.
 
 ## Architecture
 Next.js -> FastAPI (Lambda) -> SQS -> Fargate worker -> S3 / Pinecone / DynamoDB,

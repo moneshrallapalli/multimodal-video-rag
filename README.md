@@ -70,7 +70,10 @@ Checks: `uv run pytest` · `uvx ruff check .` · `pnpm --filter web lint && pnpm
   smoke-tested locally against deployed AWS resources.
 - **Phase 3 — Embeddings and Pinecone:** core complete — Phase 2 artifacts -> Bedrock Titan
   embeddings -> separate Pinecone transcript/visual indexes, with direct retrieval smoke tests.
-- **Next:** Phase 4 — LangGraph query pipeline over real retrieval.
+- **Phase 4 — LangGraph query pipeline:** core complete — `/api/search` now runs real Pinecone
+  retrieval, RRF fusion, no-answer gating, and Bedrock grounded answers behind the existing
+  frontend contract.
+- **Next:** Phase 5 — evaluation: golden set, retrieval metrics, RAGAS, and ablation reporting.
 
 ## License
 
