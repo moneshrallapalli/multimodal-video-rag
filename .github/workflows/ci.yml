@@ -34,7 +34,9 @@ jobs:
           node-version: 24
           cache: pnpm
       - name: Install
-        run: pnpm install --frozen-lockfile
+        # --ignore-scripts: sharp/unrs-resolver use prebuilt binaries and msw is unused,
+        # so skip lifecycle scripts (a cold pnpm install otherwise exits 1 on ignored builds).
+        run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Lint
         run: pnpm --filter web lint
       - name: Typecheck
