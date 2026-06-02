@@ -255,6 +255,7 @@ class CoreStack(Stack):
             role=api_role,
             timeout=Duration.seconds(60),
             memory_size=1024,
+            architecture=lambda_.Architecture.ARM_64,
             environment=api_environment,
             log_group=api_logs,
         )
@@ -308,6 +309,10 @@ class CoreStack(Stack):
             memory_limit_mib=4096,
             task_role=worker_role,
             ephemeral_storage_gib=50,
+            runtime_platform=ecs.RuntimePlatform(
+                cpu_architecture=ecs.CpuArchitecture.ARM64,
+                operating_system_family=ecs.OperatingSystemFamily.LINUX,
+            ),
         )
         worker_task.add_container(
             "IngestWorker",
