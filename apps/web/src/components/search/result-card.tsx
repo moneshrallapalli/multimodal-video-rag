@@ -4,7 +4,7 @@ import { Clock, ExternalLink, Play } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { mmss, pct } from "@/lib/format";
+import { mmss } from "@/lib/format";
 import type { SearchResult } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -48,9 +48,7 @@ export function ResultCard({
           <Badge variant="outline" className="gap-1 font-normal text-muted-foreground">
             <Clock className="size-3" /> {mmss(result.start_seconds)}
           </Badge>
-          <span className="ml-auto text-xs font-medium text-primary">
-            {pct(result.score)} match
-          </span>
+          <span className="ml-auto text-xs font-medium text-primary">Proof #{result.rank}</span>
         </div>
         <p className="mt-1.5 line-clamp-1 text-sm font-medium">{result.title}</p>
         <p className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">{result.snippet}</p>

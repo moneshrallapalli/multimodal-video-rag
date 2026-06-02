@@ -1,7 +1,6 @@
 import { Sparkles, TriangleAlert } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { pct } from "@/lib/format";
 import type { SearchResponse } from "@/lib/types";
 
 export function AnswerPanel({ response }: { response: SearchResponse }) {
@@ -21,7 +20,7 @@ export function AnswerPanel({ response }: { response: SearchResponse }) {
         <Sparkles className="size-4 text-primary" />
         <span className="text-sm font-semibold">Answer</span>
         <Badge variant="secondary" className="ml-auto">
-          {pct(response.confidence)} confidence
+          Grounded answer
         </Badge>
       </div>
       <p className="mt-2 text-sm leading-relaxed text-foreground/90">{response.answer}</p>

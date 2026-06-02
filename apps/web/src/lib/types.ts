@@ -25,6 +25,7 @@ export interface DemoVideo {
   thumbnail_url: string;
   youtube_url: string;
   duration_seconds: number | null;
+  indexed: boolean;
 }
 
 export interface SearchRequest {

@@ -49,6 +49,7 @@ DEMO_VIDEOS: list[DemoVideo] = [
         thumbnail_url=_thumb("QkdBXUikRQc"),
         youtube_url=_watch("QkdBXUikRQc"),
         duration_seconds=720,
+        indexed=True,
     ),
     DemoVideo(
         id="DVtcZQ2QdBg",
@@ -57,6 +58,7 @@ DEMO_VIDEOS: list[DemoVideo] = [
         thumbnail_url=_thumb("DVtcZQ2QdBg"),
         youtube_url=_watch("DVtcZQ2QdBg"),
         duration_seconds=1080,
+        indexed=False,
     ),
     DemoVideo(
         id="as9IYFrTiKc",
@@ -65,6 +67,7 @@ DEMO_VIDEOS: list[DemoVideo] = [
         thumbnail_url=_thumb("as9IYFrTiKc"),
         youtube_url=_watch("as9IYFrTiKc"),
         duration_seconds=900,
+        indexed=False,
     ),
 ]
 

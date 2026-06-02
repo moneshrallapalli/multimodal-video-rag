@@ -38,6 +38,7 @@ def test_videos(client):
     assert len(data) == 3
     assert {v["id"] for v in data} == {"QkdBXUikRQc", "DVtcZQ2QdBg", "as9IYFrTiKc"}
     assert all(v["thumbnail_url"].startswith("https://") for v in data)
+    assert {v["id"] for v in data if v["indexed"]} == {"QkdBXUikRQc"}
 
 
 def test_search_answerable(client):

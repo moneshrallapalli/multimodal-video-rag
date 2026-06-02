@@ -13,9 +13,9 @@ import { YouTubePlayer } from "./youtube-player";
 
 // Curated demo prompts; the last one trips the no-answer / refusal path.
 const EXAMPLES = [
-  "Where do they explain salary negotiation?",
-  "Show me the slide listing the advantages",
-  "How do you stop self-sabotage?",
+  "What does she say about fear and self sabotage?",
+  "How does comfort relate to self sabotage?",
+  "When does she recommend starting?",
   "today's weather",
 ];
 
@@ -69,6 +69,7 @@ export function SearchView() {
   }
 
   const activeKey = seek ? `${seek.videoId}-${seek.seconds}` : null;
+  const indexedCount = videos.filter((v) => v.indexed).length;
 
   return (
     <div className="flex flex-col gap-5">
@@ -127,7 +128,8 @@ export function SearchView() {
       ) : (
         !error && (
           <p className="text-sm text-muted-foreground">
-            Search the {videos.length || "demo"}-video library by what was{" "}
+            Search the {indexedCount || "seed"} indexed video
+            {indexedCount === 1 ? "" : "s"} by what was{" "}
             <span className="text-foreground">said</span> or{" "}
             <span className="text-foreground">shown</span>. Results jump the player to the
             exact moment.

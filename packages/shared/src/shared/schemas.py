@@ -28,6 +28,7 @@ class DemoVideo(BaseModel):
     thumbnail_url: str
     youtube_url: str
     duration_seconds: int | None = None
+    indexed: bool = True
 
 
 class SearchRequest(BaseModel):
