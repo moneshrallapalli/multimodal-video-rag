@@ -12,6 +12,7 @@ from datetime import UTC, datetime, timedelta
 from itertools import count
 from threading import Lock
 
+from shared.ingestion import normalize_youtube_url
 from shared.schemas import (
     DemoVideo,
     IngestResponse,
@@ -372,13 +373,6 @@ def mock_search(req: SearchRequest) -> SearchResponse:
 
 # ── In-memory ingestion jobs (admin console) ──────────────────────────
 
-_YT_ID_RE = re.compile(r"(?:youtu\.be/|v=|/embed/|/shorts/)([A-Za-z0-9_-]{11})")
-
-
-def _extract_video_id(url: str) -> str | None:
-    m = _YT_ID_RE.search(url)
-    return m.group(1) if m else None
-
 
 def _now() -> str:
     return datetime.now(UTC).isoformat(timespec="seconds")
@@ -422,11 +416,12 @@ def list_jobs() -> JobsResponse:
 
 
 def add_job(youtube_url: str) -> IngestResponse:
+    normalized = normalize_youtube_url(youtube_url)
     now = _now()
     job = Job(
         id=f"job_{next(_job_seq):03d}",
-        youtube_url=youtube_url,
-        video_id=_extract_video_id(youtube_url),
+        youtube_url=normalized.youtube_url,
+        video_id=normalized.video_id,
         title=None,
         status="queued",
         progress=0,

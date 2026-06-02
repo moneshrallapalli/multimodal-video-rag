@@ -95,3 +95,12 @@ def test_admin_flow(client):
 
     # the new job is at the top of the list
     assert client.get("/api/admin/jobs").json()["jobs"][0]["id"] == job["id"]
+
+
+def test_admin_ingest_rejects_invalid_youtube_url(client):
+    client.post("/api/admin/login", json={"password": TEST_PASSWORD})
+
+    r = client.post("/api/admin/ingest", json={"youtube_url": "https://example.com/nope"})
+
+    assert r.status_code == 400
+    assert "YouTube URL" in r.json()["detail"]
