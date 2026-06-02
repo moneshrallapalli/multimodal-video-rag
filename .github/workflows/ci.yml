@@ -17,3 +17,27 @@ jobs:
         run: uvx ruff check .
       - name: Ruff format check
         run: uvx ruff format --check .
+      - name: Install workspace
+        run: uv sync --all-packages
+      - name: Pytest
+        run: uv run pytest
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.5.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: pnpm --filter web lint
+      - name: Typecheck
+        run: pnpm --filter web typecheck
+      - name: Build
+        run: pnpm --filter web build
