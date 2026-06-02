@@ -148,6 +148,49 @@ def test_hybrid_query_fuses_both_modalities():
     assert len(response.results) == 2
 
 
+def test_exact_transcript_terms_rerank_above_semantic_neighbors():
+    nearby = RetrievalHit(
+        id="QkdBXUikRQc:transcript:nearby",
+        score=0.72,
+        metadata={
+            "video_id": "QkdBXUikRQc",
+            "start_seconds": 49.6,
+            "end_seconds": 81.36,
+            "title": "Stop Dreaming and Start Doing | Self-Sabotage",
+            "text": "The speaker says fear and unfamiliar territory can be paralyzing.",
+            "modality": "transcript",
+        },
+    )
+    exact = RetrievalHit(
+        id="QkdBXUikRQc:transcript:planning",
+        score=0.6,
+        metadata={
+            "video_id": "QkdBXUikRQc",
+            "start_seconds": 221.52,
+            "end_seconds": 254.88,
+            "title": "Stop Dreaming and Start Doing | Self-Sabotage",
+            "text": (
+                "The issue is that you're lacking proper planning. Instead of making big goals, "
+                "cut them down into small, measurable steps."
+            ),
+            "modality": "transcript",
+        },
+    )
+    answerer = FakeAnswerer()
+    pipeline = QueryPipeline(
+        embedder=FakeEmbedder(),
+        transcript_index=FakeIndex([nearby, exact]),
+        visual_index=FakeIndex([_visual_hit(score=0.7)]),
+        answer_generator=answerer,
+    )
+
+    response = pipeline.run(SearchRequest(query="What does she say about lacking proper planning?"))
+
+    assert response.refused is False
+    assert response.results[0].start_seconds == 221.52
+    assert "lacking proper planning" in answerer.calls[0]["context"].splitlines()[0]
+
+
 def test_off_domain_query_refuses_without_retrieval():
     transcript = FakeIndex([_transcript_hit()])
     visual = FakeIndex([_visual_hit()])

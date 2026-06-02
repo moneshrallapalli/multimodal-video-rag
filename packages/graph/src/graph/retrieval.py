@@ -2,12 +2,45 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Sequence
 from typing import Any
 
 from shared.schemas import RetrievalHit
 
 from .models import RetrievalCandidate, seek_url, thumbnail_url
+
+_TOKEN_RE = re.compile(r"[a-z0-9]+")
+_STOPWORDS = {
+    "about",
+    "after",
+    "again",
+    "also",
+    "and",
+    "are",
+    "around",
+    "ask",
+    "asked",
+    "before",
+    "does",
+    "find",
+    "from",
+    "how",
+    "into",
+    "she",
+    "show",
+    "that",
+    "the",
+    "their",
+    "there",
+    "they",
+    "this",
+    "video",
+    "what",
+    "when",
+    "where",
+    "with",
+}
 
 
 def transcript_candidate(hit: RetrievalHit, *, rank: int) -> RetrievalCandidate:
@@ -85,8 +118,62 @@ def reciprocal_rank_fusion(
     ]
 
 
+def lexical_rerank(
+    candidates: Sequence[RetrievalCandidate],
+    *,
+    query: str,
+) -> list[RetrievalCandidate]:
+    """Nudge exact transcript matches above merely-near semantic neighbors."""
+
+    query_terms = _content_tokens(query)
+    if not query_terms:
+        return [
+            candidate.model_copy(update={"rank": rank})
+            for rank, candidate in enumerate(candidates, start=1)
+        ]
+
+    scored = [
+        (
+            _combined_rerank_score(candidate, query_terms=query_terms),
+            index,
+            candidate,
+        )
+        for index, candidate in enumerate(candidates)
+    ]
+    scored.sort(key=lambda item: (item[0], -item[1]), reverse=True)
+    return [
+        candidate.model_copy(update={"rank": rank})
+        for rank, (_, _, candidate) in enumerate(scored, start=1)
+    ]
+
+
 def max_source_score(candidates: Sequence[RetrievalCandidate]) -> float:
     return max((candidate.score for candidate in candidates), default=0.0)
+
+
+def _combined_rerank_score(
+    candidate: RetrievalCandidate,
+    *,
+    query_terms: list[str],
+) -> float:
+    text_terms = _content_tokens(f"{candidate.title} {candidate.snippet}")
+    if not text_terms:
+        return candidate.score
+    text_set = set(text_terms)
+    overlap = sum(1 for term in query_terms if term in text_set) / len(query_terms)
+    query_bigrams = set(zip(query_terms, query_terms[1:], strict=False))
+    text_bigrams = set(zip(text_terms, text_terms[1:], strict=False))
+    bigram_overlap = len(query_bigrams & text_bigrams)
+    phrase_bonus = 0.04 if " ".join(query_terms) in " ".join(text_terms) else 0.0
+    return candidate.score + (0.05 * overlap) + (0.025 * bigram_overlap) + phrase_bonus
+
+
+def _content_tokens(text: str) -> list[str]:
+    return [
+        token
+        for token in _TOKEN_RE.findall(text.lower())
+        if len(token) > 2 and token not in _STOPWORDS
+    ]
 
 
 def _float(value: Any, default: float) -> float:

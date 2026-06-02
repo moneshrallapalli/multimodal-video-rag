@@ -13,6 +13,7 @@ from shared.schemas import QueryIntent, SearchRequest, SearchResponse, SearchRes
 from .answering import AnswerGenerator, BedrockAnswerGenerator
 from .models import GraphConfig, RetrievalCandidate
 from .retrieval import (
+    lexical_rerank,
     max_source_score,
     reciprocal_rank_fusion,
     transcript_candidate,
@@ -192,8 +193,11 @@ class QueryPipeline:
         fused = reciprocal_rank_fusion(
             [transcript, visual],
             rrf_k=self.config.rrf_k,
-        )[: state.get("top_k", self.config.retrieve_top_k)]
-        return {"fused": [candidate.model_dump() for candidate in fused]}
+        )
+        reranked = lexical_rerank(fused, query=state["query"])[
+            : state.get("top_k", self.config.retrieve_top_k)
+        ]
+        return {"fused": [candidate.model_dump() for candidate in reranked]}
 
     def _apply_retrieval_gate(self, state: GraphState) -> GraphState:
         if state.get("refused"):
