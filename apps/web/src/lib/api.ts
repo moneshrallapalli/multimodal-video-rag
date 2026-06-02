@@ -8,7 +8,9 @@ import type {
   SessionStatus,
 } from "./types";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+// Empty = same-origin (dev proxies to the backend via next.config rewrites).
+// Set NEXT_PUBLIC_API_BASE_URL to call a deployed API directly (production).
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
 export class ApiError extends Error {
   constructor(
