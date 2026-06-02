@@ -1,0 +1,69 @@
+{
+  "meta": {
+    "status": "sample",
+    "note": "Placeholder numbers for the Phase 1 UI shell. Real results come from the offline eval (eval/ragas_run.py) and are committed here in Phase 5. Do not cite these.",
+    "golden_set_size": 72,
+    "judge": "claude-haiku-4-5",
+    "retrieval_depth": 20
+  },
+  "configs": [
+    {
+      "id": "dense",
+      "label": "Dense only",
+      "recall_at_5": 0.62,
+      "recall_at_10": 0.74,
+      "mrr": 0.55,
+      "timestamp_at_5s": 0.48,
+      "modality_acc": 0.71
+    },
+    {
+      "id": "hybrid",
+      "label": "Hybrid (dense + BM25)",
+      "recall_at_5": 0.76,
+      "recall_at_10": 0.85,
+      "mrr": 0.64,
+      "timestamp_at_5s": 0.57,
+      "modality_acc": 0.79
+    },
+    {
+      "id": "rerank",
+      "label": "Hybrid + rerank",
+      "recall_at_5": 0.84,
+      "recall_at_10": 0.9,
+      "mrr": 0.72,
+      "timestamp_at_5s": 0.63,
+      "modality_acc": 0.83
+    },
+    {
+      "id": "rewrite",
+      "label": "Hybrid + rerank + rewrite",
+      "recall_at_5": 0.86,
+      "recall_at_10": 0.92,
+      "mrr": 0.75,
+      "timestamp_at_5s": 0.66,
+      "modality_acc": 0.85
+    }
+  ],
+  "ragas": {
+    "dense": {
+      "faithfulness": 0.78,
+      "answer_relevancy": 0.74,
+      "context_precision": 0.69,
+      "context_recall": 0.72
+    },
+    "rewrite": {
+      "faithfulness": 0.91,
+      "answer_relevancy": 0.88,
+      "context_precision": 0.85,
+      "context_recall": 0.86
+    }
+  },
+  "no_answer": {
+    "true_positive": 8,
+    "false_negative": 2,
+    "false_positive": 3,
+    "true_negative": 59,
+    "precision": 0.73,
+    "recall": 0.8
+  }
+}
