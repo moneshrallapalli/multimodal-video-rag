@@ -43,6 +43,13 @@ class Settings(BaseSettings):
     admin_password_hash: str = ""
     session_secret: str = ""
 
+    # Local dev / CORS (comma-separated origins allowed to call the API)
+    cors_allow_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
+
+    @property
+    def cors_origins(self) -> list[str]:
+        return [o.strip() for o in self.cors_allow_origins.split(",") if o.strip()]
+
 
 @lru_cache
 def get_settings() -> Settings:
