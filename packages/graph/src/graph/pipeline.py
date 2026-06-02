@@ -232,6 +232,8 @@ class QueryPipeline:
         candidates = [_candidate(data) for data in state.get("fused", [])]
         if not candidates:
             return {"refused": True, "answer": self.config.no_answer_message, "confidence": 0.0}
+        if all(candidate.modality == "visual" for candidate in candidates):
+            return {"answer": _visual_answer(candidates[0]), "refused": False}
         try:
             answer = self.answer_generator.generate(
                 query=state["query"],
@@ -285,3 +287,7 @@ def _mmss(seconds: float) -> str:
 
 def _extractive_answer(top: RetrievalCandidate) -> str:
     return f"{top.snippet} This appears around {_mmss(top.start_seconds)} in “{top.title}”."
+
+
+def _visual_answer(top: RetrievalCandidate) -> str:
+    return f"The strongest visual match is around {_mmss(top.start_seconds)} in “{top.title}”."

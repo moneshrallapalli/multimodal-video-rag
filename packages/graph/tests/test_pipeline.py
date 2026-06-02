@@ -108,11 +108,12 @@ def test_visual_query_routes_to_visual_index_only_with_video_filter():
     embedder = FakeEmbedder()
     transcript = FakeIndex([_transcript_hit()])
     visual = FakeIndex([_visual_hit()])
+    answerer = FakeAnswerer()
     pipeline = QueryPipeline(
         embedder=embedder,
         transcript_index=transcript,
         visual_index=visual,
-        answer_generator=FakeAnswerer(),
+        answer_generator=answerer,
     )
 
     response = pipeline.run(
@@ -121,9 +122,14 @@ def test_visual_query_routes_to_visual_index_only_with_video_filter():
 
     assert response.refused is False
     assert response.intent == "visual"
+    assert response.answer == (
+        "The strongest visual match is around 0:00 in “Stop Dreaming and Start Doing | "
+        "Self-Sabotage”."
+    )
     assert response.results[0].modality == "visual"
     assert visual.calls[0]["metadata_filter"] == {"video_id": {"$eq": "QkdBXUikRQc"}}
     assert transcript.calls == []
+    assert answerer.calls == []
 
 
 def test_hybrid_query_fuses_both_modalities():
