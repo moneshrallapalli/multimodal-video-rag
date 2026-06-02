@@ -16,6 +16,7 @@ def _admin_secret(monkeypatch):
     """Pin a known admin hash + session secret so tests don't depend on a real .env."""
     monkeypatch.setattr(settings, "admin_password_hash", PasswordHasher().hash(TEST_PASSWORD))
     monkeypatch.setattr(settings, "session_secret", "test-secret-key")
+    monkeypatch.setattr(settings, "sqs_queue_url", "")
 
 
 @pytest.fixture

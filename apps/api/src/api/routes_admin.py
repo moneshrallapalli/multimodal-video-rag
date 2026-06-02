@@ -1,4 +1,4 @@
-"""Admin endpoints: shared-secret login + (mocked) ingestion and job tracking."""
+"""Admin endpoints: shared-secret login + ingestion and job tracking."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from shared.schemas import (
 )
 
 from . import auth
-from .mock_data import add_job, list_jobs
+from .ingestion_store import enqueue_ingestion, list_jobs
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -43,4 +43,4 @@ def jobs() -> JobsResponse:
 
 @router.post("/ingest", response_model=IngestResponse, dependencies=[Depends(auth.require_admin)])
 def ingest(body: IngestRequest) -> IngestResponse:
-    return add_job(body.youtube_url)
+    return enqueue_ingestion(body.youtube_url)
