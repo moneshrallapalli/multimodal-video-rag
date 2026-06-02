@@ -68,7 +68,9 @@ Checks: `uv run pytest` · `uvx ruff check .` · `pnpm --filter web lint && pnpm
   one shared shadcn/ui design system across the public search, admin console, and eval dashboard.
 - **Phase 2 — Ingestion pipeline:** core complete — admin API -> DynamoDB/SQS -> worker -> S3/DynamoDB
   smoke-tested locally against deployed AWS resources.
-- **Next:** Phase 3 — Bedrock embeddings and Pinecone upserts.
+- **Phase 3 — Embeddings and Pinecone:** core complete — Phase 2 artifacts -> Bedrock Titan
+  embeddings -> separate Pinecone transcript/visual indexes, with direct retrieval smoke tests.
+- **Next:** Phase 4 — LangGraph query pipeline over real retrieval.
 
 ## License
 

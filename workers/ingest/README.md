@@ -12,10 +12,12 @@ SQS message
 -> ffmpeg audio + interval frame extraction
 -> faster-whisper transcript
 -> S3 artifacts
+-> Bedrock Titan embeddings
+-> Pinecone transcript + visual upserts
 -> DynamoDB video record
 ```
 
-Phase 3 adds Bedrock Titan embeddings and Pinecone upserts.
+Phase 4 replaces the public mock search with LangGraph retrieval and answer generation.
 
 ## Run Locally
 
@@ -39,6 +41,22 @@ videos/{video_id}/audio/audio.m4a
 videos/{video_id}/frames/frame_000001.jpg
 videos/{video_id}/frames/frames.json
 videos/{video_id}/transcript/transcript.json
+videos/{video_id}/vectors/indexing_summary.json
+```
+
+## Phase 3 Smoke Utilities
+
+Index an already-ingested Phase 2 video:
+
+```bash
+uv run python scripts/index_existing_video.py QkdBXUikRQc
+```
+
+Query Pinecone directly:
+
+```bash
+uv run python scripts/query_vectors.py transcript "self sabotage" --video-id QkdBXUikRQc
+uv run python scripts/query_vectors.py visual "speaker at a desk" --video-id QkdBXUikRQc
 ```
 
 ## Docker

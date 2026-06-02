@@ -12,8 +12,12 @@ citations. A portfolio-grade AI engineering project aimed at AI/ML roles.
   LangSmith, repo scaffolded, uv workspace, infra deployed via CDK and smoke-tested.
 - **Phase 1 (product skeleton): COMPLETE** — FastAPI + Next.js against typed mocked contracts,
   plus one shared shadcn/ui design system across public search, admin, and eval surfaces.
-- **Next: Phase 2 (ingestion pipeline)** — submit YouTube jobs, write DynamoDB status, enqueue SQS,
-  and process artifacts with the Fargate worker.
+- **Phase 2 (ingestion pipeline): COMPLETE** — admin API writes DynamoDB/SQS jobs; worker writes
+  S3 audio/frame/transcript artifacts and video/job status.
+- **Phase 3 (embeddings and Pinecone): COMPLETE** — Phase 2 artifacts are embedded with Titan Text
+  v2 / Titan Multimodal G1 and upserted to separate Pinecone transcript/visual indexes.
+- **Next: Phase 4 (LangGraph query pipeline)** — replace public search mocks with real retrieval,
+  RRF fusion, no-answer gating, and Bedrock answer generation.
 
 ## Architecture
 Next.js -> FastAPI (Lambda) -> SQS -> Fargate worker -> S3 / Pinecone / DynamoDB,
