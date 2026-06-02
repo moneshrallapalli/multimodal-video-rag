@@ -43,6 +43,8 @@ class Settings(BaseSettings):
     ingest_frame_interval_seconds: int = 30
     ingest_max_frames: int = 20
     whisper_model_size: str = "tiny.en"
+    transcript_chunk_seconds: int = 30
+    transcript_chunk_overlap_seconds: int = 6
 
     # Admin auth
     admin_password_hash: str = ""
