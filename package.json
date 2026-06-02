@@ -1,0 +1,11 @@
+{
+  "name": "multimodal-video-rag",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Multimodal video RAG platform on AWS",
+  "packageManager": "pnpm@11.5.0",
+  "license": "MIT",
+  "scripts": {
+    "web": "pnpm --filter web dev"
+  }
+}
