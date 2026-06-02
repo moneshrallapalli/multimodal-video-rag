@@ -10,6 +10,7 @@ from shared.embedding import BedrockEmbedder
 from shared.pinecone_client import PineconeIndexClient
 from shared.schemas import QueryIntent, SearchRequest, SearchResponse, SearchResult
 
+from .answering import AnswerGenerator, BedrockAnswerGenerator
 from .models import GraphConfig, RetrievalCandidate
 from .retrieval import (
     max_source_score,
@@ -57,6 +58,7 @@ class QueryPipeline:
         embedder: BedrockEmbedder | None = None,
         transcript_index: Any | None = None,
         visual_index: Any | None = None,
+        answer_generator: AnswerGenerator | None = None,
         config: GraphConfig | None = None,
     ) -> None:
         self.embedder = embedder or BedrockEmbedder()
@@ -68,6 +70,7 @@ class QueryPipeline:
             settings.pinecone_visual_index,
             expected_dim=settings.embed_dim,
         )
+        self.answer_generator = answer_generator or BedrockAnswerGenerator()
         self.config = config or GraphConfig()
         self.graph = self._build_graph()
 
@@ -91,7 +94,7 @@ class QueryPipeline:
         graph.add_node("fuse_results", self._fuse_results)
         graph.add_node("apply_retrieval_gate", self._apply_retrieval_gate)
         graph.add_node("build_context", self._build_context)
-        graph.add_node("extractive_answer", self._extractive_answer)
+        graph.add_node("generate_answer", self._generate_answer)
         graph.set_entry_point("validate_query")
         graph.add_edge("validate_query", "classify_intent")
         graph.add_edge("classify_intent", "retrieve_transcript")
@@ -99,8 +102,8 @@ class QueryPipeline:
         graph.add_edge("retrieve_visual", "fuse_results")
         graph.add_edge("fuse_results", "apply_retrieval_gate")
         graph.add_edge("apply_retrieval_gate", "build_context")
-        graph.add_edge("build_context", "extractive_answer")
-        graph.add_edge("extractive_answer", END)
+        graph.add_edge("build_context", "generate_answer")
+        graph.add_edge("generate_answer", END)
         return graph.compile()
 
     def _validate_query(self, state: GraphState) -> GraphState:
@@ -223,14 +226,19 @@ class QueryPipeline:
             )
         return {"context": "\n".join(lines)}
 
-    def _extractive_answer(self, state: GraphState) -> GraphState:
+    def _generate_answer(self, state: GraphState) -> GraphState:
         if state.get("refused"):
             return {}
         candidates = [_candidate(data) for data in state.get("fused", [])]
         if not candidates:
             return {"refused": True, "answer": self.config.no_answer_message, "confidence": 0.0}
-        top = candidates[0]
-        answer = f"{top.snippet} This appears around {_mmss(top.start_seconds)} in “{top.title}”."
+        try:
+            answer = self.answer_generator.generate(
+                query=state["query"],
+                context=state.get("context", ""),
+            )
+        except Exception:
+            answer = _extractive_answer(candidates[0])
         return {"answer": answer, "refused": False}
 
     def _to_search_response(self, state: GraphState) -> SearchResponse:
@@ -273,3 +281,7 @@ def _video_filter(video_id: str | None) -> dict[str, Any] | None:
 def _mmss(seconds: float) -> str:
     minutes, secs = divmod(int(seconds), 60)
     return f"{minutes}:{secs:02d}"
+
+
+def _extractive_answer(top: RetrievalCandidate) -> str:
+    return f"{top.snippet} This appears around {_mmss(top.start_seconds)} in “{top.title}”."

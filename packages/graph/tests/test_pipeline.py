@@ -37,6 +37,16 @@ class FakeIndex:
         return self.hits
 
 
+class FakeAnswerer:
+    def __init__(self, answer: str = "Grounded answer with a timestamp around 1:15.") -> None:
+        self.answer = answer
+        self.calls = []
+
+    def generate(self, *, query: str, context: str) -> str:
+        self.calls.append({"query": query, "context": context})
+        return self.answer
+
+
 def _transcript_hit(score: float = 0.72) -> RetrievalHit:
     return RetrievalHit(
         id="QkdBXUikRQc:transcript:000004",
@@ -72,11 +82,18 @@ def test_transcript_query_routes_to_transcript_index_only():
     embedder = FakeEmbedder()
     transcript = FakeIndex([_transcript_hit()])
     visual = FakeIndex([_visual_hit()])
-    pipeline = QueryPipeline(embedder=embedder, transcript_index=transcript, visual_index=visual)
+    answerer = FakeAnswerer()
+    pipeline = QueryPipeline(
+        embedder=embedder,
+        transcript_index=transcript,
+        visual_index=visual,
+        answer_generator=answerer,
+    )
 
     response = pipeline.run(SearchRequest(query="Where do they explain self sabotage?"))
 
     assert response.refused is False
+    assert response.answer == "Grounded answer with a timestamp around 1:15."
     assert response.intent == "transcript"
     assert response.results[0].modality == "transcript"
     assert response.results[0].start_seconds == 74.72
@@ -84,13 +101,19 @@ def test_transcript_query_routes_to_transcript_index_only():
     assert embedder.visual_queries == []
     assert len(transcript.calls) == 1
     assert visual.calls == []
+    assert "self-sabotaging behaviors" in answerer.calls[0]["context"]
 
 
 def test_visual_query_routes_to_visual_index_only_with_video_filter():
     embedder = FakeEmbedder()
     transcript = FakeIndex([_transcript_hit()])
     visual = FakeIndex([_visual_hit()])
-    pipeline = QueryPipeline(embedder=embedder, transcript_index=transcript, visual_index=visual)
+    pipeline = QueryPipeline(
+        embedder=embedder,
+        transcript_index=transcript,
+        visual_index=visual,
+        answer_generator=FakeAnswerer(),
+    )
 
     response = pipeline.run(
         SearchRequest(query="Show me the speaker at a desk", video_id="QkdBXUikRQc")
@@ -108,6 +131,7 @@ def test_hybrid_query_fuses_both_modalities():
         embedder=FakeEmbedder(),
         transcript_index=FakeIndex([_transcript_hit(score=0.5)]),
         visual_index=FakeIndex([_visual_hit(score=0.4)]),
+        answer_generator=FakeAnswerer(),
     )
 
     response = pipeline.run(SearchRequest(query="self sabotage", top_k=2))
@@ -121,8 +145,12 @@ def test_hybrid_query_fuses_both_modalities():
 def test_off_domain_query_refuses_without_retrieval():
     transcript = FakeIndex([_transcript_hit()])
     visual = FakeIndex([_visual_hit()])
+    answerer = FakeAnswerer()
     pipeline = QueryPipeline(
-        embedder=FakeEmbedder(), transcript_index=transcript, visual_index=visual
+        embedder=FakeEmbedder(),
+        transcript_index=transcript,
+        visual_index=visual,
+        answer_generator=answerer,
     )
 
     response = pipeline.run(SearchRequest(query="what is today's weather"))
@@ -132,6 +160,7 @@ def test_off_domain_query_refuses_without_retrieval():
     assert response.results == []
     assert transcript.calls == []
     assert visual.calls == []
+    assert answerer.calls == []
 
 
 def test_low_score_retrieval_refuses():
@@ -139,6 +168,7 @@ def test_low_score_retrieval_refuses():
         embedder=FakeEmbedder(),
         transcript_index=FakeIndex([_transcript_hit(score=0.05)]),
         visual_index=FakeIndex([]),
+        answer_generator=FakeAnswerer(),
     )
 
     response = pipeline.run(SearchRequest(query="Where do they explain self sabotage?"))
