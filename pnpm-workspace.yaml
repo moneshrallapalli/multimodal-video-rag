@@ -2,9 +2,9 @@ packages:
   - "apps/*"
   - "packages/*"
 
-# sharp (next/image) and unrs-resolver ship prebuilt binaries, and msw isn't used
-# at runtime; skip their install build scripts so pnpm stays non-interactive.
-ignoredBuiltDependencies:
+# These packages are reviewed transitive install scripts needed by pnpm 11's
+# build approval policy in CI/Vercel.
+onlyBuiltDependencies:
   - msw
   - sharp
   - unrs-resolver
