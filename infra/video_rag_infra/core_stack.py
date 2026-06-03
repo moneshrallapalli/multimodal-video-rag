@@ -341,6 +341,15 @@ class CoreStack(Stack):
                 )
             ],
         )
+        # Free Gateway Endpoints keep S3 / DynamoDB traffic on AWS's backbone
+        # instead of egressing through the public NIC. No NAT cost since we
+        # already have public subnets only, but this still cuts latency and
+        # makes the architecture diagram read more cleanly.
+        vpc.add_gateway_endpoint("S3Endpoint", service=ec2.GatewayVpcEndpointAwsService.S3)
+        vpc.add_gateway_endpoint(
+            "DynamoDBEndpoint", service=ec2.GatewayVpcEndpointAwsService.DYNAMODB
+        )
+
         worker_security_group = ec2.SecurityGroup(
             self,
             "WorkerSecurityGroup",
