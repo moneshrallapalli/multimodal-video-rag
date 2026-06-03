@@ -91,17 +91,17 @@ def run_eval(rows: list[GoldenQuery], *, retrieval_depth: int) -> dict[str, Any]
     per_config: dict[str, list[dict[str, Any]]] = {}
     config_summaries: list[dict[str, Any]] = []
     no_answer_by_config: dict[str, dict[str, Any]] = {}
-    bm25_encoder = _load_seed_bm25(rows)
+    bm25_encoders = _load_bm25_encoders(rows)
+    bm25_status = _bm25_status(rows, bm25_encoders)
 
     for config in CONFIGS:
         graph_config = _graph_config(config)
-        pipeline = QueryPipeline(
-            config=graph_config,
-            transcript_bm25=bm25_encoder if graph_config.enable_hybrid_transcript else None,
-        )
+        pipeline = QueryPipeline(config=graph_config)
         query_rows = []
         scores = []
         for row in rows:
+            if graph_config.enable_hybrid_transcript:
+                pipeline.transcript_bm25 = _bm25_for_row(row, bm25_encoders)
             response = pipeline.run(
                 SearchRequest(query=row.query, video_id=row.video_id, top_k=retrieval_depth)
             )
@@ -126,7 +126,15 @@ def run_eval(rows: list[GoldenQuery], *, retrieval_depth: int) -> dict[str, Any]
                 "enable_cross_encoder_rerank": graph_config.enable_cross_encoder_rerank,
                 "enable_query_rewrite": graph_config.enable_query_rewrite,
                 "bm25_loaded": (
-                    bm25_encoder is not None if graph_config.enable_hybrid_transcript else None
+                    bm25_status["loaded_all"] if graph_config.enable_hybrid_transcript else None
+                ),
+                "bm25_loaded_video_ids": (
+                    bm25_status["loaded_video_ids"] if graph_config.enable_hybrid_transcript else []
+                ),
+                "bm25_missing_video_ids": (
+                    bm25_status["missing_video_ids"]
+                    if graph_config.enable_hybrid_transcript
+                    else []
                 ),
             }
         )
@@ -169,15 +177,43 @@ def _graph_config(config: dict[str, Any]) -> GraphConfig:
     )
 
 
-def _load_seed_bm25(rows: list[GoldenQuery]) -> BM25Encoder | None:
+def _load_bm25_encoders(rows: list[GoldenQuery]) -> dict[str, BM25Encoder]:
     if not settings.s3_bucket:
-        return None
+        return {}
 
-    video_ids = {row.video_id for row in rows if row.video_id}
-    if len(video_ids) != 1:
-        return None
+    encoders: dict[str, BM25Encoder] = {}
+    for video_id in _golden_video_ids(rows):
+        encoder = BM25Encoder.load_from_s3(bucket=settings.s3_bucket, video_id=video_id)
+        if encoder is not None:
+            encoders[video_id] = encoder
+    return encoders
 
-    return BM25Encoder.load_from_s3(bucket=settings.s3_bucket, video_id=next(iter(video_ids)))
+
+def _bm25_for_row(
+    row: GoldenQuery,
+    encoders: dict[str, BM25Encoder],
+) -> BM25Encoder | None:
+    if not row.video_id:
+        return None
+    return encoders.get(row.video_id)
+
+
+def _bm25_status(
+    rows: list[GoldenQuery],
+    encoders: dict[str, BM25Encoder],
+) -> dict[str, Any]:
+    video_ids = _golden_video_ids(rows)
+    loaded_ids = [video_id for video_id in video_ids if video_id in encoders]
+    missing_ids = [video_id for video_id in video_ids if video_id not in encoders]
+    return {
+        "loaded_all": bool(video_ids) and not missing_ids,
+        "loaded_video_ids": loaded_ids,
+        "missing_video_ids": missing_ids,
+    }
+
+
+def _golden_video_ids(rows: list[GoldenQuery]) -> list[str]:
+    return sorted({row.video_id for row in rows if row.video_id})
 
 
 def _query_output(
