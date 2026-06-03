@@ -20,6 +20,15 @@ from .mock_data import NO_ANSWER_MESSAGE, mock_search
 from .reranking import LambdaCrossEncoderReranker, LocalCrossEncoderReranker
 
 logger = logging.getLogger("video_rag.api.search")
+logger.setLevel(logging.INFO)
+
+# Module-level diagnostic: logs once on cold start to confirm settings loaded.
+logger.info(
+    "search_service_init pinecone_key_set=%s cross_encoder=%s secret_name=%r",
+    bool(settings.pinecone_api_key),
+    settings.enable_cross_encoder_rerank,
+    settings.secrets_manager_secret_name,
+)
 
 
 def search_videos(req: SearchRequest) -> SearchResponse:
@@ -107,8 +116,5 @@ def _cross_encoder_reranker() -> LambdaCrossEncoderReranker | LocalCrossEncoderR
 # takes 20-40 s; doing it here puts that work in the cold-start init phase
 # (outside the function timeout window) so the first real query isn't slow.
 # The @lru_cache means every subsequent call returns the already-loaded object.
-if (
-    settings.enable_cross_encoder_rerank
-    and not settings.cross_encoder_reranker_function_name
-):
+if settings.enable_cross_encoder_rerank and not settings.cross_encoder_reranker_function_name:
     _cross_encoder_reranker()
