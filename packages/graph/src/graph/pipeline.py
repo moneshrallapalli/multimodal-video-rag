@@ -70,10 +70,12 @@ class QueryPipeline:
         self.transcript_index = transcript_index or PineconeIndexClient.from_index_name(
             settings.pinecone_transcript_index,
             expected_dim=settings.embed_dim,
+            expected_metric="dotproduct",
         )
         self.visual_index = visual_index or PineconeIndexClient.from_index_name(
             settings.pinecone_visual_index,
             expected_dim=settings.embed_dim,
+            expected_metric="cosine",
         )
         self.answer_generator = answer_generator or BedrockAnswerGenerator()
         self.config = config or GraphConfig()

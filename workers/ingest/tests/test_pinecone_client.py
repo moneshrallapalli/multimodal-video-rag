@@ -157,3 +157,30 @@ def test_request_retries_url_errors(monkeypatch):
     monkeypatch.setattr("shared.pinecone_client.urlopen", flaky)
     assert _client().query([0.1, 0.2, 0.3]) == []
     assert len(calls) == 2
+
+
+def test_from_index_name_asserts_metric_matches_expectation(monkeypatch):
+    """Catch a future operator who rebuilds an index with the wrong metric. A
+    silent metric swap would drift retrieval quality without any error signal."""
+
+    def fake_lookup(name, *, api_key):
+        return PineconeIndexInfo(
+            name=name, host="example.pinecone.io", dimension=3, metric="cosine"
+        )
+
+    monkeypatch.setattr("shared.pinecone_client._lookup_index", fake_lookup)
+
+    # Expected dotproduct (transcript) but the index is cosine → raises.
+    with pytest.raises(ValueError, match="metric"):
+        PineconeIndexClient.from_index_name(
+            "transcript",
+            api_key="key",
+            expected_dim=3,
+            expected_metric="dotproduct",
+        )
+
+    # Matching metric → succeeds (no assertion error).
+    client = PineconeIndexClient.from_index_name(
+        "visual", api_key="key", expected_dim=3, expected_metric="cosine"
+    )
+    assert client.info.metric == "cosine"

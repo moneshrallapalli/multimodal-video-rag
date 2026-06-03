@@ -44,10 +44,12 @@ class VideoIndexer:
             transcript_index=PineconeIndexClient.from_index_name(
                 settings.pinecone_transcript_index,
                 expected_dim=settings.embed_dim,
+                expected_metric="dotproduct",
             ),
             visual_index=PineconeIndexClient.from_index_name(
                 settings.pinecone_visual_index,
                 expected_dim=settings.embed_dim,
+                expected_metric="cosine",
             ),
             transcript_chunk_seconds=settings.transcript_chunk_seconds,
             transcript_chunk_overlap_seconds=settings.transcript_chunk_overlap_seconds,

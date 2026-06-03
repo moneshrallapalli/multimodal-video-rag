@@ -43,6 +43,7 @@ class PineconeIndexClient:
         *,
         api_key: str | None = None,
         expected_dim: int | None = None,
+        expected_metric: str | None = None,
     ) -> PineconeIndexClient:
         key = api_key or settings.pinecone_api_key
         if not key:
@@ -51,6 +52,14 @@ class PineconeIndexClient:
         dim = expected_dim or settings.embed_dim
         if info.dimension != dim:
             raise ValueError(f"Pinecone index {index_name} dimension {info.dimension} != {dim}")
+        # The transcript index is dotproduct and the visual index is cosine; their
+        # score distributions differ. Catching a rebuild that swaps the metric
+        # here is cheaper than tracking down weird ranking drift in production.
+        if expected_metric and info.metric != expected_metric:
+            raise ValueError(
+                f"Pinecone index {index_name} metric {info.metric!r} != "
+                f"expected {expected_metric!r}"
+            )
         return cls(api_key=key, info=info)
 
     def upsert(self, records: list[VectorRecord], *, namespace: str | None = None) -> int:
