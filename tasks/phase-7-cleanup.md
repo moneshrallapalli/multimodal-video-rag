@@ -318,14 +318,14 @@ Gate behind `GraphConfig.enable_query_rewrite: bool = False`.
 
 ---
 
-### [ ] T19. Re-run eval with the new configs (keep honest framing)
+### [x] T19. Re-run eval with the new configs (keep honest framing)  ✅ `7df637c`
 
 **File:** `eval/run_eval.py` configs list + `docs/evaluation.md` update + commit
 fresh `apps/web/src/data/eval-results.json`.
-**Outline:** Add `hybrid`, `hybrid_rerank`, `hybrid_rerank_rewrite` configs. Keep
+**Outline:** Add `hybrid`, `hybrid_rerank`, `hybrid_rewrite` configs. Keep
 the `"status": "real_seed"` framing — still 1 video, 15 queries.
 **Commit:** `eval: refresh seed evaluation with hybrid/rerank/rewrite configs`
-**Status:** not started
+**Status:** shipped
 
 ---
 
@@ -347,20 +347,22 @@ Add entries for:
 
 ## Status snapshot (updated as items complete)
 
-- ✅ Done: T1–T18  (18 / 20) — 90% complete
-- 🚧 In progress: T19 (re-run eval)
-- ⏳ Remaining: T19 (re-run eval), T20 (lessons)
+- ✅ Done: T1–T19  (19 / 20) — 95% complete
+- 🚧 In progress: T20 (audit lessons)
+- ⏳ Remaining: T20 (lessons)
 
-Last commit pushed: `db0a280` (T18)
+Last commit pushed: `7df637c` (T19)
 
 **Quick stats (Phase 7 so far):**
-- **86 tests passing** (was 51 before this phase) — +35 new tests
+- **87 tests passing** (was 51 before this phase) — +36 new tests
 - Python lint+format clean repo-wide
 - Web lint+typecheck+build clean
 - All P0 (security), P1 (correctness), and P2 (ops/hardening) items shipped
 - T16 (BM25 hybrid retrieval) shipped end-to-end across 4 commits
 
-**Remaining work is the rest of the §24.1 ablation:** re-run eval (T19), then
-capture audit lessons (T20). T17's API Docker image build passed with
+**Remaining work:** capture audit lessons (T20), then deploy and live smoke.
+T17's API Docker image build passed with
 `sentence-transformers` and the `BAAI/bge-reranker-base` model baked into the
 image; T18's rewrite node is off by default behind `enable_query_rewrite`.
+T19's real-seed eval now reports six configs (`dense`, gate sweeps, `hybrid`,
+`hybrid_rerank`, `hybrid_rewrite`) over the same 1 video / 15 queries.
