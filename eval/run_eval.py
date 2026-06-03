@@ -19,6 +19,8 @@ from graph import QueryPipeline  # noqa: E402
 from graph.models import GraphConfig  # noqa: E402
 from metrics import score_query, summarize_scores  # noqa: E402
 from schema import GoldenQuery  # noqa: E402
+from shared import settings  # noqa: E402
+from shared.bm25 import BM25Encoder  # noqa: E402
 from shared.schemas import SearchRequest, SearchResponse  # noqa: E402
 
 DEFAULT_OUTPUT = Path("apps/web/src/data/eval-results.json")
@@ -38,6 +40,26 @@ CONFIGS = [
         "id": "dense_strict_gate",
         "label": "Dense + strict gate",
         "min_source_score": 0.5,
+    },
+    {
+        "id": "hybrid",
+        "label": "Hybrid BM25",
+        "min_source_score": 0.2,
+        "enable_hybrid_transcript": True,
+    },
+    {
+        "id": "hybrid_rerank",
+        "label": "Hybrid + rerank",
+        "min_source_score": 0.2,
+        "enable_hybrid_transcript": True,
+        "enable_cross_encoder_rerank": True,
+    },
+    {
+        "id": "hybrid_rewrite",
+        "label": "Hybrid + rewrite",
+        "min_source_score": 0.2,
+        "enable_hybrid_transcript": True,
+        "enable_query_rewrite": True,
     },
 ]
 
@@ -69,13 +91,13 @@ def run_eval(rows: list[GoldenQuery], *, retrieval_depth: int) -> dict[str, Any]
     per_config: dict[str, list[dict[str, Any]]] = {}
     config_summaries: list[dict[str, Any]] = []
     no_answer_by_config: dict[str, dict[str, Any]] = {}
+    bm25_encoder = _load_seed_bm25(rows)
 
     for config in CONFIGS:
+        graph_config = _graph_config(config)
         pipeline = QueryPipeline(
-            config=GraphConfig(
-                retrieve_top_k=20,
-                min_source_score=float(config["min_source_score"]),
-            )
+            config=graph_config,
+            transcript_bm25=bm25_encoder if graph_config.enable_hybrid_transcript else None,
         )
         query_rows = []
         scores = []
@@ -100,6 +122,12 @@ def run_eval(rows: list[GoldenQuery], *, retrieval_depth: int) -> dict[str, Any]
                 "modality_acc": summary["modality_acc"],
                 "no_answer_f1": summary["no_answer"]["f1"],
                 "min_source_score": config["min_source_score"],
+                "enable_hybrid_transcript": graph_config.enable_hybrid_transcript,
+                "enable_cross_encoder_rerank": graph_config.enable_cross_encoder_rerank,
+                "enable_query_rewrite": graph_config.enable_query_rewrite,
+                "bm25_loaded": (
+                    bm25_encoder is not None if graph_config.enable_hybrid_transcript else None
+                ),
             }
         )
         no_answer_by_config[str(config["id"])] = summary["no_answer"]
@@ -128,6 +156,30 @@ def run_eval(rows: list[GoldenQuery], *, retrieval_depth: int) -> dict[str, Any]
     }
 
 
+def _graph_config(config: dict[str, Any]) -> GraphConfig:
+    threshold = float(config["min_source_score"])
+    return GraphConfig(
+        retrieve_top_k=20,
+        min_source_score=threshold,
+        min_transcript_source_score=float(config.get("min_transcript_source_score", threshold)),
+        min_visual_source_score=float(config.get("min_visual_source_score", threshold)),
+        enable_hybrid_transcript=bool(config.get("enable_hybrid_transcript", False)),
+        enable_cross_encoder_rerank=bool(config.get("enable_cross_encoder_rerank", False)),
+        enable_query_rewrite=bool(config.get("enable_query_rewrite", False)),
+    )
+
+
+def _load_seed_bm25(rows: list[GoldenQuery]) -> BM25Encoder | None:
+    if not settings.s3_bucket:
+        return None
+
+    video_ids = {row.video_id for row in rows if row.video_id}
+    if len(video_ids) != 1:
+        return None
+
+    return BM25Encoder.load_from_s3(bucket=settings.s3_bucket, video_id=next(iter(video_ids)))
+
+
 def _query_output(
     row: GoldenQuery,
     response: SearchResponse,
@@ -141,6 +193,7 @@ def _query_output(
         "relevant_timestamps": row.relevant_timestamps,
         "response": {
             "intent": response.intent,
+            "rewritten_query": response.rewritten_query,
             "refused": response.refused,
             "confidence": response.confidence,
             "answer": response.answer,

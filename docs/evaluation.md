@@ -46,13 +46,29 @@ Primary config: `dense` with `min_source_score=0.2`.
 |---|---:|
 | Recall@5 | 1.0000 |
 | Recall@10 | 1.0000 |
-| MRR | 0.9583 |
-| Timestamp@5s | 0.9167 |
-| Timestamp@10s | 0.9167 |
-| Modality accuracy | 0.8333 |
+| MRR | 0.9028 |
+| Timestamp@5s | 0.8333 |
+| Timestamp@10s | 0.8333 |
+| Modality accuracy | 0.9167 |
 | No-answer precision | 1.0000 |
 | No-answer recall | 0.6667 |
 | No-answer F1 | 0.8000 |
+
+Real-seed ablation summary:
+
+| Config | Min source | Hybrid BM25 | Rerank | Rewrite | Recall@5 | Recall@10 | MRR | Timestamp@5s | Timestamp@10s | Modality acc | No-answer F1 |
+|---|---:|:---:|:---:|:---:|---:|---:|---:|---:|---:|---:|---:|
+| Dense only | 0.20 | No | No | No | 1.0000 | 1.0000 | 0.9028 | 0.8333 | 0.8333 | 0.9167 | 0.8000 |
+| Dense + loose gate | 0.05 | No | No | No | 1.0000 | 1.0000 | 0.9028 | 0.8333 | 0.8333 | 0.9167 | 0.5000 |
+| Dense + strict gate | 0.50 | No | No | No | 0.6667 | 0.6667 | 0.6111 | 0.5833 | 0.5833 | 0.6667 | 0.6000 |
+| Hybrid BM25 | 0.20 | Yes | No | No | 1.0000 | 1.0000 | 0.9028 | 0.8333 | 0.8333 | 0.9167 | 0.8000 |
+| Hybrid + rerank | 0.20 | Yes | Yes | No | 1.0000 | 1.0000 | 0.9583 | 0.9167 | 0.9167 | 0.9167 | 0.8000 |
+| Hybrid + rewrite | 0.20 | Yes | No | Yes | 1.0000 | 1.0000 | 0.8958 | 0.8333 | 0.8333 | 0.9167 | 0.5000 |
+
+Hybrid rows loaded BM25 stats from S3 (`bm25_loaded=true`). The seed video was
+originally indexed before sparse transcript vectors existed, so the seed
+transcript was backfilled from the existing S3 transcript artifact before this
+run.
 
 No-answer confusion matrix for the primary config:
 
@@ -69,13 +85,12 @@ No-answer confusion matrix for the primary config:
   final retrieval quality.
 - The primary config missed `q014` (`Show me a whiteboard diagram`) because visual
   retrieval returned the nearest available frame instead of refusing.
-- Sparse BM25, local reranking, query rewrite, and RAGAS are not part of this seed
-  run yet.
+- Query rewrite is intentionally reported as an ablation, not a claimed
+  improvement; on this tiny seed it reduced no-answer F1.
+- RAGAS / LLM judge metrics are not part of this seed run yet.
 
 ## Next Evaluation Work
 
 - Ingest and index more demo videos.
 - Expand the golden set toward 60-80 queries.
-- Add BM25 sparse transcript retrieval.
-- Add reranking and query rewrite configs.
 - Run RAGAS or an explicit Haiku judge pass on baseline and final configs only.
