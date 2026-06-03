@@ -145,8 +145,8 @@ def test_visual_query_routes_to_visual_index_only_with_video_filter():
     assert response.refused is False
     assert response.intent == "visual"
     assert response.answer == (
-        "The strongest visual match is around 0:00 in “Stop Dreaming and Start Doing | "
-        "Self-Sabotage”."
+        'The strongest visual match is around 0:00 in "Stop Dreaming and Start Doing | '
+        'Self-Sabotage".'
     )
     assert response.results[0].modality == "visual"
     assert visual.calls[0]["metadata_filter"] == {"video_id": {"$eq": "QkdBXUikRQc"}}
@@ -592,3 +592,34 @@ def test_confidence_scale_tracks_rrf_k_via_config():
     assert response.results
     assert response.results[0].score == 0.387
     assert response.confidence == 0.387
+
+
+def test_llm_refusal_answer_propagates_as_refused():
+    """When the LLM generates 'I could not find strong evidence', the pipeline
+    must propagate refused=True rather than silently returning a bad answer."""
+
+    class RefusingAnswerer:
+        def generate(self, *, query: str, context: str) -> str:
+            return (
+                "I could not find strong evidence for that in the indexed videos. "
+                "The video focuses on different topics."
+            )
+
+        def rewrite_query(self, *, query: str) -> str:
+            return query
+
+    pipeline = QueryPipeline(
+        embedder=FakeEmbedder(),
+        transcript_index=FakeIndex([_transcript_hit()]),
+        visual_index=FakeIndex([]),
+        answer_generator=RefusingAnswerer(),
+    )
+
+    response = pipeline.run(
+        SearchRequest(query="Does the self-sabotage video explain salary negotiation?")
+    )
+
+    assert response.refused is True
+    assert "could not find strong evidence" in response.answer.lower()
+    assert response.confidence == 0.0
+    assert response.results == []

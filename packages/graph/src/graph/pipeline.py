@@ -338,6 +338,11 @@ class QueryPipeline:
                 len(candidates),
             )
             answer = _extractive_answer(candidates[0])
+        # Honor the LLM's own weak-evidence signal. When the grounding prompt
+        # instructs Claude to say "I could not find strong evidence" and it does,
+        # propagate that as a refusal so the gate and UX stay consistent.
+        if _llm_refused(answer):
+            return {"refused": True, "answer": answer, "confidence": 0.0, "fused": []}
         return {"answer": answer, "refused": False}
 
     def _to_search_response(self, state: GraphState) -> SearchResponse:
@@ -419,8 +424,25 @@ def _scale_to_unit(value: float, scale: float) -> float:
 
 
 def _extractive_answer(top: RetrievalCandidate) -> str:
-    return f"{top.snippet} This appears around {_mmss(top.start_seconds)} in “{top.title}”."
+    return f'{top.snippet} This appears around {_mmss(top.start_seconds)} in "{top.title}".'
 
 
 def _visual_answer(top: RetrievalCandidate) -> str:
-    return f"The strongest visual match is around {_mmss(top.start_seconds)} in “{top.title}”."
+    return f'The strongest visual match is around {_mmss(top.start_seconds)} in "{top.title}".'
+
+
+# Phrases that indicate the LLM found no usable evidence despite passing the
+# retrieval gate. Matching them in the generated answer lets the pipeline honor
+# the model's own weak-evidence signal and propagate a refusal.
+_LLM_REFUSAL_PHRASES = (
+    "could not find strong evidence",
+    "i could not find",
+    "no strong evidence",
+    "not covered in the indexed",
+)
+
+
+def _llm_refused(answer: str) -> bool:
+    """Return True if the LLM answer signals it found no usable evidence."""
+    lower = answer.lower()
+    return any(phrase in lower for phrase in _LLM_REFUSAL_PHRASES)
