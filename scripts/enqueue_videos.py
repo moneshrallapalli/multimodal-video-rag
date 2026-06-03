@@ -4,7 +4,8 @@ Bypasses the admin API auth layer but uses the same code path the API uses.
 The Fargate worker picks up jobs from SQS identically.
 
 Usage:
-    uv run python scripts/enqueue_videos.py
+    uv run python scripts/enqueue_videos.py           # new videos only
+    uv run python scripts/enqueue_videos.py --force    # re-ingest all (resets existing jobs)
 """
 
 from __future__ import annotations
@@ -32,12 +33,15 @@ VIDEOS = [
     ("Th8JoIan4dg", "YC — How to Get and Evaluate Startup Ideas"),
     ("arj7oStGLkU", "Tim Urban — Inside the Mind of a Master Procrastinator (TED)"),
     ("uxPdPpi5W4o", "Veritasium — Why Are 96M Black Balls on This Reservoir?"),
+    ("QkdBXUikRQc", "Stop Dreaming and Start Doing | Self-Sabotage"),
+    ("as9IYFrTiKc", "A Real Sprint Review Meeting Example"),
+    ("DVtcZQ2QdBg", "10 Ways to Build an Unfair Advantage in Your 20s"),
 ]
 
 GSI_PARTITION = "all"
 
 
-def enqueue(video_id: str, label: str) -> str:
+def enqueue(video_id: str, label: str, *, force: bool = False) -> str:
     dynamodb = boto3.resource("dynamodb", region_name=settings.aws_region)
     sqs = boto3.client("sqs", region_name=settings.aws_region)
     table = dynamodb.Table(settings.dynamodb_jobs_table)
@@ -59,17 +63,20 @@ def enqueue(video_id: str, label: str) -> str:
         "gsi_partition": GSI_PARTITION,
     }
 
-    try:
-        table.put_item(
-            Item=item,
-            ConditionExpression="attribute_not_exists(job_id)",
-        )
-    except ClientError as exc:
-        if exc.response.get("Error", {}).get("Code") == "ConditionalCheckFailedException":
-            existing = table.get_item(Key={"job_id": job_id}).get("Item", {})
-            status = existing.get("status", "unknown")
-            return f"SKIP (already exists, status={status})"
-        raise
+    if force:
+        table.put_item(Item=item)
+    else:
+        try:
+            table.put_item(
+                Item=item,
+                ConditionExpression="attribute_not_exists(job_id)",
+            )
+        except ClientError as exc:
+            if exc.response.get("Error", {}).get("Code") == "ConditionalCheckFailedException":
+                existing = table.get_item(Key={"job_id": job_id}).get("Item", {})
+                status = existing.get("status", "unknown")
+                return f"SKIP (already exists, status={status})"
+            raise
 
     message = IngestJobMessage(
         job_id=job_id,
@@ -89,13 +96,15 @@ def main() -> None:
         print("ERROR: SQS_QUEUE_URL not set in .env", file=sys.stderr)
         sys.exit(1)
 
-    print(f"Enqueuing {len(VIDEOS)} videos to SQS...")
+    force = "--force" in sys.argv
+
+    print(f"Enqueuing {len(VIDEOS)} videos to SQS {'(FORCE re-ingest)' if force else ''}...")
     print(f"  Queue: {settings.sqs_queue_url}")
     print(f"  Jobs table: {settings.dynamodb_jobs_table}")
     print()
 
     for video_id, label in VIDEOS:
-        result = enqueue(video_id, label)
+        result = enqueue(video_id, label, force=force)
         print(f"  [{result:8s}] {video_id}  {label}")
 
     print()

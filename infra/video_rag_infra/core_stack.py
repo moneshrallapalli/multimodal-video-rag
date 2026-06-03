@@ -271,11 +271,16 @@ class CoreStack(Stack):
         rate_limits.grant_read_write_data(worker_role)
         ingest_queue.grant_consume_messages(worker_role)
         runtime_secret.grant_read(worker_role)
-        # Worker only needs Titan text + Titan multimodal embeddings for ingestion.
+        # Worker needs Titan embeddings for indexing and Claude Haiku for frame captioning.
         worker_role.add_to_policy(
             iam.PolicyStatement(
                 actions=["bedrock:InvokeModel"],
-                resources=[text_embed_arn, image_embed_arn],
+                resources=[
+                    llm_inference_profile_arn,
+                    llm_underlying_model_arn,
+                    text_embed_arn,
+                    image_embed_arn,
+                ],
             )
         )
 
