@@ -80,13 +80,13 @@ export function VideoFilter({
           >
             <span
               className={cn(
-                "flex size-4 shrink-0 items-center justify-center rounded border",
+                "flex size-5 shrink-0 items-center justify-center rounded border-2",
                 value.length === 0
                   ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border",
+                  : "border-muted-foreground/60",
               )}
             >
-              {value.length === 0 && <Check className="size-3" />}
+              {value.length === 0 && <Check className="size-3.5" strokeWidth={3} />}
             </span>
             All indexed videos ({indexed.length})
           </button>
@@ -108,13 +108,13 @@ export function VideoFilter({
               >
                 <span
                   className={cn(
-                    "flex size-4 shrink-0 items-center justify-center rounded border",
+                    "flex size-5 shrink-0 items-center justify-center rounded border-2",
                     selected
                       ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border",
+                      : "border-muted-foreground/60",
                   )}
                 >
-                  {selected && <Check className="size-3" />}
+                  {selected && <Check className="size-3.5" strokeWidth={3} />}
                 </span>
                 <span className="truncate">
                   {video.title}
