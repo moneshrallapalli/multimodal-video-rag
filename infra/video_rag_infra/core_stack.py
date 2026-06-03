@@ -322,7 +322,7 @@ class CoreStack(Stack):
             log_group=reranker_logs,
         )
         reranker_provisioned_concurrency = int(
-            os.environ.get("RERANKER_PROVISIONED_CONCURRENCY", "1")
+            os.environ.get("RERANKER_PROVISIONED_CONCURRENCY", "0")
         )
         if reranker_provisioned_concurrency > 0:
             reranker_invoke_target = lambda_.Alias(
