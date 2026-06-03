@@ -28,7 +28,10 @@ def main() -> None:
     processing = sum(1 for i in items if i.get("status") == "processing")
     failed = sum(1 for i in items if i.get("status") == "failed")
 
-    print(f"Jobs: {len(items)} total | {completed} completed | {processing} processing | {queued} queued | {failed} failed")
+    print(
+        f"Jobs: {len(items)} total | {completed} completed | "
+        f"{processing} processing | {queued} queued | {failed} failed"
+    )
     print()
 
     for item in items:
