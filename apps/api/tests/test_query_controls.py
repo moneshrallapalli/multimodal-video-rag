@@ -61,7 +61,7 @@ def test_cache_key_changes_with_search_config(monkeypatch):
     monkeypatch.setattr(settings, "search_config_version", "dense-v1")
     dense_key = cache_key_for(req)
 
-    monkeypatch.setattr(settings, "search_config_version", "hybrid-rerank-rewrite-v1")
+    monkeypatch.setattr(settings, "search_config_version", "hybrid-rewrite-v1")
 
     assert cache_key_for(req) != dense_key
 

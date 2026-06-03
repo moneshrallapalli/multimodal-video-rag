@@ -19,7 +19,7 @@ Transcript questions and visual questions follow different retrieval paths. For 
 
 The web app calls the API through same-origin rewrites. Search requests run through FastAPI and a 9-node LangGraph pipeline. Ingestion runs asynchronously through DynamoDB, SQS, EventBridge, and Fargate. Transcript vectors and visual vectors stay in separate Pinecone indexes because they use different models and scoring behavior. S3 keeps the derived artifacts, LangSmith traces the query pipeline, and CloudWatch tracks operational health.
 
-Runtime note: the API Lambda is sized at 2048 MB so CPU cross-encoder reranking has enough memory and compute headroom.
+Runtime note: the API Lambda is sized at 2048 MB to leave headroom for controlled CPU cross-encoder runs.
 
 Infrastructure is CDK in Python, with least-privilege IAM, Secrets Manager runtime config, VPC endpoints where they matter, and alarms for the paths that should wake someone up.
 
