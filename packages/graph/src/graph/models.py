@@ -53,6 +53,9 @@ class GraphConfig(BaseModel):
     # Cross-encoder reranking is CPU-heavy and requires sentence-transformers, so
     # keep it opt-in and bake the model into the API container image.
     enable_cross_encoder_rerank: bool = False
+    # Optional Haiku query rewrite used by the ablation harness. Off by default
+    # so the dense baseline keeps the original query path.
+    enable_query_rewrite: bool = False
     no_answer_message: str = (
         "I could not find strong evidence for that in the indexed videos. "
         "Try a more specific visual description or search within a single video."

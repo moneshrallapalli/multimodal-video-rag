@@ -39,13 +39,23 @@ class FakeIndex:
 
 
 class FakeAnswerer:
-    def __init__(self, answer: str = "Grounded answer with a timestamp around 1:15.") -> None:
+    def __init__(
+        self,
+        answer: str = "Grounded answer with a timestamp around 1:15.",
+        rewrite: str | None = None,
+    ) -> None:
         self.answer = answer
+        self.rewrite = rewrite
         self.calls = []
+        self.rewrite_calls = []
 
     def generate(self, *, query: str, context: str) -> str:
         self.calls.append({"query": query, "context": context})
         return self.answer
+
+    def rewrite_query(self, *, query: str) -> str:
+        self.rewrite_calls.append(query)
+        return self.rewrite or query
 
 
 class FakeCrossEncoderReranker:
@@ -355,6 +365,28 @@ def test_cross_encoder_rerank_reorders_fused_candidates_when_enabled():
     assert response.results[0].modality == "visual"
     assert response.results[0].rank == 1
     assert response.results[1].modality == "transcript"
+
+
+def test_query_rewrite_uses_rewritten_query_downstream_when_enabled():
+    from graph.models import GraphConfig
+
+    embedder = FakeEmbedder()
+    answerer = FakeAnswerer(rewrite="self sabotage fear of failure planning")
+    pipeline = QueryPipeline(
+        embedder=embedder,
+        transcript_index=FakeIndex([_transcript_hit()]),
+        visual_index=FakeIndex([]),
+        answer_generator=answerer,
+        config=GraphConfig(enable_query_rewrite=True),
+    )
+
+    response = pipeline.run(SearchRequest(query="why does she get stuck?", top_k=2))
+
+    assert response.rewritten_query == "self sabotage fear of failure planning"
+    assert answerer.rewrite_calls == ["why does she get stuck?"]
+    assert embedder.text_queries == ["self sabotage fear of failure planning"]
+    assert embedder.visual_queries == ["self sabotage fear of failure planning"]
+    assert answerer.calls[0]["query"] == "self sabotage fear of failure planning"
 
 
 def test_per_modality_gate_lets_transcript_pass_when_visual_below_threshold():

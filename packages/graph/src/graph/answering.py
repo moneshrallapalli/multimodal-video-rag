@@ -10,6 +10,7 @@ from shared import settings
 
 class AnswerGenerator(Protocol):
     def generate(self, *, query: str, context: str) -> str: ...
+    def rewrite_query(self, *, query: str) -> str: ...
 
 
 class BedrockAnswerGenerator:
@@ -26,15 +27,29 @@ class BedrockAnswerGenerator:
         self.model_id = model_id or settings.bedrock_llm_model_id
 
     def generate(self, *, query: str, context: str) -> str:
+        return self._invoke(
+            prompt=_prompt(query=query, context=context),
+            max_tokens=450,
+            temperature=0.1,
+        )
+
+    def rewrite_query(self, *, query: str) -> str:
+        return self._invoke(
+            prompt=_rewrite_prompt(query=query),
+            max_tokens=80,
+            temperature=0.0,
+        )
+
+    def _invoke(self, *, prompt: str, max_tokens: int, temperature: float) -> str:
         response = self.client.converse(
             modelId=self.model_id,
             messages=[
                 {
                     "role": "user",
-                    "content": [{"text": _prompt(query=query, context=context)}],
+                    "content": [{"text": prompt}],
                 }
             ],
-            inferenceConfig={"maxTokens": 450, "temperature": 0.1},
+            inferenceConfig={"maxTokens": max_tokens, "temperature": temperature},
         )
         return _extract_text(response).strip()
 
@@ -57,6 +72,15 @@ CONTEXT:
 
 ANSWER:
 """
+
+
+def _rewrite_prompt(*, query: str) -> str:
+    return (
+        "Rewrite this video search query to be more specific and lexically rich, "
+        "preserving intent.\n"
+        "Return only the rewritten query.\n\n"
+        f"QUERY:\n{query}\n"
+    )
 
 
 def _extract_text(response: dict[str, Any]) -> str:

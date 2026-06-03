@@ -106,6 +106,7 @@ class QueryPipeline:
         graph = StateGraph(GraphState)
         graph.add_node("validate_query", self._validate_query)
         graph.add_node("classify_intent", self._classify_intent)
+        graph.add_node("rewrite_query", self._rewrite_query)
         graph.add_node("retrieve_transcript", self._retrieve_transcript)
         graph.add_node("retrieve_visual", self._retrieve_visual)
         graph.add_node("fuse_results", self._fuse_results)
@@ -114,7 +115,8 @@ class QueryPipeline:
         graph.add_node("generate_answer", self._generate_answer)
         graph.set_entry_point("validate_query")
         graph.add_edge("validate_query", "classify_intent")
-        graph.add_edge("classify_intent", "retrieve_transcript")
+        graph.add_edge("classify_intent", "rewrite_query")
+        graph.add_edge("rewrite_query", "retrieve_transcript")
         graph.add_edge("retrieve_transcript", "retrieve_visual")
         graph.add_edge("retrieve_visual", "fuse_results")
         graph.add_edge("fuse_results", "apply_retrieval_gate")
@@ -167,17 +169,33 @@ class QueryPipeline:
             "should_retrieve_visual": retrieve_visual,
         }
 
+    def _rewrite_query(self, state: GraphState) -> GraphState:
+        if state.get("refused") or not self.config.enable_query_rewrite:
+            return {}
+
+        query = state["query"]
+        try:
+            rewritten = self.answer_generator.rewrite_query(query=query).strip()
+        except Exception:
+            logger.exception("query_rewrite_error query_len=%s", len(query))
+            return {}
+
+        if not rewritten:
+            return {}
+        return {"rewritten_query": rewritten}
+
     def _retrieve_transcript(self, state: GraphState) -> GraphState:
         if state.get("refused") or not state.get("should_retrieve_transcript"):
             return {"transcript_hits": []}
-        vector = self.embedder.embed_text(state["query"])
+        query = _active_query(state)
+        vector = self.embedder.embed_text(query)
         # Hybrid path: alpha-blend the dense vector with a BM25 sparse encoding
         # of the query. Falls through to pure dense when hybrid is disabled or
         # no BM25 encoder is configured (e.g. corpus not yet indexed).
         sparse_vector: dict[str, Any] | None = None
         query_vector = vector
         if self.config.enable_hybrid_transcript and self.transcript_bm25 is not None:
-            sparse = self.transcript_bm25.encode_query(state["query"])
+            sparse = self.transcript_bm25.encode_query(query)
             if sparse["indices"]:
                 query_vector, sparse_vector = hybrid_blend(
                     vector, sparse, alpha=self.config.hybrid_alpha
@@ -200,7 +218,8 @@ class QueryPipeline:
     def _retrieve_visual(self, state: GraphState) -> GraphState:
         if state.get("refused") or not state.get("should_retrieve_visual"):
             return {"visual_hits": []}
-        vector = self.embedder.embed_visual_query(state["query"])
+        query = _active_query(state)
+        vector = self.embedder.embed_visual_query(query)
         hits = self.visual_index.query(
             vector,
             top_k=self.config.retrieve_top_k,
@@ -218,15 +237,16 @@ class QueryPipeline:
     def _fuse_results(self, state: GraphState) -> GraphState:
         transcript = [_candidate(data) for data in state.get("transcript_hits", [])]
         visual = [_candidate(data) for data in state.get("visual_hits", [])]
+        query = _active_query(state)
         fused = reciprocal_rank_fusion(
             [transcript, visual],
             rrf_k=self.config.rrf_k,
         )
-        reranked = lexical_rerank(fused, query=state["query"])
+        reranked = lexical_rerank(fused, query=query)
         if self.config.enable_cross_encoder_rerank:
             reranked = cross_encoder_rerank(
                 reranked,
-                query=state["query"],
+                query=query,
                 reranker=self.cross_encoder_reranker,
             )
         reranked = reranked[: state.get("top_k", self.config.retrieve_top_k)]
@@ -239,6 +259,7 @@ class QueryPipeline:
         transcript_candidates = [_candidate(d) for d in state.get("transcript_hits", [])]
         visual_candidates = [_candidate(d) for d in state.get("visual_hits", [])]
         fused_candidates = [_candidate(data) for data in state.get("fused", [])]
+        query = _active_query(state)
 
         # Per-modality dense gate (transcript uses dotproduct, visual uses cosine;
         # the score distributions differ, so a single threshold across both
@@ -250,7 +271,7 @@ class QueryPipeline:
         )
         visual_passes = max_source_score(visual_candidates) >= (self.config.min_visual_source_score)
         has_dense_evidence = transcript_passes or visual_passes
-        has_text_evidence = has_lexical_evidence(fused_candidates, query=state["query"])
+        has_text_evidence = has_lexical_evidence(fused_candidates, query=query)
 
         if not fused_candidates or not (has_dense_evidence or has_text_evidence):
             return {
@@ -283,7 +304,7 @@ class QueryPipeline:
             return {"answer": _visual_answer(candidates[0]), "refused": False}
         try:
             answer = self.answer_generator.generate(
-                query=state["query"],
+                query=_active_query(state),
                 context=state.get("context", ""),
             )
         except Exception:
@@ -328,6 +349,10 @@ class QueryPipeline:
 
 def _candidate(data: dict[str, Any]) -> RetrievalCandidate:
     return RetrievalCandidate.model_validate(data)
+
+
+def _active_query(state: GraphState) -> str:
+    return state.get("rewritten_query") or state["query"]
 
 
 def _video_filter(video_id: str | None) -> dict[str, Any] | None:
