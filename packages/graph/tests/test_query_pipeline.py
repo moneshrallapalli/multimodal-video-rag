@@ -48,6 +48,16 @@ class FakeAnswerer:
         return self.answer
 
 
+class FakeCrossEncoderReranker:
+    def __init__(self, scores: list[float]) -> None:
+        self.scores = scores
+        self.calls = []
+
+    def predict(self, pairs):
+        self.calls.append(pairs)
+        return self.scores
+
+
 def _transcript_hit(score: float = 0.72) -> RetrievalHit:
     return RetrievalHit(
         id="QkdBXUikRQc:transcript:000004",
@@ -320,6 +330,31 @@ def test_hybrid_transcript_falls_back_to_dense_when_encoder_absent():
 
     pipeline.run(SearchRequest(query="self sabotage"))
     assert transcript.calls[0]["sparse_vector"] is None
+
+
+def test_cross_encoder_rerank_reorders_fused_candidates_when_enabled():
+    """The bge reranker is injected in tests so we never load the real model.
+    It runs after fusion and before the retrieval gate, preserving candidate
+    scores while updating rank order."""
+    from graph.models import GraphConfig
+
+    fake_reranker = FakeCrossEncoderReranker(scores=[0.1, 0.9])
+    pipeline = QueryPipeline(
+        embedder=FakeEmbedder(),
+        transcript_index=FakeIndex([_transcript_hit(score=0.5)]),
+        visual_index=FakeIndex([_visual_hit(score=0.4)]),
+        answer_generator=FakeAnswerer(),
+        config=GraphConfig(enable_cross_encoder_rerank=True),
+        cross_encoder_reranker=fake_reranker,
+    )
+
+    response = pipeline.run(SearchRequest(query="self sabotage", top_k=2))
+
+    assert len(fake_reranker.calls) == 1
+    assert len(fake_reranker.calls[0]) == 2
+    assert response.results[0].modality == "visual"
+    assert response.results[0].rank == 1
+    assert response.results[1].modality == "transcript"
 
 
 def test_per_modality_gate_lets_transcript_pass_when_visual_below_threshold():

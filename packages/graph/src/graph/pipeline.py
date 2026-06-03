@@ -15,6 +15,8 @@ from shared.schemas import QueryIntent, SearchRequest, SearchResponse, SearchRes
 from .answering import AnswerGenerator, BedrockAnswerGenerator
 from .models import GraphConfig, RetrievalCandidate
 from .retrieval import (
+    CrossEncoderReranker,
+    cross_encoder_rerank,
     has_lexical_evidence,
     lexical_rerank,
     max_source_score,
@@ -67,6 +69,7 @@ class QueryPipeline:
         answer_generator: AnswerGenerator | None = None,
         config: GraphConfig | None = None,
         transcript_bm25: BM25Encoder | None = None,
+        cross_encoder_reranker: CrossEncoderReranker | None = None,
     ) -> None:
         self.embedder = embedder or BedrockEmbedder()
         self.transcript_index = transcript_index or PineconeIndexClient.from_index_name(
@@ -85,6 +88,7 @@ class QueryPipeline:
         # is set, transcript queries blend dense + sparse via Pinecone hybrid.
         # Otherwise we fall back to dense-only — the same behavior as before.
         self.transcript_bm25 = transcript_bm25
+        self.cross_encoder_reranker = cross_encoder_reranker
         self.graph = self._build_graph()
 
     def run(self, request: SearchRequest) -> SearchResponse:
@@ -218,9 +222,14 @@ class QueryPipeline:
             [transcript, visual],
             rrf_k=self.config.rrf_k,
         )
-        reranked = lexical_rerank(fused, query=state["query"])[
-            : state.get("top_k", self.config.retrieve_top_k)
-        ]
+        reranked = lexical_rerank(fused, query=state["query"])
+        if self.config.enable_cross_encoder_rerank:
+            reranked = cross_encoder_rerank(
+                reranked,
+                query=state["query"],
+                reranker=self.cross_encoder_reranker,
+            )
+        reranked = reranked[: state.get("top_k", self.config.retrieve_top_k)]
         return {"fused": [candidate.model_dump() for candidate in reranked]}
 
     def _apply_retrieval_gate(self, state: GraphState) -> GraphState:

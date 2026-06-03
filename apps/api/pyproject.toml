@@ -13,11 +13,21 @@ dependencies = [
     "mangum>=0.19",
     "argon2-cffi>=23.1",
     "itsdangerous>=2.2",
+    "torch>=2.2",
+    "sentence-transformers>=3.0",
 ]
 
 [tool.uv.sources]
 graph = { workspace = true }
 shared = { workspace = true }
+torch = [
+    { index = "pytorch-cpu", marker = "platform_system == 'Linux'" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [build-system]
 requires = ["hatchling"]

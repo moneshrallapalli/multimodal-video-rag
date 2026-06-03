@@ -50,6 +50,9 @@ class GraphConfig(BaseModel):
     # alpha=1 → pure dense, alpha=0 → pure sparse. 0.7 is Pinecone's documented
     # default starting point; tune empirically via the eval harness.
     hybrid_alpha: float = 0.7
+    # Cross-encoder reranking is CPU-heavy and requires sentence-transformers, so
+    # keep it opt-in and bake the model into the API container image.
+    enable_cross_encoder_rerank: bool = False
     no_answer_message: str = (
         "I could not find strong evidence for that in the indexed videos. "
         "Try a more specific visual description or search within a single video."

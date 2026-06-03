@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, Protocol
 
 from shared.schemas import RetrievalHit
 
@@ -41,6 +41,12 @@ _STOPWORDS = {
     "where",
     "with",
 }
+_DEFAULT_CROSS_ENCODER_MODEL = "BAAI/bge-reranker-base"
+_CROSS_ENCODER_MODEL: Any | None = None
+
+
+class CrossEncoderReranker(Protocol):
+    def predict(self, sentences: Sequence[tuple[str, str]]) -> Sequence[float]: ...
 
 
 def transcript_candidate(hit: RetrievalHit, *, rank: int) -> RetrievalCandidate:
@@ -147,6 +153,31 @@ def lexical_rerank(
     ]
 
 
+def cross_encoder_rerank(
+    candidates: Sequence[RetrievalCandidate],
+    *,
+    query: str,
+    reranker: CrossEncoderReranker | None = None,
+) -> list[RetrievalCandidate]:
+    """Use a cross-encoder to reorder fused candidates without changing scores."""
+
+    if not candidates:
+        return []
+
+    model = reranker or _load_cross_encoder()
+    pairs = [(query, _rerank_text(candidate)) for candidate in candidates]
+    scores = [float(score) for score in model.predict(pairs)]
+    scored = [
+        (score, -index, candidate)
+        for index, (score, candidate) in enumerate(zip(scores, candidates, strict=True))
+    ]
+    scored.sort(key=lambda item: (item[0], item[1]), reverse=True)
+    return [
+        candidate.model_copy(update={"rank": rank})
+        for rank, (_, _, candidate) in enumerate(scored, start=1)
+    ]
+
+
 def max_source_score(candidates: Sequence[RetrievalCandidate]) -> float:
     return max((candidate.score for candidate in candidates), default=0.0)
 
@@ -190,6 +221,25 @@ def _combined_rerank_score(
     bigram_overlap = len(query_bigrams & text_bigrams)
     phrase_bonus = 0.04 if " ".join(query_terms) in " ".join(text_terms) else 0.0
     return candidate.score + (0.05 * overlap) + (0.025 * bigram_overlap) + phrase_bonus
+
+
+def _load_cross_encoder() -> Any:
+    global _CROSS_ENCODER_MODEL
+
+    if _CROSS_ENCODER_MODEL is None:
+        from sentence_transformers import CrossEncoder
+
+        _CROSS_ENCODER_MODEL = CrossEncoder(_DEFAULT_CROSS_ENCODER_MODEL)
+    return _CROSS_ENCODER_MODEL
+
+
+def _rerank_text(candidate: RetrievalCandidate) -> str:
+    return (
+        f"Title: {candidate.title}\n"
+        f"Modality: {candidate.modality}\n"
+        f"Timestamp: {_mmss(candidate.start_seconds)}\n"
+        f"Evidence: {candidate.snippet}"
+    )
 
 
 def _content_tokens(text: str) -> list[str]:
