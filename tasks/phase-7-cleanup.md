@@ -16,7 +16,7 @@ and can be committed separately.
 
 ## 🔴 P0 — Security (block public reveal)
 
-### [ ] T1. Refuse empty `session_secret` in deployed mode
+### [x] T1. Refuse empty `session_secret` in deployed mode  ✅ `f835dc7`
 
 **File:** `apps/api/src/api/auth.py` line ~25
 **Why:** Production fallback to `"dev-only-insecure-secret"` makes admin cookies
@@ -37,7 +37,7 @@ def _serializer() -> URLSafeTimedSerializer:
 
 ---
 
-### [ ] T2. Scope `bedrock:InvokeModel` and `ecs:RunTask` IAM to specific ARNs
+### [x] T2. Scope `bedrock:InvokeModel` and `ecs:RunTask` IAM to specific ARNs  ✅ `93c0da5`
 
 **File:** `infra/video_rag_infra/core_stack.py` lines 218-221, 240-245, 403-408
 **Why:** `Resource: "*"` with literal `# TODO` comment is the first thing a recruiter
@@ -55,7 +55,7 @@ spots; least-privilege violation.
 
 ## 🟠 P1 — Correctness bugs
 
-### [ ] T3. Fix off-by-half-interval frame timestamps
+### [x] T3. Fix off-by-half-interval frame timestamps  ✅ `baf607f`
 
 **File:** `workers/ingest/src/ingest/media.py` lines 97-117
 **Why:** `ffmpeg -vf fps=1/30` picks frames from the midpoint of each window
@@ -80,7 +80,7 @@ first-frame timestamp != 0.
 
 ---
 
-### [ ] T4. Bake the confidence/score scaling constant into config
+### [x] T4. Bake the confidence/score scaling constant into config  ✅ `db45438`
 
 **Files:** `packages/graph/src/graph/pipeline.py` lines 221, 268
 **Why:** `* 24` is empirically tuned for `rrf_k=60`. Untested, silently breaks if
@@ -94,7 +94,7 @@ explaining "calibrated for rrf_k=60". Replace both inline `* 24` with
 
 ---
 
-### [ ] T5. Log + emit metric on bare-except branches
+### [x] T5. Log + emit metric on bare-except branches  ✅ `3cc678d`
 
 **Files:**
 - `apps/api/src/api/search_service.py` lines 22-32
@@ -112,7 +112,7 @@ fallback. Operationally indistinguishable from "evidence weak" on the dashboard.
 
 ---
 
-### [ ] T6. Per-metric score gating for the refusal gate
+### [x] T6. Per-metric score gating for the refusal gate  ✅ `a1176a0`
 
 **File:** `packages/graph/src/graph/pipeline.py` lines 203-221, `models.py`
 **Why:** Single `min_source_score=0.2` threshold across dotproduct (transcript)
@@ -130,7 +130,7 @@ and asserts the correct modality wins. Existing tests stay green.
 
 ## 🟡 P2 — Operations / hardening
 
-### [ ] T7. Idempotency short-circuit at top of `IngestionWorker.process()`
+### [x] T7. Idempotency short-circuit at top of `IngestionWorker.process()`  ✅ `d6c2e24`
 
 **File:** `workers/ingest/src/ingest/pipeline.py` line 41
 **Why:** SQS at-least-once delivery: a redelivered completed job re-downloads,
@@ -143,7 +143,7 @@ log and return without raising (so SQS deletes the message).
 
 ---
 
-### [ ] T8. Add retry + jitter to Pinecone HTTP calls
+### [x] T8. Add retry + jitter to Pinecone HTTP calls  ✅ `3dad8f3`
 
 **File:** `packages/shared/src/shared/pinecone_client.py` lines 83-100
 **Why:** Single transient 5xx + bare except = silent no-answer on a network blip.
@@ -156,7 +156,7 @@ with a mock that errors once then succeeds.
 
 ---
 
-### [ ] T9. Stop buffering ffmpeg output in memory
+### [x] T9. Stop buffering ffmpeg output in memory  ✅ `b20d1cc`
 
 **File:** `workers/ingest/src/ingest/media.py` line 150-152
 **Why:** `capture_output=True` keeps all stdout+stderr in RAM; ffmpeg progress
@@ -169,7 +169,7 @@ stderr=subprocess.PIPE)` — drop stdout, keep stderr (truncated) for diagnostic
 
 ---
 
-### [ ] T10. Assert Pinecone index metric matches expectation
+### [x] T10. Assert Pinecone index metric matches expectation  ✅ `21aa7fc`
 
 **File:** `packages/shared/src/shared/pinecone_client.py` line 41 area
 **Why:** `info.metric` is captured but never validated. A future operator could
@@ -338,8 +338,16 @@ Add entries for:
 
 ## Status snapshot (updated as items complete)
 
-- ✅ Done: —
-- 🚧 In progress: —
-- ⏳ Remaining: T1 — T20
+- ✅ Done: T1, T2, T3, T4, T5, T6, T7, T8, T9, T10  (10 / 20) — halfway
+- 🚧 In progress: T11
+- ⏳ Remaining: T11 — T20
 
-Last commit pushed: (none yet from this phase)
+Last commit pushed: `21aa7fc` (T10)
+
+**Quick stats (Phase 7 so far):**
+- 66 tests passing (was 51 before this phase)
+- Python lint+format clean repo-wide
+- Web lint+typecheck+build clean
+- IAM tightened, frame timestamps fixed, ×24 magic constant codified, per-modality
+  gating live, ingestion idempotent, Pinecone retries, ffmpeg memory bug fixed,
+  index metric assertion in place
