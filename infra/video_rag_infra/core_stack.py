@@ -200,6 +200,29 @@ class CoreStack(Stack):
             key: value for key, value in runtime_environment.items() if key != "AWS_REGION"
         }
 
+        # Bedrock model ARNs for least-privilege IAM. Claude Haiku 4.5 uses a
+        # cross-region inference profile (global.*) that lives in the caller's
+        # account; invoke also requires permission on the underlying foundation
+        # models the profile fans out to (anthropic.claude-haiku-4-5*).
+        llm_model_id = runtime_environment["BEDROCK_LLM_MODEL_ID"]
+        text_embed_model_id = runtime_environment["BEDROCK_TEXT_EMBED_MODEL_ID"]
+        image_embed_model_id = runtime_environment["BEDROCK_IMAGE_EMBED_MODEL_ID"]
+
+        def _foundation_model_arn(model_id: str) -> str:
+            # Foundation-model ARNs are region-scoped with no account segment.
+            return f"arn:aws:bedrock:{self.region}::foundation-model/{model_id}"
+
+        llm_inference_profile_arn = (
+            f"arn:aws:bedrock:{self.region}:{self.account}:inference-profile/{llm_model_id}"
+        )
+        # The Haiku 4.5 global inference profile fans out to per-region foundation
+        # models; allow the underlying Anthropic Haiku 4.5 model family.
+        llm_underlying_model_arn = (
+            "arn:aws:bedrock:*::foundation-model/anthropic.claude-haiku-4-5-*"
+        )
+        text_embed_arn = _foundation_model_arn(text_embed_model_id)
+        image_embed_arn = _foundation_model_arn(image_embed_model_id)
+
         # IAM role for the ingestion worker (ECS Fargate task role).
         worker_role = iam.Role(
             self,
@@ -213,10 +236,11 @@ class CoreStack(Stack):
         rate_limits.grant_read_write_data(worker_role)
         ingest_queue.grant_consume_messages(worker_role)
         runtime_secret.grant_read(worker_role)
+        # Worker only needs Titan text + Titan multimodal embeddings for ingestion.
         worker_role.add_to_policy(
             iam.PolicyStatement(
                 actions=["bedrock:InvokeModel"],
-                resources=["*"],  # TODO: scope to the Titan model ARNs
+                resources=[text_embed_arn, image_embed_arn],
             )
         )
 
@@ -237,10 +261,18 @@ class CoreStack(Stack):
         rate_limits.grant_read_write_data(api_role)
         ingest_queue.grant_send_messages(api_role)
         runtime_secret.grant_read(api_role)
+        # API invokes the Claude Haiku 4.5 cross-region inference profile (which
+        # requires the profile ARN AND the underlying foundation models it routes
+        # to) plus Titan text + image embeddings for retrieval.
         api_role.add_to_policy(
             iam.PolicyStatement(
                 actions=["bedrock:InvokeModel"],
-                resources=["*"],  # TODO: scope to the Claude/Titan model ARNs
+                resources=[
+                    llm_inference_profile_arn,
+                    llm_underlying_model_arn,
+                    text_embed_arn,
+                    image_embed_arn,
+                ],
             )
         )
 
@@ -400,10 +432,23 @@ def handler(event, context):
             },
         )
         ingest_queue.grant(dispatcher, "sqs:GetQueueAttributes")
+        # ListTasks is scoped via the cluster condition; RunTask is scoped to the
+        # specific task-definition family (any revision).
+        task_def_family_arn = (
+            f"arn:aws:ecs:{self.region}:{self.account}:task-definition/{worker_task.family}:*"
+        )
         dispatcher.add_to_role_policy(
             iam.PolicyStatement(
-                actions=["ecs:ListTasks", "ecs:RunTask"],
+                actions=["ecs:ListTasks"],
                 resources=["*"],
+                conditions={"ArnEquals": {"ecs:cluster": cluster.cluster_arn}},
+            )
+        )
+        dispatcher.add_to_role_policy(
+            iam.PolicyStatement(
+                actions=["ecs:RunTask"],
+                resources=[task_def_family_arn],
+                conditions={"ArnEquals": {"ecs:cluster": cluster.cluster_arn}},
             )
         )
         dispatcher.add_to_role_policy(
