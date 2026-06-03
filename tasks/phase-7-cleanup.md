@@ -288,7 +288,7 @@ on transcript query).
 
 ---
 
-### [ ] T17. bge-reranker rerank stage
+### [x] T17. bge-reranker rerank stage  ✅ `8051567`
 
 **Files:** `packages/graph/src/graph/retrieval.py` (add `cross_encoder_rerank`
 alongside the existing `lexical_rerank`), `apps/api/pyproject.toml` (add
@@ -300,7 +300,7 @@ alongside the existing `lexical_rerank`), `apps/api/pyproject.toml` (add
 - Bake model into image: `RUN python -c "from sentence_transformers import CrossEncoder; CrossEncoder('BAAI/bge-reranker-base')"`.
 - Toggle via `GraphConfig.enable_cross_encoder_rerank`.
 **Commit:** `feat(graph): bge-reranker rerank stage`
-**Status:** not started
+**Status:** shipped
 
 ---
 
@@ -347,21 +347,20 @@ Add entries for:
 
 ## Status snapshot (updated as items complete)
 
-- ✅ Done: T1–T16  (16 / 20) — 80% complete
-- 🚧 In progress: T17 (bge-reranker rerank stage)
-- ⏳ Remaining: T17 (rerank), T18 (query rewrite), T19 (re-run eval), T20 (lessons)
+- ✅ Done: T1–T17  (17 / 20) — 85% complete
+- 🚧 In progress: T18 (query rewrite node)
+- ⏳ Remaining: T18 (query rewrite), T19 (re-run eval), T20 (lessons)
 
-Last commit pushed: `8fb5276` (T16 final)
+Last commit pushed: `8051567` (T17)
 
 **Quick stats (Phase 7 so far):**
-- **83 tests passing** (was 51 before this phase) — +32 new tests
+- **84 tests passing** (was 51 before this phase) — +33 new tests
 - Python lint+format clean repo-wide
 - Web lint+typecheck+build clean
 - All P0 (security), P1 (correctness), and P2 (ops/hardening) items shipped
 - T16 (BM25 hybrid retrieval) shipped end-to-end across 4 commits
 
-**Remaining work is the rest of the §24.1 ablation:** bge-reranker (T17) and
-query-rewrite (T18). Each is independent. Then re-run eval (T19) and capture
-audit lessons (T20). T17 needs sentence-transformers (~500MB) baked into the
-API image — that's the chunky one. T18 is small (one Bedrock Haiku call before
-retrieval).
+**Remaining work is the rest of the §24.1 ablation:** query-rewrite (T18),
+then re-run eval (T19) and capture audit lessons (T20). T17's API Docker image
+build passed with `sentence-transformers` and the `BAAI/bge-reranker-base`
+model baked into the image.
