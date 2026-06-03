@@ -7,8 +7,9 @@ from typing import Any
 
 from langgraph.graph import END, StateGraph
 from shared import settings
+from shared.bm25 import BM25Encoder
 from shared.embedding import BedrockEmbedder
-from shared.pinecone_client import PineconeIndexClient
+from shared.pinecone_client import PineconeIndexClient, hybrid_blend
 from shared.schemas import QueryIntent, SearchRequest, SearchResponse, SearchResult
 
 from .answering import AnswerGenerator, BedrockAnswerGenerator
@@ -65,6 +66,7 @@ class QueryPipeline:
         visual_index: Any | None = None,
         answer_generator: AnswerGenerator | None = None,
         config: GraphConfig | None = None,
+        transcript_bm25: BM25Encoder | None = None,
     ) -> None:
         self.embedder = embedder or BedrockEmbedder()
         self.transcript_index = transcript_index or PineconeIndexClient.from_index_name(
@@ -79,6 +81,10 @@ class QueryPipeline:
         )
         self.answer_generator = answer_generator or BedrockAnswerGenerator()
         self.config = config or GraphConfig()
+        # When a BM25 encoder is provided AND `config.enable_hybrid_transcript`
+        # is set, transcript queries blend dense + sparse via Pinecone hybrid.
+        # Otherwise we fall back to dense-only — the same behavior as before.
+        self.transcript_bm25 = transcript_bm25
         self.graph = self._build_graph()
 
     def run(self, request: SearchRequest) -> SearchResponse:
@@ -161,10 +167,22 @@ class QueryPipeline:
         if state.get("refused") or not state.get("should_retrieve_transcript"):
             return {"transcript_hits": []}
         vector = self.embedder.embed_text(state["query"])
+        # Hybrid path: alpha-blend the dense vector with a BM25 sparse encoding
+        # of the query. Falls through to pure dense when hybrid is disabled or
+        # no BM25 encoder is configured (e.g. corpus not yet indexed).
+        sparse_vector: dict[str, Any] | None = None
+        query_vector = vector
+        if self.config.enable_hybrid_transcript and self.transcript_bm25 is not None:
+            sparse = self.transcript_bm25.encode_query(state["query"])
+            if sparse["indices"]:
+                query_vector, sparse_vector = hybrid_blend(
+                    vector, sparse, alpha=self.config.hybrid_alpha
+                )
         hits = self.transcript_index.query(
-            vector,
+            query_vector,
             top_k=self.config.retrieve_top_k,
             metadata_filter=_video_filter(state.get("video_id")),
+            sparse_vector=sparse_vector,
         )
         return {
             "transcript_hits": [

@@ -42,6 +42,14 @@ class GraphConfig(BaseModel):
     # both modality lists scores ≈ 0.033 → 0.79 displayed. If you change rrf_k,
     # rescale this too (rule of thumb: confidence_scale ≈ (rrf_k + 1) / 2.5).
     confidence_scale: float = 24.0
+    # Hybrid transcript retrieval: dense Titan + sparse BM25 on the transcript
+    # index. Off by default for back-compat with the dense baseline. When on, a
+    # BM25Encoder must be passed to the pipeline; otherwise we silently fall
+    # back to dense-only for that query.
+    enable_hybrid_transcript: bool = False
+    # alpha=1 → pure dense, alpha=0 → pure sparse. 0.7 is Pinecone's documented
+    # default starting point; tune empirically via the eval harness.
+    hybrid_alpha: float = 0.7
     no_answer_message: str = (
         "I could not find strong evidence for that in the indexed videos. "
         "Try a more specific visual description or search within a single video."

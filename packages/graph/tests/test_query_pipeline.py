@@ -25,13 +25,14 @@ class FakeIndex:
         self.hits = hits
         self.calls = []
 
-    def query(self, vector, *, top_k, metadata_filter=None, namespace=None):
+    def query(self, vector, *, top_k, metadata_filter=None, namespace=None, sparse_vector=None):
         self.calls.append(
             {
                 "vector": vector,
                 "top_k": top_k,
                 "metadata_filter": metadata_filter,
                 "namespace": namespace,
+                "sparse_vector": sparse_vector,
             }
         )
         return self.hits
@@ -274,6 +275,51 @@ def test_scale_to_unit_helper_and_default_confidence_calibration():
     assert _scale_to_unit(0.0, 24.0) == 0.0
     assert _scale_to_unit(1.0, 24.0) == 1.0
     assert _scale_to_unit(-0.1, 24.0) == 0.0
+
+
+def test_hybrid_transcript_blends_dense_and_sparse_vectors_when_enabled():
+    """When hybrid is enabled and an encoder is provided, the transcript query
+    must send a `sparse_vector` to Pinecone (alpha-blended with the dense vector).
+    When disabled, the query stays dense-only — preserving the v1 baseline."""
+    from graph.models import GraphConfig
+    from shared.bm25 import BM25Encoder
+
+    encoder = BM25Encoder.fit(["sabotage is fear of starting", "comfort zone blocks growth"])
+    transcript = FakeIndex([_transcript_hit()])
+    pipeline = QueryPipeline(
+        embedder=FakeEmbedder(),
+        transcript_index=transcript,
+        visual_index=FakeIndex([]),
+        answer_generator=FakeAnswerer(),
+        config=GraphConfig(enable_hybrid_transcript=True, hybrid_alpha=0.7),
+        transcript_bm25=encoder,
+    )
+
+    pipeline.run(SearchRequest(query="fear of starting"))
+
+    call = transcript.calls[0]
+    assert call["sparse_vector"] is not None
+    assert call["sparse_vector"]["indices"]
+    assert call["sparse_vector"]["values"]
+
+
+def test_hybrid_transcript_falls_back_to_dense_when_encoder_absent():
+    """Toggling hybrid on without supplying a BM25 encoder must NOT blow up —
+    we silently fall back to dense so the demo keeps working pre-deploy."""
+    from graph.models import GraphConfig
+
+    transcript = FakeIndex([_transcript_hit()])
+    pipeline = QueryPipeline(
+        embedder=FakeEmbedder(),
+        transcript_index=transcript,
+        visual_index=FakeIndex([]),
+        answer_generator=FakeAnswerer(),
+        config=GraphConfig(enable_hybrid_transcript=True),
+        # transcript_bm25 deliberately omitted
+    )
+
+    pipeline.run(SearchRequest(query="self sabotage"))
+    assert transcript.calls[0]["sparse_vector"] is None
 
 
 def test_per_modality_gate_lets_transcript_pass_when_visual_below_threshold():

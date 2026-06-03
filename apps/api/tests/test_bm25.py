@@ -70,3 +70,34 @@ def test_stopwords_and_short_tokens_are_ignored():
     assert _hash_index("speaker") in encoded["indices"]
     assert _hash_index("the") not in encoded["indices"]
     assert _hash_index("a") not in encoded["indices"]
+
+
+def test_load_from_s3_returns_none_on_missing_artifact():
+    """Videos indexed before BM25 was wired up have no bm25_stats.json. The
+    loader must return None rather than raising so the pipeline can fall back."""
+    import io
+
+    class S3Stub:
+        def get_object(self, **kwargs):
+            raise RuntimeError("404 NoSuchKey")
+
+    assert BM25Encoder.load_from_s3(bucket="b", video_id="vid", s3_client=S3Stub()) is None
+
+    class S3WithObject:
+        def __init__(self, payload: str):
+            self._payload = payload
+
+        def get_object(self, **kwargs):
+            return {"Body": io.BytesIO(self._payload.encode("utf-8"))}
+
+    encoder = BM25Encoder.fit(["alpha beta gamma", "beta gamma delta"])
+    import json
+
+    loaded = BM25Encoder.load_from_s3(
+        bucket="b",
+        video_id="vid",
+        s3_client=S3WithObject(json.dumps(encoder.to_dict())),
+    )
+    assert loaded is not None
+    assert loaded.n_docs == encoder.n_docs
+    assert loaded.encode_document("alpha")["indices"] == encoder.encode_document("alpha")["indices"]

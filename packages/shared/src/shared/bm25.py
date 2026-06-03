@@ -188,3 +188,33 @@ class BM25Encoder:
             b=float(data.get("b", _DEFAULT_B)),
             vocab_size=int(data.get("vocab_size", _HASH_VOCAB_SIZE)),
         )
+
+    @classmethod
+    def load_from_s3(
+        cls, *, bucket: str, video_id: str, s3_client: Any | None = None
+    ) -> BM25Encoder | None:
+        """Load a fitted encoder from the standard ingestion artifact location.
+
+        Returns None when the stats file is missing (e.g. video indexed before
+        BM25 was introduced), so callers can fall back to dense-only retrieval
+        without blowing up.
+        """
+        import json
+
+        if s3_client is None:
+            import boto3
+
+            s3_client = boto3.client("s3")
+
+        # Lazy-import to avoid circular dep with shared.ingestion.
+        from .ingestion import bm25_stats_key
+
+        try:
+            response = s3_client.get_object(Bucket=bucket, Key=bm25_stats_key(video_id))
+        except Exception:
+            return None
+        try:
+            payload = json.loads(response["Body"].read().decode("utf-8"))
+        except Exception:
+            return None
+        return cls.from_dict(payload)
