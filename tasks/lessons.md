@@ -25,6 +25,22 @@ Engineering gotchas hit while building this repo, with the rule to avoid repeati
 - **CI runs `ruff format --check`, not just `ruff check`.** Rule: after editing Python files, run
   both commands locally before pushing, especially after CDK/deploy config changes.
 
+## Audit / production hardening
+
+- **Magic constants in retrieval scoring drift silently.** Rule: put scoring constants in
+  `GraphConfig` and add a test that pins the conversion they control.
+- **Bare `except` branches are operational blindness.** Rule: when falling back for UX resilience,
+  log a structured error and emit/count a metric so outages are visible.
+- **One retrieval threshold cannot govern two similarity metrics.** Rule: dotproduct transcript
+  scores and cosine visual scores need separate thresholds, even if the defaults start equal.
+- **`ffmpeg -vf fps=1/N` samples frames from inside each time window, not exactly from `t=0`.**
+  Rule: timestamp extracted frames at the window midpoint unless using a seek strategy that proves
+  otherwise.
+- **Cookie `samesite` should match the actual browser topology.** Rule: if prod browser calls go
+  through same-origin Vercel rewrites, use `lax`; only use `none` for real cross-site browser calls.
+- **SQS delivery is at-least-once.** Rule: every worker handler starts with an idempotency
+  short-circuit before doing downloads, embeds, writes, or other expensive side effects.
+
 ## Framework
 
 - **shadcn `sonner.tsx` imports `next-themes`.** If you aren't using a theme provider, simplify it
