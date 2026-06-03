@@ -69,8 +69,7 @@ class Settings(BaseSettings):
 
     # Local dev / CORS (comma-separated origins allowed to call the API)
     cors_allow_origins: str = (
-        "http://localhost:3000,http://127.0.0.1:3000,"
-        "https://multimodal-video-rag-web.vercel.app"
+        "http://localhost:3000,http://127.0.0.1:3000,https://multimodal-video-rag-web.vercel.app"
     )
 
     # Public query cost controls. Disabled unless tables are configured.

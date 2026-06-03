@@ -62,10 +62,7 @@ from constructs import Construct
 def _cors_origins() -> list[str]:
     configured = os.environ.get(
         "CORS_ALLOW_ORIGINS",
-        (
-            "http://localhost:3000,http://127.0.0.1:3000,"
-            "https://multimodal-video-rag-web.vercel.app"
-        ),
+        ("http://localhost:3000,http://127.0.0.1:3000,https://multimodal-video-rag-web.vercel.app"),
     )
     return [origin.strip() for origin in configured.split(",") if origin.strip()]
 
