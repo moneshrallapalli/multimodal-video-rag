@@ -256,7 +256,16 @@ cleanup plan.
 
 ## 🟢 P3 — Larger architectural fills (real ablation honesty)
 
-### [ ] T16. BM25 sparse transcript retrieval (hybrid config)
+### [x] T16. BM25 sparse transcript retrieval (hybrid config)  ✅ (4 commits)
+
+Shipped:
+- `d07a68f` — pure-python BM25 encoder + tests
+- `bbd3fb3` — pinecone sparse vector + hybrid_blend helper
+- `5044977` — worker fits BM25 + upserts sparse vectors + persists stats to S3
+- `8fb5276` — graph pipeline blends dense+sparse when enabled; loader from S3
+
+Off by default (`GraphConfig.enable_hybrid_transcript=False`). Toggle on in the
+eval harness to see hybrid vs dense in the ablation chart.
 
 **Files:** `packages/shared/src/shared/pinecone_client.py` (sparse vector support),
 worker `workers/ingest/src/ingest/indexing.py` (fit BM25 encoder + upsert sparse
@@ -338,22 +347,21 @@ Add entries for:
 
 ## Status snapshot (updated as items complete)
 
-- ✅ Done: T1–T15  (15 / 20) — 75% complete
-- 🚧 In progress: T16 (hybrid sparse retrieval)
-- ⏳ Remaining: T16, T17, T18 (the P3 ablation fills), T19 (re-run eval), T20 (lessons)
+- ✅ Done: T1–T16  (16 / 20) — 80% complete
+- 🚧 In progress: T17 (bge-reranker rerank stage)
+- ⏳ Remaining: T17 (rerank), T18 (query rewrite), T19 (re-run eval), T20 (lessons)
 
-Last commit pushed: `2158ddc` (T15)
+Last commit pushed: `8fb5276` (T16 final)
 
 **Quick stats (Phase 7 so far):**
-- 68 tests passing (was 51 before this phase) — +17 new tests
+- **83 tests passing** (was 51 before this phase) — +32 new tests
 - Python lint+format clean repo-wide
 - Web lint+typecheck+build clean
-- All P0 (security) and P1 (correctness) items shipped
-- All P2 (ops/hardening) items shipped
-- Remaining work is the P3 retrieval ablation (BM25 hybrid + bge-reranker +
-  query-rewrite), then re-run eval + lessons update.
+- All P0 (security), P1 (correctness), and P2 (ops/hardening) items shipped
+- T16 (BM25 hybrid retrieval) shipped end-to-end across 4 commits
 
-**P3 note:** T16/T17/T18 are the substantive AI/ML upgrades. They're independent
-work — each can be shipped or deferred without blocking the others. Recommend
-shipping T16 (BM25 hybrid) at minimum before re-running eval (T19), since the
-single-config seed eval already has the dense baseline.
+**Remaining work is the rest of the §24.1 ablation:** bge-reranker (T17) and
+query-rewrite (T18). Each is independent. Then re-run eval (T19) and capture
+audit lessons (T20). T17 needs sentence-transformers (~500MB) baked into the
+API image — that's the chunky one. T18 is small (one Bedrock Haiku call before
+retrieval).
