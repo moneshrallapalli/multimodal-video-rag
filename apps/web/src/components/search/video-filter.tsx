@@ -83,7 +83,7 @@ export function VideoFilter({
                 "flex size-5 shrink-0 items-center justify-center rounded border-2",
                 value.length === 0
                   ? "border-primary bg-primary text-primary-foreground"
-                  : "border-muted-foreground/60",
+                  : "border-neutral-400",
               )}
             >
               {value.length === 0 && <Check className="size-3.5" strokeWidth={3} />}
@@ -111,7 +111,7 @@ export function VideoFilter({
                     "flex size-5 shrink-0 items-center justify-center rounded border-2",
                     selected
                       ? "border-primary bg-primary text-primary-foreground"
-                      : "border-muted-foreground/60",
+                      : "border-neutral-400",
                   )}
                 >
                   {selected && <Check className="size-3.5" strokeWidth={3} />}
