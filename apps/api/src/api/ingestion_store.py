@@ -18,6 +18,11 @@ from shared.schemas import IngestJobMessage, IngestResponse, Job, JobsResponse
 
 from . import mock_data
 
+# Constant GSI partition value: keeps all jobs in one queryable bucket without
+# needing an extra dimension. Fine at the demo's scale (≤ low hundreds of jobs).
+_JOBS_GSI_PARTITION = "all"
+_JOBS_GSI_NAME = "JobsByCreatedAt"
+
 
 def _is_duplicate_job_error(exc: ClientError) -> bool:
     return exc.response.get("Error", {}).get("Code") == "ConditionalCheckFailedException"
@@ -54,7 +59,22 @@ class DynamoIngestionStore:
         self._queue_url = queue_url
 
     def list_jobs(self) -> JobsResponse:
-        response = self._jobs_table.scan(Limit=100)
+        # Query the JobsByCreatedAt GSI to get newest-first ordering with a
+        # bounded result set. Fall back to scan if the GSI doesn't exist yet
+        # (e.g. an older deployed stack); the fallback can be removed once all
+        # environments have been redeployed with T12 infra.
+        try:
+            response = self._jobs_table.query(
+                IndexName=_JOBS_GSI_NAME,
+                KeyConditionExpression="gsi_partition = :p",
+                ExpressionAttributeValues={":p": _JOBS_GSI_PARTITION},
+                ScanIndexForward=False,
+                Limit=100,
+            )
+        except ClientError as exc:
+            if exc.response.get("Error", {}).get("Code") != "ValidationException":
+                raise
+            response = self._jobs_table.scan(Limit=100)
         jobs = [_item_to_job(item) for item in response.get("Items", [])]
         jobs.sort(key=lambda job: job.created_at, reverse=True)
         return JobsResponse(jobs=jobs)
@@ -73,6 +93,8 @@ class DynamoIngestionStore:
             "created_at": now,
             "updated_at": now,
             "error": None,
+            # GSI partition: all jobs in one queryable bucket; sort key is created_at.
+            "gsi_partition": _JOBS_GSI_PARTITION,
         }
 
         try:

@@ -112,6 +112,17 @@ class CoreStack(Stack):
             billing_mode=ddb.BillingMode.PAY_PER_REQUEST,
             removal_policy=RemovalPolicy.DESTROY,
         )
+        # Listing jobs by creation order requires a GSI; raw scans return scan
+        # order and silently shadow newer jobs past Limit. All items share a
+        # constant partition value ("all") since the demo never exceeds a few
+        # hundred jobs — a single hot partition is fine for that scale, and the
+        # sort key gives us proper descending pagination by created_at.
+        jobs.add_global_secondary_index(
+            index_name="JobsByCreatedAt",
+            partition_key=ddb.Attribute(name="gsi_partition", type=ddb.AttributeType.STRING),
+            sort_key=ddb.Attribute(name="created_at", type=ddb.AttributeType.STRING),
+            projection_type=ddb.ProjectionType.ALL,
+        )
         query_cache = ddb.Table(
             self,
             "QueryCache",

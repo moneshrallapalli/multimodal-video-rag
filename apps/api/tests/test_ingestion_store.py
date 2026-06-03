@@ -31,6 +31,25 @@ class FakeJobsTable:
         assert Limit == 100
         return {"Items": list(self.items.values())}
 
+    def query(
+        self,
+        *,
+        IndexName: str,
+        KeyConditionExpression: str,
+        ExpressionAttributeValues: dict[str, Any],
+        ScanIndexForward: bool,
+        Limit: int,
+    ) -> dict[str, Any]:
+        assert IndexName == "JobsByCreatedAt"
+        assert KeyConditionExpression == "gsi_partition = :p"
+        assert ExpressionAttributeValues == {":p": "all"}
+        assert ScanIndexForward is False
+        assert Limit == 100
+        partition = ExpressionAttributeValues[":p"]
+        matched = [item for item in self.items.values() if item.get("gsi_partition") == partition]
+        matched.sort(key=lambda item: item.get("created_at", ""), reverse=True)
+        return {"Items": matched}
+
 
 class FakeSqs:
     def __init__(self) -> None:
@@ -86,3 +105,37 @@ def test_list_jobs_sorts_newest_first():
     jobs = store.list_jobs().jobs
 
     assert [job.id for job in jobs] == [newer.id, older.id]
+
+
+def test_enqueued_jobs_carry_gsi_partition_value_for_created_at_index():
+    """The JobsByCreatedAt GSI requires a constant partition value on every
+    item — without it the new jobs would never appear in the indexed listing."""
+    table = FakeJobsTable()
+    sqs = FakeSqs()
+    store = DynamoIngestionStore(jobs_table=table, sqs_client=sqs, queue_url="queue-url")
+
+    store.enqueue("https://youtu.be/QkdBXUikRQc")
+
+    stored = next(iter(table.items.values()))
+    assert stored["gsi_partition"] == "all"
+
+
+def test_list_jobs_falls_back_to_scan_when_gsi_missing():
+    """Older deployed stacks won't have the GSI yet. The store falls back to a
+    scan so the admin console still works during the deploy window."""
+
+    class GsiMissingTable(FakeJobsTable):
+        def query(self, **kwargs):
+            raise ClientError(
+                {"Error": {"Code": "ValidationException"}},
+                "Query",
+            )
+
+    table = GsiMissingTable()
+    sqs = FakeSqs()
+    store = DynamoIngestionStore(jobs_table=table, sqs_client=sqs, queue_url="queue-url")
+    store.enqueue("https://youtu.be/QkdBXUikRQc")
+
+    jobs = store.list_jobs().jobs
+
+    assert len(jobs) == 1
