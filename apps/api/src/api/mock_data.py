@@ -39,7 +39,7 @@ def _watch(video_id: str) -> str:
     return f"https://youtu.be/{video_id}"
 
 
-# ── Public demo library (the three provided career talks) ─────────────
+# ── Public demo library (indexed corpus) ──────────────────────────────
 
 DEMO_VIDEOS: list[DemoVideo] = [
     DemoVideo(
@@ -67,6 +67,96 @@ DEMO_VIDEOS: list[DemoVideo] = [
         thumbnail_url=_thumb("as9IYFrTiKc"),
         youtube_url=_watch("as9IYFrTiKc"),
         duration_seconds=404,
+        indexed=True,
+    ),
+    DemoVideo(
+        id="u4ZoJKF_VuA",
+        title="Start with Why: How Great Leaders Inspire Action",
+        author="Simon Sinek",
+        thumbnail_url=_thumb("u4ZoJKF_VuA"),
+        youtube_url=_watch("u4ZoJKF_VuA"),
+        duration_seconds=1083,
+        indexed=True,
+    ),
+    DemoVideo(
+        id="1Gdl-A1DvpA",
+        title="Gordon Ramsay Challenges Amateur Cook to Keep Up with Him",
+        author="Bon Appetit",
+        thumbnail_url=_thumb("1Gdl-A1DvpA"),
+        youtube_url=_watch("1Gdl-A1DvpA"),
+        duration_seconds=544,
+        indexed=True,
+    ),
+    DemoVideo(
+        id="iCvmsMzlF7o",
+        title="The Power of Vulnerability",
+        author="Brene Brown",
+        thumbnail_url=_thumb("iCvmsMzlF7o"),
+        youtube_url=_watch("iCvmsMzlF7o"),
+        duration_seconds=1249,
+        indexed=True,
+    ),
+    DemoVideo(
+        id="TGdLss5Srnk",
+        title="Sam Altman on Elon Musk suing OpenAI",
+        author="Lex Fridman",
+        thumbnail_url=_thumb("TGdLss5Srnk"),
+        youtube_url=_watch("TGdLss5Srnk"),
+        duration_seconds=595,
+        indexed=True,
+    ),
+    DemoVideo(
+        id="E76CUtSHMrU",
+        title="Smartphone Awards 2024!",
+        author="Marques Brownlee",
+        thumbnail_url=_thumb("E76CUtSHMrU"),
+        youtube_url=_watch("E76CUtSHMrU"),
+        duration_seconds=1645,
+        indexed=True,
+    ),
+    DemoVideo(
+        id="h6fcK_fRYaI",
+        title="The Egg - A Short Story",
+        author="Kurzgesagt - In a Nutshell",
+        thumbnail_url=_thumb("h6fcK_fRYaI"),
+        youtube_url=_watch("h6fcK_fRYaI"),
+        duration_seconds=444,
+        indexed=True,
+    ),
+    DemoVideo(
+        id="v7AYKMP6rOE",
+        title="Yoga For Complete Beginners - 20 Minute Home Yoga Workout",
+        author="Yoga With Adriene",
+        thumbnail_url=_thumb("v7AYKMP6rOE"),
+        youtube_url=_watch("v7AYKMP6rOE"),
+        duration_seconds=1415,
+        indexed=True,
+    ),
+    DemoVideo(
+        id="Th8JoIan4dg",
+        title="How to Get and Evaluate Startup Ideas",
+        author="Y Combinator",
+        thumbnail_url=_thumb("Th8JoIan4dg"),
+        youtube_url=_watch("Th8JoIan4dg"),
+        duration_seconds=1930,
+        indexed=True,
+    ),
+    DemoVideo(
+        id="arj7oStGLkU",
+        title="Inside the Mind of a Master Procrastinator",
+        author="Tim Urban",
+        thumbnail_url=_thumb("arj7oStGLkU"),
+        youtube_url=_watch("arj7oStGLkU"),
+        duration_seconds=836,
+        indexed=True,
+    ),
+    DemoVideo(
+        id="uxPdPpi5W4o",
+        title="Why Are 96,000,000 Black Balls on This Reservoir?",
+        author="Veritasium",
+        thumbnail_url=_thumb("uxPdPpi5W4o"),
+        youtube_url=_watch("uxPdPpi5W4o"),
+        duration_seconds=705,
         indexed=True,
     ),
 ]

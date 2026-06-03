@@ -35,10 +35,25 @@ def test_videos(client):
     r = client.get("/api/videos")
     assert r.status_code == 200
     data = r.json()
-    assert len(data) == 3
-    assert {v["id"] for v in data} == {"QkdBXUikRQc", "DVtcZQ2QdBg", "as9IYFrTiKc"}
+    expected_ids = {
+        "QkdBXUikRQc",
+        "DVtcZQ2QdBg",
+        "as9IYFrTiKc",
+        "u4ZoJKF_VuA",
+        "1Gdl-A1DvpA",
+        "iCvmsMzlF7o",
+        "TGdLss5Srnk",
+        "E76CUtSHMrU",
+        "h6fcK_fRYaI",
+        "v7AYKMP6rOE",
+        "Th8JoIan4dg",
+        "arj7oStGLkU",
+        "uxPdPpi5W4o",
+    }
+    assert len(data) == 13
+    assert {v["id"] for v in data} == expected_ids
     assert all(v["thumbnail_url"].startswith("https://") for v in data)
-    assert {v["id"] for v in data if v["indexed"]} == {"QkdBXUikRQc", "DVtcZQ2QdBg", "as9IYFrTiKc"}
+    assert {v["id"] for v in data if v["indexed"]} == expected_ids
 
 
 def test_search_answerable(client):
