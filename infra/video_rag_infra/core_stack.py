@@ -335,9 +335,16 @@ class CoreStack(Stack):
         else:
             reranker_invoke_target = reranker_function
         reranker_invoke_target.grant_invoke(api_role)
-        api_environment["CROSS_ENCODER_RERANKER_FUNCTION_NAME"] = (
-            reranker_invoke_target.function_arn
-        )
+        # Only route to the reranker Lambda when provisioned concurrency is on
+        # (i.e. it is warm). With provisioned_concurrency=0 the first invocation
+        # would cold-start and exceed its own timeout.  When the function name is
+        # absent the API falls back to loading the model locally (baked into the
+        # API container image), which is slower on the first cold-start but
+        # reliable thereafter.
+        if reranker_provisioned_concurrency > 0:
+            api_environment["CROSS_ENCODER_RERANKER_FUNCTION_NAME"] = (
+                reranker_invoke_target.function_arn
+            )
 
         api_function = lambda_.DockerImageFunction(
             self,
