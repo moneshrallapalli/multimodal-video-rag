@@ -4,20 +4,24 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Iterator
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
 
+from shared.bm25 import BM25Encoder
+from shared.indexing import chunk_transcript
 from shared.ingestion import (
     artifact_prefix,
     audio_key,
     bm25_stats_key,
+    corpus_bm25_stats_key,
     frame_key,
     metadata_key,
     transcript_key,
     utc_now_iso,
 )
-from shared.schemas import IngestJobMessage, JobStatus, VideoMetadataArtifact
+from shared.schemas import IngestJobMessage, JobStatus, TranscriptArtifact, VideoMetadataArtifact
 
 from .indexing import VideoIndexer
 from .media import MediaProcessor, frame_artifacts
@@ -111,6 +115,7 @@ class IngestionWorker:
                             bm25_stats_key(message.video_id),
                             json.dumps(summary.bm25_stats),
                         )
+                        self._refresh_corpus_bm25_stats()
 
                 self._put_video_record(message, metadata)
                 self._update_job(
@@ -215,6 +220,51 @@ class IngestionWorker:
                 "updated_at": now,
             }
         )
+
+    def _refresh_corpus_bm25_stats(self) -> None:
+        """Refit corpus-wide BM25 stats from all transcript artifacts in S3.
+
+        The worker dispatcher currently allows one ingestion worker at a time, so
+        a simple whole-corpus refit is safer and clearer than incremental idf
+        bookkeeping. If this fails, the just-ingested video remains valid because
+        per-video hybrid stats were already written.
+        """
+        try:
+            documents: list[str] = []
+            transcript_count = 0
+            for transcript in self._iter_transcript_artifacts():
+                transcript_count += 1
+                chunks = chunk_transcript(
+                    transcript,
+                    target_seconds=self.indexer.transcript_chunk_seconds if self.indexer else 30,
+                    overlap_seconds=(
+                        self.indexer.transcript_chunk_overlap_seconds if self.indexer else 6
+                    ),
+                )
+                documents.extend(chunk.text for chunk in chunks)
+            if not documents:
+                logger.warning("worker_corpus_bm25_skipped reason=no_transcripts")
+                return
+            encoder = BM25Encoder.fit(documents)
+            self._upload_json(corpus_bm25_stats_key(), json.dumps(encoder.to_dict()))
+            logger.info(
+                "worker_corpus_bm25_refreshed transcripts=%s chunks=%s",
+                transcript_count,
+                len(documents),
+            )
+        except Exception:
+            logger.exception("worker_corpus_bm25_refresh_error")
+
+    def _iter_transcript_artifacts(self) -> Iterator[TranscriptArtifact]:
+        paginator = self.s3.get_paginator("list_objects_v2")
+        for page in paginator.paginate(Bucket=self.bucket, Prefix="videos/"):
+            for obj in page.get("Contents", []):
+                key = str(obj.get("Key", ""))
+                if not key.endswith("/transcript/transcript.json"):
+                    continue
+                response = self.s3.get_object(Bucket=self.bucket, Key=key)
+                body = response["Body"].read().decode("utf-8")
+                yield TranscriptArtifact.model_validate_json(body)
 
 
 def _model_list_json(models: list[Any]) -> str:

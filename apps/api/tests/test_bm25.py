@@ -101,3 +101,21 @@ def test_load_from_s3_returns_none_on_missing_artifact():
     assert loaded is not None
     assert loaded.n_docs == encoder.n_docs
     assert loaded.encode_document("alpha")["indices"] == encoder.encode_document("alpha")["indices"]
+
+
+def test_load_corpus_from_s3_uses_corpus_key():
+    import io
+    import json
+
+    calls = []
+    encoder = BM25Encoder.fit(["alpha beta gamma"])
+
+    class S3WithObject:
+        def get_object(self, **kwargs):
+            calls.append(kwargs)
+            return {"Body": io.BytesIO(json.dumps(encoder.to_dict()).encode("utf-8"))}
+
+    loaded = BM25Encoder.load_corpus_from_s3(bucket="b", s3_client=S3WithObject())
+
+    assert loaded is not None
+    assert calls == [{"Bucket": "b", "Key": "corpus/vectors/bm25_stats.json"}]

@@ -102,7 +102,8 @@ def result_matches(
     *,
     tolerance_seconds: float,
 ) -> bool:
-    if row.video_id and result.video_id != row.video_id:
+    expected_video_id = row.expected_video_id or row.video_id
+    if expected_video_id and result.video_id != expected_video_id:
         return False
     for start, end in row.relevant_timestamps:
         expanded_start = start - tolerance_seconds

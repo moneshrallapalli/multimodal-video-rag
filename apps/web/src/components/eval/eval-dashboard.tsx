@@ -21,6 +21,20 @@ type RagasRow = {
   context_precision: number;
   context_recall: number;
 };
+type JudgeRow = {
+  id: string;
+  n: number;
+  answer_quality: number;
+  grounded_rate: number;
+  correct_rate: number;
+  useful_rate: number;
+};
+type EvalDataWithJudge = typeof data & {
+  judge?: {
+    mode: string;
+    configs: JudgeRow[];
+  };
+};
 
 const METRICS = [
   { key: "recall_at_5", label: "Recall@5" },
@@ -31,6 +45,12 @@ const METRICS = [
 ] as const;
 
 const ragasByConfig = data.ragas as Record<string, RagasRow | undefined>;
+const judgeByConfig = Object.fromEntries(
+  (((data as EvalDataWithJudge).judge?.configs ?? []) as JudgeRow[]).map((row) => [
+    row.id,
+    row,
+  ]),
+) as Record<string, JudgeRow | undefined>;
 
 export function EvalDashboard() {
   const [selectedId, setSelectedId] = useState<string>(
@@ -38,14 +58,16 @@ export function EvalDashboard() {
   );
   const selected = data.configs.find((c) => c.id === selectedId) as Config;
   const ragas = ragasByConfig[selectedId];
+  const judge = judgeByConfig[selectedId];
   const maxR5 = Math.max(...data.configs.map((c) => c.recall_at_5));
   const na = data.no_answer;
-  const isSeed = data.meta.status === "real_seed";
+  const metaStatus = (data.meta as { status: string }).status;
+  const isReal = metaStatus === "real_seed" || metaStatus === "real_expanded";
 
   return (
     <div className="flex flex-col gap-6">
       <div className="rounded-lg border border-amber-300/60 bg-amber-50 px-4 py-2.5 text-sm text-amber-900">
-        <span className="font-medium">{isSeed ? "Seed evaluation." : "Sample data."}</span>{" "}
+        <span className="font-medium">{isReal ? "Real evaluation." : "Sample data."}</span>{" "}
         {data.meta.note}
       </div>
 
@@ -121,20 +143,27 @@ export function EvalDashboard() {
 
       <div className="grid gap-4 md:grid-cols-2">
         <div className="rounded-xl border border-border bg-card p-4">
-          <h3 className="text-sm font-semibold">RAGAS — {selected.label}</h3>
-          {ragas ? (
+          <h3 className="text-sm font-semibold">Answer quality — {selected.label}</h3>
+          {judge ? (
+            <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+              <Metric label="Quality" value={judge.answer_quality} />
+              <Metric label="Grounded" value={judge.grounded_rate} />
+              <Metric label="Correct" value={judge.correct_rate} />
+              <Metric label="Useful" value={judge.useful_rate} />
+              <div className="col-span-2 mt-1 text-xs text-muted-foreground">
+                {judge.n} answerable queries judged by {data.meta.judge}
+              </div>
+            </dl>
+          ) : ragas ? (
             <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
               {Object.entries(ragas).map(([k, v]) => (
-                <div key={k} className="flex items-center justify-between gap-2">
-                  <dt className="text-muted-foreground capitalize">{k.replace(/_/g, " ")}</dt>
-                  <dd className="font-medium tabular-nums">{pct(v)}</dd>
-                </div>
+                <Metric key={k} label={k.replace(/_/g, " ")} value={v} />
               ))}
             </dl>
           ) : (
             <p className="mt-3 text-sm text-muted-foreground">
-              RAGAS / LLM judge metrics were not run for this seed evaluation. Deterministic
-              retrieval and no-answer metrics are real.
+              LLM judge metrics were not run for this config. Deterministic retrieval and
+              no-answer metrics are real.
             </p>
           )}
         </div>
@@ -152,6 +181,15 @@ export function EvalDashboard() {
           </p>
         </div>
       </div>
+    </div>
+  );
+}
+
+function Metric({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <dt className="text-muted-foreground capitalize">{label}</dt>
+      <dd className="font-medium tabular-nums">{pct(value)}</dd>
     </div>
   );
 }

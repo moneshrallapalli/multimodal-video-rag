@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from graph.models import GraphConfig
 from graph.pipeline import QueryPipeline
 from shared.schemas import RetrievalHit, SearchRequest
 
@@ -212,6 +213,23 @@ def test_exact_transcript_terms_rerank_above_semantic_neighbors():
     assert "lacking proper planning" in answerer.calls[0]["context"].splitlines()[0]
 
 
+def test_answer_generation_can_be_disabled_for_retrieval_eval():
+    answerer = FakeAnswerer(answer="Generated answer should not be used.")
+    pipeline = QueryPipeline(
+        embedder=FakeEmbedder(),
+        transcript_index=FakeIndex([_transcript_hit()]),
+        visual_index=FakeIndex([]),
+        answer_generator=answerer,
+        config=GraphConfig(enable_answer_generation=False),
+    )
+
+    response = pipeline.run(SearchRequest(query="Where do they explain self sabotage?"))
+
+    assert response.refused is False
+    assert response.answer.startswith("Top evidence is around 1:14")
+    assert answerer.calls == []
+
+
 def test_lexical_transcript_evidence_can_pass_low_dense_gate():
     planning = RetrievalHit(
         id="QkdBXUikRQc:transcript:planning",
@@ -373,6 +391,37 @@ def test_cross_encoder_rerank_reorders_fused_candidates_when_enabled():
     from graph.models import GraphConfig
 
     fake_reranker = FakeCrossEncoderReranker(scores=[0.1, 0.9])
+    exact = _transcript_hit(score=0.4).model_copy(
+        update={
+            "id": "QkdBXUikRQc:transcript:exact",
+            "metadata": {
+                **_transcript_hit(score=0.4).metadata,
+                "chunk_id": "QkdBXUikRQc:transcript:exact",
+                "text": "The speaker explains self sabotage and fear of failure.",
+            },
+        }
+    )
+    pipeline = QueryPipeline(
+        embedder=FakeEmbedder(),
+        transcript_index=FakeIndex([_transcript_hit(score=0.5), exact]),
+        visual_index=FakeIndex([_visual_hit(score=0.4)]),
+        answer_generator=FakeAnswerer(),
+        config=GraphConfig(enable_cross_encoder_rerank=True),
+        cross_encoder_reranker=fake_reranker,
+    )
+
+    response = pipeline.run(SearchRequest(query="Where do they explain self sabotage?", top_k=2))
+
+    assert len(fake_reranker.calls) == 1
+    assert len(fake_reranker.calls[0]) == 2
+    assert response.results[0].snippet == "The speaker explains self sabotage and fear of failure."
+    assert response.results[0].rank == 1
+
+
+def test_cross_encoder_rerank_skips_visual_intent_when_enabled():
+    from graph.models import GraphConfig
+
+    fake_reranker = FakeCrossEncoderReranker(scores=[1.0])
     pipeline = QueryPipeline(
         embedder=FakeEmbedder(),
         transcript_index=FakeIndex([_transcript_hit(score=0.5)]),
@@ -382,13 +431,10 @@ def test_cross_encoder_rerank_reorders_fused_candidates_when_enabled():
         cross_encoder_reranker=fake_reranker,
     )
 
-    response = pipeline.run(SearchRequest(query="self sabotage", top_k=2))
+    response = pipeline.run(SearchRequest(query="Show me the speaker at a desk", top_k=1))
 
-    assert len(fake_reranker.calls) == 1
-    assert len(fake_reranker.calls[0]) == 2
+    assert fake_reranker.calls == []
     assert response.results[0].modality == "visual"
-    assert response.results[0].rank == 1
-    assert response.results[1].modality == "transcript"
 
 
 def test_query_rewrite_uses_rewritten_query_downstream_when_enabled():
@@ -401,7 +447,7 @@ def test_query_rewrite_uses_rewritten_query_downstream_when_enabled():
         transcript_index=FakeIndex([_transcript_hit()]),
         visual_index=FakeIndex([]),
         answer_generator=answerer,
-        config=GraphConfig(enable_query_rewrite=True),
+        config=GraphConfig(enable_query_rewrite=True, query_rewrite_max_terms=10),
     )
 
     response = pipeline.run(SearchRequest(query="why does she get stuck?", top_k=2))
@@ -411,6 +457,47 @@ def test_query_rewrite_uses_rewritten_query_downstream_when_enabled():
     assert embedder.text_queries == ["self sabotage fear of failure planning"]
     assert embedder.visual_queries == ["self sabotage fear of failure planning"]
     assert answerer.calls[0]["query"] == "self sabotage fear of failure planning"
+
+
+def test_query_rewrite_skips_visual_intent():
+    from graph.models import GraphConfig
+
+    embedder = FakeEmbedder()
+    answerer = FakeAnswerer(rewrite="rewritten visual query")
+    pipeline = QueryPipeline(
+        embedder=embedder,
+        transcript_index=FakeIndex([]),
+        visual_index=FakeIndex([_visual_hit()]),
+        answer_generator=answerer,
+        config=GraphConfig(enable_query_rewrite=True),
+    )
+
+    response = pipeline.run(SearchRequest(query="Show me the speaker at a desk"))
+
+    assert response.rewritten_query is None
+    assert answerer.rewrite_calls == []
+    assert embedder.visual_queries == ["Show me the speaker at a desk"]
+
+
+def test_query_rewrite_skips_already_specific_queries():
+    from graph.models import GraphConfig
+
+    embedder = FakeEmbedder()
+    answerer = FakeAnswerer(rewrite="rewritten query")
+    pipeline = QueryPipeline(
+        embedder=embedder,
+        transcript_index=FakeIndex([_transcript_hit()]),
+        visual_index=FakeIndex([]),
+        answer_generator=answerer,
+        config=GraphConfig(enable_query_rewrite=True, query_rewrite_max_terms=3),
+    )
+
+    query = "Where does she explain fear as the reason we stop chasing dreams?"
+    response = pipeline.run(SearchRequest(query=query))
+
+    assert response.rewritten_query is None
+    assert answerer.rewrite_calls == []
+    assert embedder.text_queries == [query]
 
 
 def test_per_modality_gate_lets_transcript_pass_when_visual_below_threshold():

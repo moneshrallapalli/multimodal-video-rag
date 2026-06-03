@@ -54,6 +54,34 @@ def test_score_query_detects_relevant_timestamp_and_modality():
     assert score.modality_correct is True
 
 
+def test_score_query_can_evaluate_unfiltered_expected_video():
+    row = GoldenQuery(
+        id="q-unfiltered",
+        query="where is the sprint review feedback?",
+        type="transcript",
+        video_id=None,
+        expected_video_id="expected-video",
+        relevant_timestamps=[(10, 20)],
+        expected_modality="transcript",
+        reference_answer="answer",
+    )
+    response = SearchResponse(
+        query="where is the sprint review feedback?",
+        intent="transcript",
+        answer="answer",
+        confidence=0.8,
+        results=[
+            _result(12, 18).model_copy(update={"video_id": "other-video"}),
+            _result(12, 18).model_copy(update={"video_id": "expected-video", "rank": 2}),
+        ],
+    )
+
+    score = score_query(row, response)
+
+    assert score.recall_at_5 == 1.0
+    assert score.mrr == 0.5
+
+
 def test_score_query_tracks_no_answer_confusion():
     no_answer = GoldenQuery(
         id="q2",

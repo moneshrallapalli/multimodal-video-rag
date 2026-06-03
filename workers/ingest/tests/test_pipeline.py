@@ -55,6 +55,33 @@ class FakeS3:
         assert ContentType == "application/json"
         self.objects[Key] = Body.decode("utf-8")
 
+    def get_paginator(self, operation_name: str):
+        assert operation_name == "list_objects_v2"
+        return FakeS3Paginator(self)
+
+    def get_object(self, *, Bucket: str, Key: str) -> dict[str, Any]:
+        assert Bucket == "test-bucket"
+        return {"Body": FakeBody(self.objects[Key].encode("utf-8"))}
+
+
+class FakeS3Paginator:
+    def __init__(self, s3: FakeS3) -> None:
+        self.s3 = s3
+
+    def paginate(self, *, Bucket: str, Prefix: str):
+        assert Bucket == "test-bucket"
+        yield {
+            "Contents": [{"Key": key} for key in sorted(self.s3.objects) if key.startswith(Prefix)]
+        }
+
+
+class FakeBody:
+    def __init__(self, body: bytes) -> None:
+        self.body = body
+
+    def read(self) -> bytes:
+        return self.body
+
 
 class FakeMedia:
     def __init__(self, *, fail_download: bool = False) -> None:
@@ -101,6 +128,8 @@ class FakeIndexer:
     def __init__(self, *, bm25_stats: dict | None = None) -> None:
         self.calls = []
         self._bm25_stats = bm25_stats
+        self.transcript_chunk_seconds = 30
+        self.transcript_chunk_overlap_seconds = 6
 
     def index_video(self, **kwargs) -> IndexingSummary:
         self.calls.append(kwargs)
@@ -229,6 +258,26 @@ def test_worker_uploads_bm25_stats_when_present():
     assert "videos/QkdBXUikRQc/vectors/bm25_stats.json" in s3.objects
     stored = json.loads(s3.objects["videos/QkdBXUikRQc/vectors/bm25_stats.json"])
     assert stored == bm25_stats
+
+
+def test_worker_refreshes_corpus_bm25_stats_when_bm25_present():
+    """Unfiltered hybrid search needs corpus-wide idf stats, not just per-video stats."""
+    s3 = FakeS3()
+    worker = IngestionWorker(
+        bucket="test-bucket",
+        jobs_table=FakeTable(),
+        videos_table=FakeTable(),
+        s3_client=s3,
+        media=FakeMedia(),
+        indexer=FakeIndexer(bm25_stats={"avgdl": 1.0, "doc_freq": {"hello": 1}, "n_docs": 1}),
+    )
+
+    worker.process(_message())
+
+    assert "corpus/vectors/bm25_stats.json" in s3.objects
+    corpus_stats = json.loads(s3.objects["corpus/vectors/bm25_stats.json"])
+    assert corpus_stats["n_docs"] == 1
+    assert corpus_stats["doc_freq"]["hello"] == 1
 
 
 def test_worker_skips_bm25_upload_when_stats_absent():

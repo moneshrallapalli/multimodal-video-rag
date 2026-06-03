@@ -59,3 +59,8 @@ def frame_key(video_id: str, frame_number: int) -> str:
 def bm25_stats_key(video_id: str) -> str:
     """S3 key for the per-video BM25 encoder state (used at query time for hybrid)."""
     return f"{artifact_prefix(video_id)}/vectors/bm25_stats.json"
+
+
+def corpus_bm25_stats_key() -> str:
+    """S3 key for the corpus-wide BM25 encoder state used by all-video search."""
+    return "corpus/vectors/bm25_stats.json"

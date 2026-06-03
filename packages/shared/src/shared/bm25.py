@@ -199,6 +199,36 @@ class BM25Encoder:
         BM25 was introduced), so callers can fall back to dense-only retrieval
         without blowing up.
         """
+        # Lazy-import to avoid circular dep with shared.ingestion.
+        from .ingestion import bm25_stats_key
+
+        return cls._load_key_from_s3(
+            bucket=bucket,
+            key=bm25_stats_key(video_id),
+            s3_client=s3_client,
+        )
+
+    @classmethod
+    def load_corpus_from_s3(
+        cls, *, bucket: str, s3_client: Any | None = None
+    ) -> BM25Encoder | None:
+        """Load corpus-wide BM25 stats for searches without a single-video filter."""
+        from .ingestion import corpus_bm25_stats_key
+
+        return cls._load_key_from_s3(
+            bucket=bucket,
+            key=corpus_bm25_stats_key(),
+            s3_client=s3_client,
+        )
+
+    @classmethod
+    def _load_key_from_s3(
+        cls,
+        *,
+        bucket: str,
+        key: str,
+        s3_client: Any | None,
+    ) -> BM25Encoder | None:
         import json
 
         if s3_client is None:
@@ -206,11 +236,8 @@ class BM25Encoder:
 
             s3_client = boto3.client("s3")
 
-        # Lazy-import to avoid circular dep with shared.ingestion.
-        from .ingestion import bm25_stats_key
-
         try:
-            response = s3_client.get_object(Bucket=bucket, Key=bm25_stats_key(video_id))
+            response = s3_client.get_object(Bucket=bucket, Key=key)
         except Exception:
             return None
         try:

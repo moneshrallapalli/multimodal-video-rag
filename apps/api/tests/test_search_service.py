@@ -65,6 +65,7 @@ def test_search_service_returns_safe_refusal_on_graph_error(monkeypatch, caplog)
 
 def test_pipeline_uses_runtime_graph_feature_flags(monkeypatch):
     captured = {}
+    fake_reranker = object()
 
     class CapturingPipeline:
         def __init__(self, **kwargs) -> None:
@@ -74,7 +75,9 @@ def test_pipeline_uses_runtime_graph_feature_flags(monkeypatch):
     monkeypatch.setattr(settings, "enable_cross_encoder_rerank", True)
     monkeypatch.setattr(settings, "enable_query_rewrite", True)
     monkeypatch.setattr(settings, "hybrid_alpha", 0.42)
+    monkeypatch.setattr(settings, "cross_encoder_reranker_function_name", "reranker-live")
     monkeypatch.setattr(search_service, "QueryPipeline", CapturingPipeline)
+    monkeypatch.setattr(search_service, "_cross_encoder_reranker", lambda: fake_reranker)
     search_service._pipeline.cache_clear()
 
     try:
@@ -88,6 +91,33 @@ def test_pipeline_uses_runtime_graph_feature_flags(monkeypatch):
     assert config.enable_query_rewrite is True
     assert config.hybrid_alpha == 0.42
     assert captured["transcript_bm25_resolver"] is search_service._bm25_encoder
+    assert captured["cross_encoder_reranker"] is fake_reranker
+
+
+def test_pipeline_disables_rerank_when_remote_function_missing(monkeypatch, caplog):
+    captured = {}
+
+    class CapturingPipeline:
+        def __init__(self, **kwargs) -> None:
+            captured.update(kwargs)
+
+    import logging
+
+    monkeypatch.setattr(settings, "enable_cross_encoder_rerank", True)
+    monkeypatch.setattr(settings, "cross_encoder_reranker_function_name", "")
+    monkeypatch.setattr(search_service, "QueryPipeline", CapturingPipeline)
+    search_service._pipeline.cache_clear()
+
+    try:
+        with caplog.at_level(logging.WARNING, logger="video_rag.api.search"):
+            search_service._pipeline()
+    finally:
+        search_service._pipeline.cache_clear()
+
+    assert captured["config"].enable_cross_encoder_rerank is False
+    assert any(
+        "cross_encoder_rerank_disabled_no_remote" in record.message for record in caplog.records
+    )
 
 
 def test_bm25_encoder_loads_from_s3_by_video_id(monkeypatch):
@@ -109,3 +139,28 @@ def test_bm25_encoder_loads_from_s3_by_video_id(monkeypatch):
         search_service._bm25_encoder.cache_clear()
 
     assert calls == [("artifact-bucket", "video-a")]
+
+
+def test_bm25_encoder_loads_corpus_stats_for_unfiltered_search(monkeypatch):
+    calls: list[str] = []
+    fake_encoder = object()
+
+    def fake_load_corpus_from_s3(*, bucket: str):
+        calls.append(bucket)
+        return fake_encoder
+
+    monkeypatch.setattr(settings, "s3_bucket", "artifact-bucket")
+    monkeypatch.setattr(
+        search_service.BM25Encoder,
+        "load_corpus_from_s3",
+        staticmethod(fake_load_corpus_from_s3),
+    )
+    search_service._bm25_encoder.cache_clear()
+
+    try:
+        assert search_service._bm25_encoder(None) is fake_encoder
+        assert search_service._bm25_encoder(None) is fake_encoder
+    finally:
+        search_service._bm25_encoder.cache_clear()
+
+    assert calls == ["artifact-bucket"]

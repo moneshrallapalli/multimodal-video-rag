@@ -15,6 +15,7 @@ class GoldenQuery(BaseModel):
     query: str
     type: EvalType
     video_id: str | None = None
+    expected_video_id: str | None = None
     relevant_timestamps: list[tuple[float, float]] = Field(default_factory=list)
     expected_modality: ExpectedModality
     reference_answer: str | None = None

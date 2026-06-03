@@ -56,6 +56,12 @@ class GraphConfig(BaseModel):
     # Optional Haiku query rewrite used by the ablation harness. Off by default
     # so the dense baseline keeps the original query path.
     enable_query_rewrite: bool = False
+    # Rewrite is most useful for terse queries. Already-specific queries often
+    # lose exact lexical anchors when rewritten, so skip them above this limit.
+    query_rewrite_max_terms: int = 3
+    # Eval can disable generation when it only needs retrieval metrics. The API
+    # keeps this on so user-facing answers still come from Bedrock.
+    enable_answer_generation: bool = True
     no_answer_message: str = (
         "I could not find strong evidence for that in the indexed videos. "
         "Try a more specific visual description or search within a single video."

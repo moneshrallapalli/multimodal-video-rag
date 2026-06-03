@@ -175,8 +175,12 @@ class QueryPipeline:
     def _rewrite_query(self, state: GraphState) -> GraphState:
         if state.get("refused") or not self.config.enable_query_rewrite:
             return {}
+        if state.get("intent") == "visual":
+            return {}
 
         query = state["query"]
+        if len(_rewrite_terms(query)) > self.config.query_rewrite_max_terms:
+            return {}
         try:
             rewritten = self.answer_generator.rewrite_query(query=query).strip()
         except Exception:
@@ -247,7 +251,10 @@ class QueryPipeline:
             rrf_k=self.config.rrf_k,
         )
         reranked = lexical_rerank(fused, query=query)
-        if self.config.enable_cross_encoder_rerank:
+        if self.config.enable_cross_encoder_rerank and state.get("intent") in {
+            "transcript",
+            "summary",
+        }:
             reranked = cross_encoder_rerank(
                 reranked,
                 query=query,
@@ -306,6 +313,15 @@ class QueryPipeline:
             return {"refused": True, "answer": self.config.no_answer_message, "confidence": 0.0}
         if all(candidate.modality == "visual" for candidate in candidates):
             return {"answer": _visual_answer(candidates[0]), "refused": False}
+        if not self.config.enable_answer_generation:
+            top = candidates[0]
+            return {
+                "answer": (
+                    f'Top evidence is around {_mmss(top.start_seconds)} in "{top.title}": '
+                    f"{top.snippet}"
+                ),
+                "refused": False,
+            }
         try:
             answer = self.answer_generator.generate(
                 query=_active_query(state),
@@ -368,6 +384,28 @@ def _video_filter(video_id: str | None) -> dict[str, Any] | None:
     if not video_id:
         return None
     return {"video_id": {"$eq": video_id}}
+
+
+def _rewrite_terms(query: str) -> list[str]:
+    return [
+        token
+        for token in query.lower().replace("?", " ").replace(",", " ").split()
+        if len(token) > 2
+        and token
+        not in {
+            "the",
+            "and",
+            "for",
+            "with",
+            "where",
+            "what",
+            "when",
+            "does",
+            "show",
+            "find",
+            "video",
+        }
+    ]
 
 
 def _mmss(seconds: float) -> str:

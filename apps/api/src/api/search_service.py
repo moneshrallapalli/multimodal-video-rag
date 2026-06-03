@@ -17,6 +17,7 @@ from shared.bm25 import BM25Encoder
 from shared.schemas import SearchRequest, SearchResponse
 
 from .mock_data import NO_ANSWER_MESSAGE, mock_search
+from .reranking import LambdaCrossEncoderReranker
 
 logger = logging.getLogger("video_rag.api.search")
 
@@ -57,13 +58,21 @@ def real_search_enabled() -> bool:
 
 @lru_cache
 def _pipeline() -> QueryPipeline:
-    return QueryPipeline(config=_graph_config(), transcript_bm25_resolver=_bm25_encoder)
+    return QueryPipeline(
+        config=_graph_config(),
+        transcript_bm25_resolver=_bm25_encoder,
+        cross_encoder_reranker=_cross_encoder_reranker(),
+    )
 
 
 def _graph_config() -> GraphConfig:
+    enable_cross_encoder_rerank = settings.enable_cross_encoder_rerank
+    if enable_cross_encoder_rerank and not settings.cross_encoder_reranker_function_name:
+        logger.warning("cross_encoder_rerank_disabled_no_remote")
+        enable_cross_encoder_rerank = False
     return GraphConfig(
         enable_hybrid_transcript=settings.enable_hybrid_transcript,
-        enable_cross_encoder_rerank=settings.enable_cross_encoder_rerank,
+        enable_cross_encoder_rerank=enable_cross_encoder_rerank,
         enable_query_rewrite=settings.enable_query_rewrite,
         hybrid_alpha=settings.hybrid_alpha,
     )
@@ -71,12 +80,24 @@ def _graph_config() -> GraphConfig:
 
 @lru_cache(maxsize=128)
 def _bm25_encoder(video_id: str | None) -> BM25Encoder | None:
-    if not video_id:
-        return None
     if not settings.s3_bucket:
-        logger.warning("bm25_disabled_no_s3_bucket video_id=%s", video_id)
+        logger.warning("bm25_disabled_no_s3_bucket video_id=%s", video_id or "")
         return None
+    if not video_id:
+        corpus_encoder = BM25Encoder.load_corpus_from_s3(bucket=settings.s3_bucket)
+        if corpus_encoder is None:
+            logger.warning("bm25_corpus_stats_missing")
+        return corpus_encoder
     encoder = BM25Encoder.load_from_s3(bucket=settings.s3_bucket, video_id=video_id)
     if encoder is None:
         logger.warning("bm25_stats_missing video_id=%s", video_id)
     return encoder
+
+
+@lru_cache
+def _cross_encoder_reranker() -> LambdaCrossEncoderReranker | None:
+    if not settings.cross_encoder_reranker_function_name:
+        return None
+    return LambdaCrossEncoderReranker(
+        function_name=settings.cross_encoder_reranker_function_name,
+    )

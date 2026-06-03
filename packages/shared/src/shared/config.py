@@ -67,6 +67,7 @@ class Settings(BaseSettings):
     enable_query_rewrite: bool = True
     hybrid_alpha: float = 0.7
     search_config_version: str = "hybrid-rewrite-v1"
+    cross_encoder_reranker_function_name: str = ""
 
     # Admin auth
     admin_password_hash: str = ""

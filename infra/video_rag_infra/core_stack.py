@@ -150,6 +150,13 @@ class CoreStack(Stack):
             retention=logs.RetentionDays.TWO_WEEKS,
             removal_policy=RemovalPolicy.DESTROY,
         )
+        reranker_logs = logs.LogGroup(
+            self,
+            "RerankerLogs",
+            log_group_name="/video-rag/reranker",
+            retention=logs.RetentionDays.TWO_WEEKS,
+            removal_policy=RemovalPolicy.DESTROY,
+        )
         worker_logs = logs.LogGroup(
             self,
             "WorkerLogs",
@@ -202,12 +209,12 @@ class CoreStack(Stack):
             "SECRETS_MANAGER_SECRET_NAME": runtime_secret_name,
             "CORS_ALLOW_ORIGINS": ",".join(cors_allow_origins),
             "ENABLE_HYBRID_TRANSCRIPT": os.environ.get("ENABLE_HYBRID_TRANSCRIPT", "true"),
-            "ENABLE_CROSS_ENCODER_RERANK": os.environ.get("ENABLE_CROSS_ENCODER_RERANK", "false"),
+            "ENABLE_CROSS_ENCODER_RERANK": os.environ.get("ENABLE_CROSS_ENCODER_RERANK", "true"),
             "ENABLE_QUERY_REWRITE": os.environ.get("ENABLE_QUERY_REWRITE", "true"),
             "HYBRID_ALPHA": os.environ.get("HYBRID_ALPHA", "0.7"),
             "SEARCH_CONFIG_VERSION": os.environ.get(
                 "SEARCH_CONFIG_VERSION",
-                "hybrid-rewrite-v1",
+                "hybrid-rerank-rewrite-v2",
             ),
             "SESSION_COOKIE_SECURE": "true",
             # Production browser path is Vercel → Next rewrites → API Gateway, which
@@ -298,6 +305,38 @@ class CoreStack(Stack):
                     image_embed_arn,
                 ],
             )
+        )
+
+        reranker_function = lambda_.DockerImageFunction(
+            self,
+            "RerankerFunction",
+            function_name="video-rag-reranker",
+            code=lambda_.DockerImageCode.from_image_asset(
+                str(repo_root),
+                file="apps/api/Dockerfile",
+                cmd=["api.rerank_handler.handler"],
+            ),
+            timeout=Duration.seconds(30),
+            memory_size=int(os.environ.get("RERANKER_MEMORY_SIZE", "2048")),
+            architecture=lambda_.Architecture.ARM_64,
+            log_group=reranker_logs,
+        )
+        reranker_provisioned_concurrency = int(
+            os.environ.get("RERANKER_PROVISIONED_CONCURRENCY", "1")
+        )
+        if reranker_provisioned_concurrency > 0:
+            reranker_invoke_target = lambda_.Alias(
+                self,
+                "RerankerLiveAlias",
+                alias_name="live",
+                version=reranker_function.current_version,
+                provisioned_concurrent_executions=reranker_provisioned_concurrency,
+            )
+        else:
+            reranker_invoke_target = reranker_function
+        reranker_invoke_target.grant_invoke(api_role)
+        api_environment["CROSS_ENCODER_RERANKER_FUNCTION_NAME"] = (
+            reranker_invoke_target.function_arn
         )
 
         api_function = lambda_.DockerImageFunction(
@@ -529,6 +568,11 @@ def handler(event, context):
                 title="API latency",
                 left=[api_function.metric_duration()],
             ),
+            cloudwatch.GraphWidget(
+                title="Reranker latency",
+                left=[reranker_function.metric_duration()],
+                right=[reranker_function.metric_errors()],
+            ),
         )
         cloudwatch.Alarm(
             self,
@@ -545,6 +589,14 @@ def handler(event, context):
             threshold=1,
             evaluation_periods=1,
             alarm_description="The deployed API Lambda returned errors.",
+        )
+        cloudwatch.Alarm(
+            self,
+            "RerankerErrorAlarm",
+            metric=reranker_function.metric_errors(period=Duration.minutes(5)),
+            threshold=1,
+            evaluation_periods=1,
+            alarm_description="The cross-encoder reranker Lambda returned errors.",
         )
 
         api_logs.add_metric_filter(
@@ -582,6 +634,8 @@ def handler(event, context):
         CfnOutput(self, "RateLimitsTableName", value=rate_limits.table_name)
         CfnOutput(self, "WorkerRoleArn", value=worker_role.role_arn)
         CfnOutput(self, "ApiRoleArn", value=api_role.role_arn)
+        CfnOutput(self, "RerankerFunctionName", value=reranker_function.function_name)
+        CfnOutput(self, "RerankerInvokeTargetArn", value=reranker_invoke_target.function_arn)
         CfnOutput(self, "ApiUrl", value=http_api.url or "")
         CfnOutput(self, "WorkerClusterName", value=cluster.cluster_name)
         CfnOutput(self, "WorkerTaskDefinitionArn", value=worker_task.task_definition_arn)
