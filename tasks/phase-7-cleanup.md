@@ -304,7 +304,7 @@ alongside the existing `lexical_rerank`), `apps/api/pyproject.toml` (add
 
 ---
 
-### [ ] T18. Query rewrite node (Haiku)
+### [x] T18. Query rewrite node (Haiku)  ✅ `db0a280`
 
 **Files:** `packages/graph/src/graph/pipeline.py` — add `_rewrite_query` node
 between `_classify_intent` and retrieve; set `state["rewritten_query"]`.
@@ -314,7 +314,7 @@ node writes it; fills the §24.1 "+rewrite" config.
 specific and lexically rich, preserving intent. Return only the rewritten query."
 Gate behind `GraphConfig.enable_query_rewrite: bool = False`.
 **Commit:** `feat(graph): query rewrite node for ablation`
-**Status:** not started
+**Status:** shipped
 
 ---
 
@@ -347,20 +347,20 @@ Add entries for:
 
 ## Status snapshot (updated as items complete)
 
-- ✅ Done: T1–T17  (17 / 20) — 85% complete
-- 🚧 In progress: T18 (query rewrite node)
-- ⏳ Remaining: T18 (query rewrite), T19 (re-run eval), T20 (lessons)
+- ✅ Done: T1–T18  (18 / 20) — 90% complete
+- 🚧 In progress: T19 (re-run eval)
+- ⏳ Remaining: T19 (re-run eval), T20 (lessons)
 
-Last commit pushed: `8051567` (T17)
+Last commit pushed: `db0a280` (T18)
 
 **Quick stats (Phase 7 so far):**
-- **84 tests passing** (was 51 before this phase) — +33 new tests
+- **86 tests passing** (was 51 before this phase) — +35 new tests
 - Python lint+format clean repo-wide
 - Web lint+typecheck+build clean
 - All P0 (security), P1 (correctness), and P2 (ops/hardening) items shipped
 - T16 (BM25 hybrid retrieval) shipped end-to-end across 4 commits
 
-**Remaining work is the rest of the §24.1 ablation:** query-rewrite (T18),
-then re-run eval (T19) and capture audit lessons (T20). T17's API Docker image
-build passed with `sentence-transformers` and the `BAAI/bge-reranker-base`
-model baked into the image.
+**Remaining work is the rest of the §24.1 ablation:** re-run eval (T19), then
+capture audit lessons (T20). T17's API Docker image build passed with
+`sentence-transformers` and the `BAAI/bge-reranker-base` model baked into the
+image; T18's rewrite node is off by default behind `enable_query_rewrite`.
