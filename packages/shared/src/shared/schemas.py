@@ -157,12 +157,20 @@ class TranscriptChunk(BaseModel):
     text: str
 
 
+class SparseVector(BaseModel):
+    """Sparse vector format Pinecone expects: parallel index/value lists."""
+
+    indices: list[int] = Field(default_factory=list)
+    values: list[float] = Field(default_factory=list)
+
+
 class VectorRecord(BaseModel):
-    """A dense vector plus Pinecone metadata."""
+    """A dense vector plus Pinecone metadata; optional sparse for hybrid search."""
 
     id: str
     values: list[float]
     metadata: dict[str, str | int | float | bool]
+    sparse_values: SparseVector | None = None
 
 
 class IndexingSummary(BaseModel):

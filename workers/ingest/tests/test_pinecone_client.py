@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import io
 import json
+from typing import Any
 from urllib.error import HTTPError, URLError
 
 import pytest
@@ -157,6 +158,91 @@ def test_request_retries_url_errors(monkeypatch):
     monkeypatch.setattr("shared.pinecone_client.urlopen", flaky)
     assert _client().query([0.1, 0.2, 0.3]) == []
     assert len(calls) == 2
+
+
+def test_upsert_includes_sparse_values_when_present(monkeypatch):
+    """The Pinecone wire format expects `sparse_values` alongside `values` for
+    hybrid records. Empty sparse vectors must be omitted (Pinecone rejects them)."""
+    captured: dict[str, Any] = {}
+
+    def fake_urlopen(req, timeout):
+        captured["body"] = json.loads(req.data.decode("utf-8"))
+        return FakeResponse({"upsertedCount": 2})
+
+    monkeypatch.setattr("shared.pinecone_client.urlopen", fake_urlopen)
+    client = _client()
+
+    from shared.schemas import SparseVector
+
+    client.upsert(
+        [
+            VectorRecord(
+                id="v:1",
+                values=[0.1, 0.2, 0.3],
+                metadata={"video_id": "v"},
+                sparse_values=SparseVector(indices=[42, 7], values=[1.5, 0.8]),
+            ),
+            VectorRecord(
+                id="v:2",
+                values=[0.4, 0.5, 0.6],
+                metadata={"video_id": "v"},
+                # No sparse vector — must be omitted from the wire payload.
+                sparse_values=None,
+            ),
+        ]
+    )
+
+    vectors = captured["body"]["vectors"]
+    assert vectors[0]["sparse_values"] == {"indices": [42, 7], "values": [1.5, 0.8]}
+    assert "sparse_values" not in vectors[1]
+
+
+def test_query_sends_sparse_vector_when_provided(monkeypatch):
+    captured: dict[str, Any] = {}
+
+    def fake_urlopen(req, timeout):
+        captured["body"] = json.loads(req.data.decode("utf-8"))
+        return FakeResponse({"matches": []})
+
+    monkeypatch.setattr("shared.pinecone_client.urlopen", fake_urlopen)
+    _client().query(
+        [0.1, 0.2, 0.3],
+        sparse_vector={"indices": [10, 20], "values": [0.9, 0.5]},
+    )
+    assert captured["body"]["sparseVector"] == {
+        "indices": [10, 20],
+        "values": [0.9, 0.5],
+    }
+
+
+def test_query_omits_sparse_vector_when_empty(monkeypatch):
+    """An empty sparse vector at query time must not be sent — Pinecone errors on it."""
+    captured: dict[str, Any] = {}
+
+    def fake_urlopen(req, timeout):
+        captured["body"] = json.loads(req.data.decode("utf-8"))
+        return FakeResponse({"matches": []})
+
+    monkeypatch.setattr("shared.pinecone_client.urlopen", fake_urlopen)
+    _client().query([0.1, 0.2, 0.3], sparse_vector={"indices": [], "values": []})
+    assert "sparseVector" not in captured["body"]
+
+
+def test_hybrid_blend_alpha_extremes_and_midpoint():
+    """alpha=1 = pure dense, alpha=0 = pure sparse, 0.7 blends both."""
+    from shared.pinecone_client import hybrid_blend
+
+    dense, sparse = hybrid_blend([1.0, 2.0], {"indices": [1], "values": [0.5]}, alpha=1.0)
+    assert dense == [1.0, 2.0]
+    assert sparse["values"] == [0.0]
+
+    dense, sparse = hybrid_blend([1.0, 2.0], {"indices": [1], "values": [0.5]}, alpha=0.0)
+    assert dense == [0.0, 0.0]
+    assert sparse["values"] == [0.5]
+
+    dense, sparse = hybrid_blend([2.0], {"indices": [1], "values": [1.0]}, alpha=0.7)
+    assert dense == [pytest.approx(1.4)]
+    assert sparse["values"] == [pytest.approx(0.3)]
 
 
 def test_from_index_name_asserts_metric_matches_expectation(monkeypatch):

@@ -66,7 +66,7 @@ class PineconeIndexClient:
         if not records:
             return 0
         payload: dict[str, Any] = {
-            "vectors": [record.model_dump() for record in records],
+            "vectors": [_record_payload(record) for record in records],
         }
         if namespace:
             payload["namespace"] = namespace
@@ -80,6 +80,7 @@ class PineconeIndexClient:
         top_k: int = 5,
         metadata_filter: dict[str, Any] | None = None,
         namespace: str | None = None,
+        sparse_vector: dict[str, Any] | None = None,
     ) -> list[RetrievalHit]:
         payload: dict[str, Any] = {
             "vector": vector,
@@ -90,6 +91,13 @@ class PineconeIndexClient:
             payload["filter"] = metadata_filter
         if namespace:
             payload["namespace"] = namespace
+        # Pinecone serverless hybrid: send `sparseVector` alongside the dense
+        # vector. Caller is responsible for alpha-scaling (see hybrid_blend()).
+        if sparse_vector and sparse_vector.get("indices"):
+            payload["sparseVector"] = {
+                "indices": list(sparse_vector["indices"]),
+                "values": list(sparse_vector["values"]),
+            }
         data = self._request("/query", payload)
         return [
             RetrievalHit(
@@ -147,6 +155,41 @@ class PineconeIndexClient:
             time.sleep(sleep_for)
         # Defensive — unreachable in practice because the loop above either returns or raises.
         raise RuntimeError(f"Pinecone {self.info.name}{path} exhausted retries") from last_exc
+
+
+def _record_payload(record: VectorRecord) -> dict[str, Any]:
+    """Render a VectorRecord for Pinecone, omitting sparse_values when empty.
+
+    Pinecone rejects payloads with empty sparse_values, so we strip them rather
+    than send `{"indices": [], "values": []}`.
+    """
+    payload = record.model_dump(exclude_none=True)
+    sparse = payload.get("sparse_values")
+    if sparse and not sparse.get("indices"):
+        payload.pop("sparse_values", None)
+    return payload
+
+
+def hybrid_blend(
+    dense: list[float],
+    sparse: dict[str, Any],
+    *,
+    alpha: float,
+) -> tuple[list[float], dict[str, Any]]:
+    """Pinecone's standard alpha-blending convention.
+
+    alpha=1.0 → pure dense; alpha=0.0 → pure sparse. The serverless query API
+    blends by scaling both sides on the client. Returns (dense, sparse) ready
+    to pass to `query(vector=, sparse_vector=)`.
+    """
+    alpha = max(0.0, min(1.0, alpha))
+    scaled_dense = [value * alpha for value in dense]
+    sparse_values = sparse.get("values") or []
+    scaled_sparse = {
+        "indices": list(sparse.get("indices") or []),
+        "values": [value * (1.0 - alpha) for value in sparse_values],
+    }
+    return scaled_dense, scaled_sparse
 
 
 def _lookup_index(index_name: str, *, api_key: str) -> PineconeIndexInfo:
