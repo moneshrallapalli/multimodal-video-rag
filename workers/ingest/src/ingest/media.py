@@ -111,8 +111,16 @@ class MediaProcessor:
                 output_template,
             ]
         )
+        # `ffmpeg -vf fps=1/N` picks the frame from inside the [0,N) window — closer
+        # to the window midpoint than to its leading edge. Labeling frame 1 as t=0
+        # is systematically ~N/2 seconds early. Centering on the midpoint makes
+        # Timestamp@5s/@10s metrics accurate without per-frame ffprobe.
+        half_interval = self.frame_interval_seconds / 2.0
         return [
-            FrameFile(path=path, timestamp_seconds=(index - 1) * self.frame_interval_seconds)
+            FrameFile(
+                path=path,
+                timestamp_seconds=(index - 1) * self.frame_interval_seconds + half_interval,
+            )
             for index, path in enumerate(sorted(frames_dir.glob("frame_*.jpg")), start=1)
         ]
 
