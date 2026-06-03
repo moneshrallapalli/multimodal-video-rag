@@ -276,6 +276,30 @@ def test_scale_to_unit_helper_and_default_confidence_calibration():
     assert _scale_to_unit(-0.1, 24.0) == 0.0
 
 
+def test_bedrock_answer_failure_logs_and_falls_back_to_extractive(caplog):
+    """When Bedrock raises, we degrade to an extractive answer — but log so the
+    `bedrock_answer_error` metric filter can count real outages on the dashboard."""
+    import logging
+
+    class BrokenAnswerer:
+        def generate(self, *, query: str, context: str) -> str:
+            raise RuntimeError("bedrock throttled")
+
+    pipeline = QueryPipeline(
+        embedder=FakeEmbedder(),
+        transcript_index=FakeIndex([_transcript_hit()]),
+        visual_index=FakeIndex([]),
+        answer_generator=BrokenAnswerer(),
+    )
+
+    with caplog.at_level(logging.ERROR, logger="video_rag.graph"):
+        response = pipeline.run(SearchRequest(query="Where do they explain self sabotage?"))
+
+    assert response.refused is False
+    assert response.answer  # extractive fallback ran
+    assert any("bedrock_answer_error" in record.message for record in caplog.records)
+
+
 def test_confidence_scale_tracks_rrf_k_via_config():
     """Consumers who tune rrf_k can tune confidence_scale via config — no magic
     number hidden inline. Pipeline output should reflect their choice."""

@@ -521,6 +521,23 @@ def handler(event, context):
             metric_name="ApiRequestLogLines",
             metric_value="1",
         )
+        # Real pipeline failures vs legitimate weak-evidence refusals; without
+        # these counters the dashboard can't distinguish "Pinecone down" from
+        # "user asked an off-domain question."
+        api_logs.add_metric_filter(
+            "SearchPipelineErrorMetricFilter",
+            filter_pattern=logs.FilterPattern.literal("search_pipeline_error"),
+            metric_namespace="VideoRag",
+            metric_name="SearchPipelineErrors",
+            metric_value="1",
+        )
+        api_logs.add_metric_filter(
+            "BedrockAnswerErrorMetricFilter",
+            filter_pattern=logs.FilterPattern.literal("bedrock_answer_error"),
+            metric_namespace="VideoRag",
+            metric_name="BedrockAnswerErrors",
+            metric_value="1",
+        )
 
         # Outputs — copy the bucket name and queue URL into .env.
         CfnOutput(self, "ArtifactsBucketName", value=artifacts.bucket_name)

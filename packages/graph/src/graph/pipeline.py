@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from langgraph.graph import END, StateGraph
@@ -51,6 +52,8 @@ _TRANSCRIPT_KEYWORDS = {
 _SUMMARY_KEYWORDS = {"summary", "summarize", "summarise", "takeaway", "takeaways", "lessons"}
 _TIMESTAMP_KEYWORDS = {"when", "timestamp", "minute", "second"}
 _OFF_DOMAIN = {"weather", "recipe", "stock", "stocks", "bitcoin", "football", "lottery", "pizza"}
+
+logger = logging.getLogger("video_rag.graph")
 
 
 class QueryPipeline:
@@ -245,6 +248,15 @@ class QueryPipeline:
                 context=state.get("context", ""),
             )
         except Exception:
+            # Bedrock throttling / network errors fall back to extractive answers
+            # so the UX still works, but we log so the dashboard can count them
+            # via the `bedrock_answer_error` metric filter (otherwise a real
+            # outage is indistinguishable from a successful extractive path).
+            logger.exception(
+                "bedrock_answer_error query_len=%s candidates=%s",
+                len(state.get("query", "")),
+                len(candidates),
+            )
             answer = _extractive_answer(candidates[0])
         return {"answer": answer, "refused": False}
 

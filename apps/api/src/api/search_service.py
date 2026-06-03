@@ -7,6 +7,7 @@ shape so the frontend can still run.
 
 from __future__ import annotations
 
+import logging
 from functools import lru_cache
 
 from graph import QueryPipeline
@@ -15,6 +16,8 @@ from shared.schemas import SearchRequest, SearchResponse
 
 from .mock_data import NO_ANSWER_MESSAGE, mock_search
 
+logger = logging.getLogger("video_rag.api.search")
+
 
 def search_videos(req: SearchRequest) -> SearchResponse:
     if not real_search_enabled():
@@ -22,6 +25,15 @@ def search_videos(req: SearchRequest) -> SearchResponse:
     try:
         return _pipeline().run(req)
     except Exception:
+        # Surface the underlying error to CloudWatch so a real pipeline failure
+        # (Pinecone outage, Bedrock throttling, etc.) is distinguishable from a
+        # legitimate weak-evidence refusal on the dashboard. The metric filter on
+        # `search_pipeline_error` log lines counts these.
+        logger.exception(
+            "search_pipeline_error query_len=%s video_id=%s",
+            len(req.query),
+            req.video_id or "",
+        )
         return SearchResponse(
             query=req.query,
             intent="no_answer",
