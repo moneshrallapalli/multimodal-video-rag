@@ -58,7 +58,7 @@ def _prompt(*, query: str, context: str, intent: str | None = None) -> str:
     visual_rules = ""
     if intent == "visual":
         visual_rules = (
-            "- Evidence labeled \"visual_caption\" contains AI-generated frame descriptions. "
+            '- Evidence labeled "visual_caption" contains AI-generated frame descriptions. '
             "These are approximate — treat them as strong evidence when they describe the "
             "same scene the user asks about, even if exact wording differs.\n"
             "- For visual queries, if any context entry describes a matching scene, confirm "
