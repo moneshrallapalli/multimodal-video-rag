@@ -151,6 +151,30 @@ def max_source_score(candidates: Sequence[RetrievalCandidate]) -> float:
     return max((candidate.score for candidate in candidates), default=0.0)
 
 
+def has_lexical_evidence(candidates: Sequence[RetrievalCandidate], *, query: str) -> bool:
+    query_terms = _content_tokens(query)
+    if not query_terms:
+        return False
+
+    query_phrase = " ".join(query_terms)
+    for candidate in candidates:
+        text_terms = _content_tokens(candidate.snippet)
+        if not text_terms:
+            continue
+
+        text_phrase = " ".join(text_terms)
+        if len(query_terms) > 1 and query_phrase in text_phrase:
+            return True
+
+        overlap = len(set(query_terms) & set(text_terms))
+        if len(query_terms) <= 2 and overlap == len(query_terms):
+            return True
+        if len(query_terms) >= 3 and overlap >= 2:
+            return True
+
+    return False
+
+
 def _combined_rerank_score(
     candidate: RetrievalCandidate,
     *,

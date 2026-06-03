@@ -13,6 +13,7 @@ from shared.schemas import QueryIntent, SearchRequest, SearchResponse, SearchRes
 from .answering import AnswerGenerator, BedrockAnswerGenerator
 from .models import GraphConfig, RetrievalCandidate
 from .retrieval import (
+    has_lexical_evidence,
     lexical_rerank,
     max_source_score,
     reciprocal_rank_fusion,
@@ -206,17 +207,17 @@ class QueryPipeline:
             *[_candidate(data) for data in state.get("transcript_hits", [])],
             *[_candidate(data) for data in state.get("visual_hits", [])],
         ]
-        if (
-            not state.get("fused")
-            or max_source_score(source_candidates) < self.config.min_source_score
-        ):
+        fused_candidates = [_candidate(data) for data in state.get("fused", [])]
+        has_dense_evidence = max_source_score(source_candidates) >= self.config.min_source_score
+        has_text_evidence = has_lexical_evidence(fused_candidates, query=state["query"])
+        if not fused_candidates or not (has_dense_evidence or has_text_evidence):
             return {
                 "refused": True,
                 "answer": self.config.no_answer_message,
                 "confidence": 0.0,
                 "fused": [],
             }
-        top_score = max((_candidate(data).score for data in state.get("fused", [])), default=0.0)
+        top_score = max((candidate.score for candidate in fused_candidates), default=0.0)
         return {"confidence": min(1.0, round(top_score * 24, 3))}
 
     def _build_context(self, state: GraphState) -> GraphState:

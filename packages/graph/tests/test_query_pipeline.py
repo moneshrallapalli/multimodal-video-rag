@@ -191,6 +191,37 @@ def test_exact_transcript_terms_rerank_above_semantic_neighbors():
     assert "lacking proper planning" in answerer.calls[0]["context"].splitlines()[0]
 
 
+def test_lexical_transcript_evidence_can_pass_low_dense_gate():
+    planning = RetrievalHit(
+        id="QkdBXUikRQc:transcript:planning",
+        score=0.0879,
+        metadata={
+            "video_id": "QkdBXUikRQc",
+            "start_seconds": 221.52,
+            "end_seconds": 254.88,
+            "title": "Stop Dreaming and Start Doing | Self-Sabotage",
+            "text": (
+                "The issue is that you're lacking proper planning. Instead of making big goals, "
+                "cut them down into small, measurable steps."
+            ),
+            "modality": "transcript",
+        },
+    )
+    answerer = FakeAnswerer()
+    pipeline = QueryPipeline(
+        embedder=FakeEmbedder(),
+        transcript_index=FakeIndex([planning]),
+        visual_index=FakeIndex([]),
+        answer_generator=answerer,
+    )
+
+    response = pipeline.run(SearchRequest(query="talk on proper planning"))
+
+    assert response.refused is False
+    assert response.results[0].start_seconds == 221.52
+    assert "proper planning" in answerer.calls[0]["context"]
+
+
 def test_off_domain_query_refuses_without_retrieval():
     transcript = FakeIndex([_transcript_hit()])
     visual = FakeIndex([_visual_hit()])
