@@ -191,7 +191,11 @@ class CoreStack(Stack):
             "SECRETS_MANAGER_SECRET_NAME": runtime_secret_name,
             "CORS_ALLOW_ORIGINS": ",".join(cors_allow_origins),
             "SESSION_COOKIE_SECURE": "true",
-            "SESSION_COOKIE_SAMESITE": "none",
+            # Production browser path is Vercel → Next rewrites → API Gateway, which
+            # the browser sees as same-origin. `lax` is sufficient there and avoids
+            # the CSRF surface that `none` opens. (Direct browser → API Gateway from
+            # a different origin is not supported by design.)
+            "SESSION_COOKIE_SAMESITE": "lax",
             "QUERY_CACHE_TTL_SECONDS": os.environ.get("QUERY_CACHE_TTL_SECONDS", "3600"),
             "RATE_LIMIT_WINDOW_SECONDS": os.environ.get("RATE_LIMIT_WINDOW_SECONDS", "60"),
             "RATE_LIMIT_MAX_REQUESTS": os.environ.get("RATE_LIMIT_MAX_REQUESTS", "20"),
