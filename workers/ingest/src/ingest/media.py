@@ -36,6 +36,8 @@ class MediaProcessor:
         self.whisper_model_size = whisper_model_size
 
     def fetch_metadata(self, youtube_url: str) -> VideoMetadataArtifact:
+        # This command's stdout is a JSON blob we need; everywhere else we
+        # discard stdout to avoid buffering hundreds of MB of ffmpeg progress.
         result = _run(
             [
                 "yt-dlp",
@@ -43,7 +45,8 @@ class MediaProcessor:
                 "--skip-download",
                 "--no-playlist",
                 youtube_url,
-            ]
+            ],
+            capture_stdout=True,
         )
         raw = json.loads(result.stdout)
         duration = raw.get("duration")
@@ -155,5 +158,25 @@ def frame_artifacts(video_id: str, frames: list[FrameFile], keys: list[str]) -> 
     ]
 
 
-def _run(args: list[str]) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(args, check=True, capture_output=True, text=True)
+_STDERR_TAIL_BYTES = 4096
+
+
+def _run(args: list[str], *, capture_stdout: bool = False) -> subprocess.CompletedProcess[str]:
+    """Run a subprocess without buffering its stdout in memory by default.
+
+    ffmpeg progress output on a long video can be hundreds of MB; keeping it in
+    RAM risks OOM on the Fargate worker. Callers that actually need stdout (e.g.
+    `yt-dlp --dump-single-json`) opt in with `capture_stdout=True`. Stderr is
+    always captured but truncated to the last 4 KB before being re-raised.
+    """
+    proc = subprocess.run(
+        args,
+        check=False,
+        stdout=subprocess.PIPE if capture_stdout else subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if proc.returncode != 0:
+        tail = (proc.stderr or "")[-_STDERR_TAIL_BYTES:]
+        raise subprocess.CalledProcessError(proc.returncode, args, output=proc.stdout, stderr=tail)
+    return proc
