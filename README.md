@@ -25,16 +25,21 @@ Infrastructure is CDK in Python, with least-privilege IAM, Secrets Manager runti
 
 ## Eval results
 
-This is a seed evaluation over one indexed video and 15 hand-labeled queries across transcript, visual, timestamp, hybrid, and no-answer cases. It is useful for regression checks and ablation sanity, not a final benchmark.
+Real evaluation over 3 indexed videos, 60 hand-labeled queries (transcript, visual, timestamp, hybrid, summary, no-answer). Deterministic retrieval metrics plus Haiku LLM judge on answerable queries.
 
-| Config | Recall@5 | MRR | Timestamp@5s | No-answer F1 |
-|---|---:|---:|---:|---:|
-| Dense baseline | 1.00 | 0.90 | 0.83 | 0.80 |
-| Hybrid (dense + BM25) | 1.00 | 0.90 | 0.83 | 0.80 |
-| **Hybrid + cross-encoder rerank** | **1.00** | **0.96** | **0.92** | **0.80** |
-| Hybrid + query rewrite | 1.00 | 0.90 | 0.83 | 0.50 |
+| Config | MRR | Timestamp@5s | No-answer F1 |
+|---|---:|---:|---:|
+| Dense baseline | 0.929 | 0.889 | 0.500 |
+| Hybrid BM25 | 0.920 | 0.870 | 0.286 |
+| Hybrid + rerank | 0.934 | 0.889 | 0.286 |
+| Hybrid + rewrite | 0.920 | 0.870 | 0.286 |
+| **Production (hybrid + rewrite)** | **0.920** | **0.870** | **0.286** |
 
-Cross-encoder reranking is the strongest config on the seed set: MRR moves from 0.90 to 0.96, and timestamp accuracy moves from 83% to 92%. Query rewrite is kept as a negative result because it hurt no-answer F1 on these 15 queries.
+LLM judge on 54 answerable queries: quality 0.753, grounded 0.815, correct 0.704, useful 0.741.
+
+Recall@5 and modality accuracy are near-ceiling on 3 videos (retrieving top-10 from ~130 vectors). MRR and Timestamp@5s are what actually discriminate between configs. The cross-encoder config is eval-only — API Gateway's 30s hard timeout makes cold-start model loading impractical without provisioned concurrency.
+
+No-answer F1 is the main weakness: 5 in-domain content-absent queries score above the 0.2 gate because the video has adjacent content. Fixing this requires semantic "is this topic present?" reasoning beyond a score threshold.
 
 ## Interesting engineering decisions
 
@@ -46,13 +51,12 @@ Cross-encoder reranking is the strongest config on the seed set: MRR moves from 
 
 **Idempotent ingestion.** SQS delivers at-least-once. The worker checks job status in DynamoDB before doing any expensive work (downloads, transcription, embedding). A redelivered message for a completed job gets a log line and a delete, not a duplicate $2 Bedrock bill.
 
-**Cross-encoder baked into the Docker image.** `sentence-transformers` + `BAAI/bge-reranker-base` is ~500MB. It's pre-downloaded into the Lambda container image at build time so cold starts don't hit Hugging Face.
+**Cross-encoder reranking is eval-only.** `BAAI/bge-reranker-base` (~500MB) is baked into the API container image. In the eval harness it runs locally and moves MRR from 0.920 to 0.934. In the deployed Lambda it can't be used because API Gateway HTTP has a fixed 30-second integration timeout — cold-start model loading always exceeds it. This is a real infrastructure constraint, not a code problem.
 
 ## Current limits
 
-- The deployed demo library is still small.
-- The committed eval is still a real seed run: 1 video, 15 queries.
-- No RAGAS or LLM-judge scores are reported yet.
+- No-answer F1 is weak on in-domain content-absent queries (5 misses out of 6 total). Requires semantic topic-detection, not just a score threshold.
+- Cross-encoder reranking is eval-only due to API Gateway timeout constraints.
 - Admin ingestion is password-gated, not a multi-user product flow.
 
 ## Run locally
