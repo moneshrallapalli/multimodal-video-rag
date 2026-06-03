@@ -57,8 +57,8 @@ DEMO_VIDEOS: list[DemoVideo] = [
         author="Mia McGrath",
         thumbnail_url=_thumb("DVtcZQ2QdBg"),
         youtube_url=_watch("DVtcZQ2QdBg"),
-        duration_seconds=1080,
-        indexed=False,
+        duration_seconds=1521,
+        indexed=True,
     ),
     DemoVideo(
         id="as9IYFrTiKc",
@@ -66,8 +66,8 @@ DEMO_VIDEOS: list[DemoVideo] = [
         author="DataMiner by Skyline Communications",
         thumbnail_url=_thumb("as9IYFrTiKc"),
         youtube_url=_watch("as9IYFrTiKc"),
-        duration_seconds=900,
-        indexed=False,
+        duration_seconds=404,
+        indexed=True,
     ),
 ]
 
