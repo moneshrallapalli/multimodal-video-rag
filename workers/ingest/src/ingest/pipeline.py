@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
@@ -18,6 +19,8 @@ from shared.schemas import IngestJobMessage, JobStatus, VideoMetadataArtifact
 
 from .indexing import VideoIndexer
 from .media import MediaProcessor, frame_artifacts
+
+logger = logging.getLogger(__name__)
 
 
 class IngestionWorker:
@@ -42,8 +45,12 @@ class IngestionWorker:
         """Process one SQS ingestion message.
 
         Exceptions are re-raised after the job is marked failed so SQS can retry
-        and eventually redrive to the DLQ.
+        and eventually redrive to the DLQ. SQS delivery is at-least-once, so a
+        redelivered already-completed job is skipped to avoid re-downloading,
+        re-transcribing, and re-embedding (cost + time).
         """
+        if self._already_completed(message.job_id):
+            return
         try:
             self._update_job(message.job_id, status="downloading", progress=10)
             with TemporaryDirectory(prefix=f"ingest-{message.video_id}-") as tmp:
@@ -106,6 +113,24 @@ class IngestionWorker:
         except Exception as exc:
             self._update_job(message.job_id, status="failed", progress=0, error=str(exc)[:500])
             raise
+
+    def _already_completed(self, job_id: str) -> bool:
+        """Cheap pre-check: if SQS redelivered a finished job, skip re-doing the
+        whole pipeline. Failures during the get_item itself are swallowed so we
+        fall through to the normal flow (better to redo work than block on a
+        transient DDB read)."""
+        try:
+            response = self.jobs_table.get_item(Key={"job_id": job_id})
+        except Exception:
+            logger.exception(
+                "worker_job_lookup_error job_id=%s; proceeding with full process", job_id
+            )
+            return False
+        item = response.get("Item") if isinstance(response, dict) else None
+        if item and item.get("status") == "completed":
+            logger.info("worker_skip_completed_job job_id=%s reason=idempotent_redelivery", job_id)
+            return True
+        return False
 
     def _upload_file(self, path: Path, key: str, content_type: str) -> None:
         self.s3.upload_file(

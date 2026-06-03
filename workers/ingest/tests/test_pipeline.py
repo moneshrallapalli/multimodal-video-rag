@@ -18,15 +18,26 @@ from shared.schemas import (
 
 
 class FakeTable:
-    def __init__(self) -> None:
+    def __init__(self, *, existing_items: dict[str, dict[str, Any]] | None = None) -> None:
         self.updates: list[dict[str, Any]] = []
         self.puts: list[dict[str, Any]] = []
+        self.gets: list[dict[str, Any]] = []
+        self._items: dict[str, dict[str, Any]] = existing_items or {}
 
     def update_item(self, **kwargs) -> None:
         self.updates.append(kwargs)
 
     def put_item(self, **kwargs) -> None:
         self.puts.append(kwargs["Item"])
+
+    def get_item(self, **kwargs) -> dict[str, Any]:
+        self.gets.append(kwargs)
+        key = kwargs.get("Key", {})
+        if not key:
+            return {}
+        pk_value = next(iter(key.values()))
+        item = self._items.get(pk_value)
+        return {"Item": item} if item else {}
 
 
 class FakeS3:
@@ -163,3 +174,54 @@ def test_worker_marks_failed_and_reraises_on_retryable_error():
     failed = jobs.updates[-1]["ExpressionAttributeValues"]
     assert failed[":status"] == "failed"
     assert failed[":error"] == "download exploded"
+
+
+def test_worker_skips_already_completed_job_on_redelivery():
+    """SQS delivery is at-least-once. A redelivered completed job must not
+    re-download, re-transcribe, or re-embed — costs money and time."""
+    jobs = FakeTable(existing_items={"yt_QkdBXUikRQc": {"status": "completed"}})
+    videos = FakeTable()
+    s3 = FakeS3()
+    indexer = FakeIndexer()
+    media = FakeMedia()
+    worker = IngestionWorker(
+        bucket="test-bucket",
+        jobs_table=jobs,
+        videos_table=videos,
+        s3_client=s3,
+        media=media,
+        indexer=indexer,
+    )
+
+    worker.process(_message())
+
+    # Critical assertions: NO writes anywhere, only the lookup happened.
+    assert jobs.gets, "must have probed job status before processing"
+    assert jobs.updates == []
+    assert videos.puts == []
+    assert s3.files == []
+    assert s3.objects == {}
+    assert indexer.calls == []
+
+
+def test_worker_proceeds_when_lookup_fails_transiently():
+    """A transient DDB read failure must not block the worker from doing the
+    work — better to redo an idempotent step than to drop a real job."""
+
+    class FailingTable(FakeTable):
+        def get_item(self, **kwargs) -> dict[str, Any]:
+            raise RuntimeError("ddb hiccup")
+
+    jobs = FailingTable()
+    worker = IngestionWorker(
+        bucket="test-bucket",
+        jobs_table=jobs,
+        videos_table=FakeTable(),
+        s3_client=FakeS3(),
+        media=FakeMedia(),
+        indexer=FakeIndexer(),
+    )
+
+    # Should NOT raise: the lookup failure is swallowed and the pipeline proceeds.
+    worker.process(_message())
+    assert jobs.updates, "pipeline should have run through to update statuses"
