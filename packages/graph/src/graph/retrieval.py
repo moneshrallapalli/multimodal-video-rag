@@ -201,7 +201,9 @@ def has_lexical_evidence(candidates: Sequence[RetrievalCandidate], *, query: str
         overlap = len(set(query_terms) & set(text_terms))
         if len(query_terms) <= 2 and overlap == len(query_terms):
             return True
-        if len(query_terms) >= 3 and overlap >= 2:
+        if 3 <= len(query_terms) <= 4 and overlap >= 2:
+            return True
+        if len(query_terms) >= 5 and overlap >= 3:
             return True
 
     return False

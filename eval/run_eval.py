@@ -77,6 +77,7 @@ CONFIGS = [
         "enable_hybrid_transcript": True,
         "enable_cross_encoder_rerank": True,
         "enable_query_rewrite": True,
+        "enable_answer_generation": True,
     },
 ]
 
@@ -142,8 +143,9 @@ def run_eval(
     for config in CONFIGS:
         config_id = str(config["id"])
         effective_config = dict(config)
-        if judge is None or config_id not in judge_config_ids:
-            effective_config["enable_answer_generation"] = False
+        if "enable_answer_generation" not in effective_config:
+            if judge is None or config_id not in judge_config_ids:
+                effective_config["enable_answer_generation"] = False
         print(f"[eval] running {config_id} ({len(rows)} queries)", file=sys.stderr, flush=True)
         graph_config = _graph_config(effective_config)
         pipeline = QueryPipeline(config=graph_config)
