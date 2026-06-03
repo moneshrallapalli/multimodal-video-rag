@@ -28,6 +28,12 @@ class GraphConfig(BaseModel):
     retrieve_top_k: int = 8
     rrf_k: int = 60
     min_source_score: float = 0.2
+    # Confidence/display score = clamp(fused_RRF_score * confidence_scale, 0, 1).
+    # The 24.0 default is empirically calibrated for rrf_k=60: at rank 1 the RRF
+    # contribution from one list is 1/(60+1) ≈ 0.0164, so a candidate that tops
+    # both modality lists scores ≈ 0.033 → 0.79 displayed. If you change rrf_k,
+    # rescale this too (rule of thumb: confidence_scale ≈ (rrf_k + 1) / 2.5).
+    confidence_scale: float = 24.0
     no_answer_message: str = (
         "I could not find strong evidence for that in the indexed videos. "
         "Try a more specific visual description or search within a single video."

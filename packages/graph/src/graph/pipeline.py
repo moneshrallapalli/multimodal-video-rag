@@ -218,7 +218,7 @@ class QueryPipeline:
                 "fused": [],
             }
         top_score = max((candidate.score for candidate in fused_candidates), default=0.0)
-        return {"confidence": min(1.0, round(top_score * 24, 3))}
+        return {"confidence": _scale_to_unit(top_score, self.config.confidence_scale)}
 
     def _build_context(self, state: GraphState) -> GraphState:
         if state.get("refused"):
@@ -265,7 +265,7 @@ class QueryPipeline:
                     start_seconds=candidate.start_seconds,
                     end_seconds=candidate.end_seconds,
                     modality=candidate.modality,
-                    score=max(0.0, min(1.0, round(candidate.score * 24, 3))),
+                    score=_scale_to_unit(candidate.score, self.config.confidence_scale),
                     snippet=candidate.snippet,
                     thumbnail_url=candidate.thumbnail_url,
                     seek_url=candidate.seek_url,
@@ -288,6 +288,11 @@ def _video_filter(video_id: str | None) -> dict[str, Any] | None:
 def _mmss(seconds: float) -> str:
     minutes, secs = divmod(int(seconds), 60)
     return f"{minutes}:{secs:02d}"
+
+
+def _scale_to_unit(value: float, scale: float) -> float:
+    """Clamp `value * scale` into [0, 1] with 3-decimal display precision."""
+    return max(0.0, min(1.0, round(value * scale, 3)))
 
 
 def _extractive_answer(top: RetrievalCandidate) -> str:

@@ -255,3 +255,42 @@ def test_low_score_retrieval_refuses():
 
     assert response.refused is True
     assert response.results == []
+
+
+def test_scale_to_unit_helper_and_default_confidence_calibration():
+    """Pin the confidence/score scaling. Anyone tuning rrf_k must explicitly tune
+    confidence_scale alongside, not discover it via drifting UI numbers."""
+    from graph.models import GraphConfig
+    from graph.pipeline import _scale_to_unit
+
+    config = GraphConfig()
+    assert config.confidence_scale == 24.0
+    assert config.rrf_k == 60
+    # RRF contribution at rank 1 from one list is 1/(60+1) ≈ 0.01639.
+    # A candidate that tops *both* modality lists scores ≈ 0.03279.
+    assert _scale_to_unit(1.0 / 61, config.confidence_scale) == 0.393
+    assert _scale_to_unit(2.0 / 61, config.confidence_scale) == 0.787
+    # Clamp behavior at both ends.
+    assert _scale_to_unit(0.0, 24.0) == 0.0
+    assert _scale_to_unit(1.0, 24.0) == 1.0
+    assert _scale_to_unit(-0.1, 24.0) == 0.0
+
+
+def test_confidence_scale_tracks_rrf_k_via_config():
+    """Consumers who tune rrf_k can tune confidence_scale via config — no magic
+    number hidden inline. Pipeline output should reflect their choice."""
+    from graph.models import GraphConfig
+
+    cfg = GraphConfig(rrf_k=30, confidence_scale=12.0)
+    pipeline = QueryPipeline(
+        embedder=FakeEmbedder(),
+        transcript_index=FakeIndex([_transcript_hit()]),
+        visual_index=FakeIndex([]),
+        answer_generator=FakeAnswerer(),
+        config=cfg,
+    )
+    response = pipeline.run(SearchRequest(query="Where do they explain self sabotage?"))
+    # Top hit, rank 1, single list, rrf_k=30 → 1/31 ≈ 0.03226 × 12 → 0.387 (rounded).
+    assert response.results
+    assert response.results[0].score == 0.387
+    assert response.confidence == 0.387
