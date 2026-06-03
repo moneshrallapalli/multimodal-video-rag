@@ -209,7 +209,7 @@ class CoreStack(Stack):
             "SECRETS_MANAGER_SECRET_NAME": runtime_secret_name,
             "CORS_ALLOW_ORIGINS": ",".join(cors_allow_origins),
             "ENABLE_HYBRID_TRANSCRIPT": os.environ.get("ENABLE_HYBRID_TRANSCRIPT", "true"),
-            "ENABLE_CROSS_ENCODER_RERANK": os.environ.get("ENABLE_CROSS_ENCODER_RERANK", "true"),
+            "ENABLE_CROSS_ENCODER_RERANK": os.environ.get("ENABLE_CROSS_ENCODER_RERANK", "false"),
             "ENABLE_QUERY_REWRITE": os.environ.get("ENABLE_QUERY_REWRITE", "true"),
             "HYBRID_ALPHA": os.environ.get("HYBRID_ALPHA", "0.7"),
             "SEARCH_CONFIG_VERSION": os.environ.get(
