@@ -331,7 +331,7 @@ the `"status": "real_seed"` framing — still 1 video, 15 queries.
 
 ## Final pass
 
-### [ ] T20. Update `tasks/lessons.md` with audit findings
+### [x] T20. Update `tasks/lessons.md` with audit findings  ✅ `59a4120`
 
 Add entries for:
 - Magic constants in retrieval scoring should live in config with a test.
@@ -341,17 +341,17 @@ Add entries for:
 - Cookie samesite should match actual cross-origin reality, not be defensive.
 
 **Commit:** `docs: capture audit lessons`
-**Status:** not started
+**Status:** shipped
 
 ---
 
 ## Status snapshot (updated as items complete)
 
-- ✅ Done: T1–T19  (19 / 20) — 95% complete
-- 🚧 In progress: T20 (audit lessons)
-- ⏳ Remaining: T20 (lessons)
+- ✅ Done: T1–T20  (20 / 20) — 100% complete
+- 🚧 In progress: deploy and live smoke
+- ⏳ Remaining: deploy CDK, then smoke `/health`, `/api/search`, and `/api/admin/session`
 
-Last commit pushed: `7df637c` (T19)
+Last commit pushed: `59a4120` (T20)
 
 **Quick stats (Phase 7 so far):**
 - **87 tests passing** (was 51 before this phase) — +36 new tests
@@ -360,9 +360,9 @@ Last commit pushed: `7df637c` (T19)
 - All P0 (security), P1 (correctness), and P2 (ops/hardening) items shipped
 - T16 (BM25 hybrid retrieval) shipped end-to-end across 4 commits
 
-**Remaining work:** capture audit lessons (T20), then deploy and live smoke.
-T17's API Docker image build passed with
+**Remaining work:** deploy and live smoke. T17's API Docker image build passed with
 `sentence-transformers` and the `BAAI/bge-reranker-base` model baked into the
 image; T18's rewrite node is off by default behind `enable_query_rewrite`.
 T19's real-seed eval now reports six configs (`dense`, gate sweeps, `hybrid`,
-`hybrid_rerank`, `hybrid_rewrite`) over the same 1 video / 15 queries.
+`hybrid_rerank`, `hybrid_rewrite`) over the same 1 video / 15 queries. T20's
+audit lessons are captured in `tasks/lessons.md`.
