@@ -121,11 +121,14 @@ def result_matches(
 def _modality_correct(row: GoldenQuery, results: list[SearchResult]) -> bool | None:
     if not results:
         return False
-    if row.expected_modality in ("visual", "transcript"):
-        return results[0].modality == row.expected_modality
+    if row.expected_modality == "visual":
+        return results[0].modality in ("visual", "visual_caption")
+    if row.expected_modality == "transcript":
+        return results[0].modality == "transcript"
     if row.expected_modality == "hybrid":
         modalities = {result.modality for result in results[:5]}
-        return {"visual", "transcript"}.issubset(modalities)
+        has_visual = bool(modalities & {"visual", "visual_caption"})
+        return has_visual and "transcript" in modalities
     return None
 
 

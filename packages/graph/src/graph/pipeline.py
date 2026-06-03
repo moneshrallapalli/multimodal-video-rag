@@ -152,7 +152,7 @@ class QueryPipeline:
             retrieve_visual = False
         elif tokens & _VISUAL_KEYWORDS and not tokens & _TRANSCRIPT_KEYWORDS:
             intent = "visual"
-            retrieve_transcript = False
+            retrieve_transcript = True
             retrieve_visual = True
         elif tokens & _TRANSCRIPT_KEYWORDS and not tokens & _VISUAL_KEYWORDS:
             intent = "transcript"

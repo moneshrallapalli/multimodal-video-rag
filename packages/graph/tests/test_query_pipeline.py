@@ -85,6 +85,22 @@ def _transcript_hit(score: float = 0.72) -> RetrievalHit:
     )
 
 
+def _visual_caption_hit(score: float = 0.55) -> RetrievalHit:
+    return RetrievalHit(
+        id="QkdBXUikRQc:caption:000001",
+        score=score,
+        metadata={
+            "video_id": "QkdBXUikRQc",
+            "chunk_id": "QkdBXUikRQc:caption:000001",
+            "start_seconds": 0,
+            "end_seconds": 0,
+            "title": "Stop Dreaming and Start Doing | Self-Sabotage",
+            "text": "Woman seated in a bedroom with wall art and bedside lamps.",
+            "modality": "visual_caption",
+        },
+    )
+
+
 def _visual_hit(score: float = 0.42) -> RetrievalHit:
     return RetrievalHit(
         id="QkdBXUikRQc:frame:000001",
@@ -126,9 +142,9 @@ def test_transcript_query_routes_to_transcript_index_only():
     assert "self-sabotaging behaviors" in answerer.calls[0]["context"]
 
 
-def test_visual_query_routes_to_visual_index_only_with_video_filter():
+def test_visual_query_routes_to_both_indexes_with_video_filter():
     embedder = FakeEmbedder()
-    transcript = FakeIndex([_transcript_hit()])
+    transcript = FakeIndex([_visual_caption_hit()])
     visual = FakeIndex([_visual_hit()])
     answerer = FakeAnswerer()
     pipeline = QueryPipeline(
@@ -144,14 +160,30 @@ def test_visual_query_routes_to_visual_index_only_with_video_filter():
 
     assert response.refused is False
     assert response.intent == "visual"
-    assert response.answer == (
-        'The strongest visual match is around 0:00 in "Stop Dreaming and Start Doing | '
-        'Self-Sabotage".'
-    )
-    assert response.results[0].modality == "visual"
+    assert len(transcript.calls) == 1
+    assert len(visual.calls) == 1
     assert visual.calls[0]["metadata_filter"] == {"video_id": {"$eq": "QkdBXUikRQc"}}
-    assert transcript.calls == []
-    assert answerer.calls == []
+    modalities = {r.modality for r in response.results}
+    assert modalities & {"visual", "visual_caption"}
+
+
+def test_visual_query_retrieves_visual_captions():
+    pipeline = QueryPipeline(
+        embedder=FakeEmbedder(),
+        transcript_index=FakeIndex([_visual_caption_hit(score=0.55)]),
+        visual_index=FakeIndex([_visual_hit(score=0.30)]),
+        answer_generator=FakeAnswerer(),
+    )
+
+    response = pipeline.run(
+        SearchRequest(query="Show me a bedroom setting", video_ids=["QkdBXUikRQc"])
+    )
+
+    assert response.refused is False
+    assert response.intent == "visual"
+    caption_results = [r for r in response.results if r.modality == "visual_caption"]
+    assert len(caption_results) >= 1
+    assert "bedroom" in caption_results[0].snippet.lower()
 
 
 def test_hybrid_query_fuses_both_modalities():
@@ -418,10 +450,10 @@ def test_cross_encoder_rerank_reorders_fused_candidates_when_enabled():
     assert response.results[0].rank == 1
 
 
-def test_cross_encoder_rerank_skips_visual_intent_when_enabled():
+def test_cross_encoder_rerank_fires_on_visual_intent_with_mixed_modalities():
     from graph.models import GraphConfig
 
-    fake_reranker = FakeCrossEncoderReranker(scores=[1.0])
+    fake_reranker = FakeCrossEncoderReranker(scores=[1.0, 0.5])
     pipeline = QueryPipeline(
         embedder=FakeEmbedder(),
         transcript_index=FakeIndex([_transcript_hit(score=0.5)]),
@@ -431,10 +463,10 @@ def test_cross_encoder_rerank_skips_visual_intent_when_enabled():
         cross_encoder_reranker=fake_reranker,
     )
 
-    response = pipeline.run(SearchRequest(query="Show me the speaker at a desk", top_k=1))
+    response = pipeline.run(SearchRequest(query="Show me the speaker at a desk", top_k=2))
 
-    assert fake_reranker.calls == []
-    assert response.results[0].modality == "visual"
+    assert len(fake_reranker.calls) == 1
+    assert response.refused is False
 
 
 def test_cross_encoder_rerank_fires_on_mixed_modality_hybrid_intent():
