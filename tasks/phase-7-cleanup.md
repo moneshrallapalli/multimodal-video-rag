@@ -183,7 +183,7 @@ transcript index, `"cosine"` for visual.
 
 ---
 
-### [ ] T11. Tighten admin cookie `samesite` to `lax`
+### [x] T11. Tighten admin cookie `samesite` to `lax`  ✅ `b802a26`
 
 **File:** `infra/video_rag_infra/core_stack.py` line 194 (`SESSION_COOKIE_SAMESITE`)
 **Why:** Vercel rewrites → API means the browser sees same-origin; `lax` is
@@ -198,7 +198,7 @@ existing architectural decision.
 
 ---
 
-### [ ] T12. Add GSI on `jobs` table for created_at-desc ordering
+### [x] T12. Add GSI on `jobs` table for created_at-desc ordering  ✅ `801891e`
 
 **File:** `infra/video_rag_infra/core_stack.py` Jobs table + `apps/api/src/api/ingestion_store.py`
 **Why:** `scan(Limit=100)` returns scan order, not creation order. Past 100 jobs
@@ -212,7 +212,7 @@ Worker `_update_job` and store `enqueue` set `gsi_partition="all"` on every item
 
 ---
 
-### [ ] T13. Add VPC Gateway Endpoints for S3 and DynamoDB
+### [x] T13. Add VPC Gateway Endpoints for S3 and DynamoDB  ✅ `7d3939a`
 
 **File:** `infra/video_rag_infra/core_stack.py` VPC construction (~line 284)
 **Why:** Free, reduces traffic through the public NIC, reads better on the
@@ -232,7 +232,7 @@ vpc.add_gateway_endpoint(
 
 ---
 
-### [ ] T14. Delete stale `eval-sample.json`
+### [x] T14. Delete stale `eval-sample.json`  ✅ `9362beb`
 
 **File:** `apps/web/src/data/eval-sample.json`
 **Why:** No imports reference it; superseded by `eval-results.json`.
@@ -243,7 +243,7 @@ vpc.add_gateway_endpoint(
 
 ---
 
-### [ ] T15. Refresh `tasks/todo.md` to point at the current phase state
+### [x] T15. Refresh `tasks/todo.md` to point at the current phase state  ✅ `2158ddc`
 
 **File:** `tasks/todo.md`
 **Why:** Currently still labeled "Phase 1." Confuses anyone clicking into `tasks/`.
@@ -338,16 +338,22 @@ Add entries for:
 
 ## Status snapshot (updated as items complete)
 
-- ✅ Done: T1, T2, T3, T4, T5, T6, T7, T8, T9, T10  (10 / 20) — halfway
-- 🚧 In progress: T11
-- ⏳ Remaining: T11 — T20
+- ✅ Done: T1–T15  (15 / 20) — 75% complete
+- 🚧 In progress: T16 (hybrid sparse retrieval)
+- ⏳ Remaining: T16, T17, T18 (the P3 ablation fills), T19 (re-run eval), T20 (lessons)
 
-Last commit pushed: `21aa7fc` (T10)
+Last commit pushed: `2158ddc` (T15)
 
 **Quick stats (Phase 7 so far):**
-- 66 tests passing (was 51 before this phase)
+- 68 tests passing (was 51 before this phase) — +17 new tests
 - Python lint+format clean repo-wide
 - Web lint+typecheck+build clean
-- IAM tightened, frame timestamps fixed, ×24 magic constant codified, per-modality
-  gating live, ingestion idempotent, Pinecone retries, ffmpeg memory bug fixed,
-  index metric assertion in place
+- All P0 (security) and P1 (correctness) items shipped
+- All P2 (ops/hardening) items shipped
+- Remaining work is the P3 retrieval ablation (BM25 hybrid + bge-reranker +
+  query-rewrite), then re-run eval + lessons update.
+
+**P3 note:** T16/T17/T18 are the substantive AI/ML upgrades. They're independent
+work — each can be shipped or deferred without blocking the others. Recommend
+shipping T16 (BM25 hybrid) at minimum before re-running eval (T19), since the
+single-config seed eval already has the dense baseline.
