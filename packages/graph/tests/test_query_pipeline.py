@@ -276,6 +276,56 @@ def test_scale_to_unit_helper_and_default_confidence_calibration():
     assert _scale_to_unit(-0.1, 24.0) == 0.0
 
 
+def test_per_modality_gate_lets_transcript_pass_when_visual_below_threshold():
+    """The transcript-and-visual indexes use different metrics (dotproduct vs
+    cosine) so their score distributions differ. Per-modality thresholds let
+    each modality have its own bar — a strong transcript hit alongside a
+    weak visual hit must still answer (the legacy combined threshold could
+    misclassify on near-ties)."""
+    from graph.models import GraphConfig
+
+    strong_transcript = _transcript_hit(score=0.45)
+    weak_visual = _visual_hit(score=0.05)
+    pipeline = QueryPipeline(
+        embedder=FakeEmbedder(),
+        transcript_index=FakeIndex([strong_transcript]),
+        visual_index=FakeIndex([weak_visual]),
+        answer_generator=FakeAnswerer(),
+        config=GraphConfig(
+            min_transcript_source_score=0.2,
+            min_visual_source_score=0.5,  # visual must clear a higher bar
+        ),
+    )
+
+    response = pipeline.run(SearchRequest(query="self sabotage"))
+
+    assert response.refused is False
+    assert response.results
+
+
+def test_per_modality_gate_refuses_when_both_below_threshold():
+    """If neither modality clears its own threshold AND no lexical evidence is
+    present, the gate must refuse — same UX as the legacy single-threshold gate."""
+    from graph.models import GraphConfig
+
+    weak_transcript = _transcript_hit(score=0.05)
+    pipeline = QueryPipeline(
+        embedder=FakeEmbedder(),
+        transcript_index=FakeIndex([weak_transcript]),
+        visual_index=FakeIndex([]),
+        answer_generator=FakeAnswerer(),
+        config=GraphConfig(
+            min_transcript_source_score=0.2,
+            min_visual_source_score=0.2,
+        ),
+    )
+
+    response = pipeline.run(SearchRequest(query="show me an unrelated thing entirely"))
+
+    assert response.refused is True
+    assert response.results == []
+
+
 def test_bedrock_answer_failure_logs_and_falls_back_to_extractive(caplog):
     """When Bedrock raises, we degrade to an extractive answer — but log so the
     `bedrock_answer_error` metric filter can count real outages on the dashboard."""

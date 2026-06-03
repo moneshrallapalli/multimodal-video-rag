@@ -206,13 +206,23 @@ class QueryPipeline:
     def _apply_retrieval_gate(self, state: GraphState) -> GraphState:
         if state.get("refused"):
             return {"fused": [], "confidence": 0.0}
-        source_candidates = [
-            *[_candidate(data) for data in state.get("transcript_hits", [])],
-            *[_candidate(data) for data in state.get("visual_hits", [])],
-        ]
+
+        transcript_candidates = [_candidate(d) for d in state.get("transcript_hits", [])]
+        visual_candidates = [_candidate(d) for d in state.get("visual_hits", [])]
         fused_candidates = [_candidate(data) for data in state.get("fused", [])]
-        has_dense_evidence = max_source_score(source_candidates) >= self.config.min_source_score
+
+        # Per-modality dense gate (transcript uses dotproduct, visual uses cosine;
+        # the score distributions differ, so a single threshold across both
+        # produces modality-flip bugs at near-tied scores). Either modality
+        # passing dense lets the answer proceed; lexical evidence stays as a
+        # final safety net for terse queries.
+        transcript_passes = max_source_score(transcript_candidates) >= (
+            self.config.min_transcript_source_score
+        )
+        visual_passes = max_source_score(visual_candidates) >= (self.config.min_visual_source_score)
+        has_dense_evidence = transcript_passes or visual_passes
         has_text_evidence = has_lexical_evidence(fused_candidates, query=state["query"])
+
         if not fused_candidates or not (has_dense_evidence or has_text_evidence):
             return {
                 "refused": True,

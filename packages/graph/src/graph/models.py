@@ -27,7 +27,15 @@ class RetrievalCandidate(BaseModel):
 class GraphConfig(BaseModel):
     retrieve_top_k: int = 8
     rrf_k: int = 60
+    # Legacy single-threshold gate. Kept for backwards compatibility with the
+    # eval harness; prefer the per-modality thresholds below.
     min_source_score: float = 0.2
+    # Per-modality refusal gates. Transcript index uses dotproduct, visual uses
+    # cosine — their score distributions differ. A single threshold across both
+    # produces modality-flip bugs at near-tied scores (see eval q006). Defaults
+    # match the legacy 0.2 so behavior is identical until tuned.
+    min_transcript_source_score: float = 0.2
+    min_visual_source_score: float = 0.2
     # Confidence/display score = clamp(fused_RRF_score * confidence_scale, 0, 1).
     # The 24.0 default is empirically calibrated for rrf_k=60: at rank 1 the RRF
     # contribution from one list is 1/(60+1) ≈ 0.0164, so a candidate that tops
