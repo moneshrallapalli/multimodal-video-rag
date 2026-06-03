@@ -106,3 +106,29 @@ def test_admin_ingest_rejects_invalid_youtube_url(client):
 
     assert r.status_code == 400
     assert "YouTube URL" in r.json()["detail"]
+
+
+def test_serializer_refuses_empty_secret_in_deployed_mode(monkeypatch):
+    """In deployed mode (Secrets Manager configured), an empty SESSION_SECRET must
+    raise — never silently fall back to the dev default that would let an attacker
+    forge admin cookies."""
+    from api import auth
+
+    monkeypatch.setattr(settings, "session_secret", "")
+    monkeypatch.setattr(settings, "secrets_manager_secret_name", "video-rag/runtime")
+
+    with pytest.raises(RuntimeError, match="SESSION_SECRET"):
+        auth._serializer()
+
+
+def test_serializer_allows_dev_fallback_outside_deployed_mode(monkeypatch):
+    """Local dev without Secrets Manager keeps the convenience fallback."""
+    from api import auth
+
+    monkeypatch.setattr(settings, "session_secret", "")
+    monkeypatch.setattr(settings, "secrets_manager_secret_name", "")
+
+    serializer = auth._serializer()
+    # Round-trip a token to confirm a usable serializer was returned.
+    token = serializer.dumps({"role": "admin"})
+    assert serializer.loads(token) == {"role": "admin"}

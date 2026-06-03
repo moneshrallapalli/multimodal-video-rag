@@ -19,8 +19,17 @@ _MAX_AGE = 60 * 60 * 8  # 8 hours
 _ph = PasswordHasher()
 
 
+_DEV_INSECURE_SESSION_SECRET = "dev-only-insecure-secret"
+
+
 def _serializer() -> URLSafeTimedSerializer:
-    secret = settings.session_secret or "dev-only-insecure-secret"
+    secret = settings.session_secret
+    if not secret:
+        # In deployed mode (Secrets Manager configured) refuse to fall back to a
+        # known weak default — that would let an attacker forge admin cookies.
+        if settings.secrets_manager_secret_name:
+            raise RuntimeError("SESSION_SECRET missing from runtime secret")
+        secret = _DEV_INSECURE_SESSION_SECRET
     return URLSafeTimedSerializer(secret, salt="admin-session")
 
 
