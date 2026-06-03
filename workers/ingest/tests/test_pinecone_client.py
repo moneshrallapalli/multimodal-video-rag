@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import io
 import json
+from urllib.error import HTTPError, URLError
 
+import pytest
 from shared.pinecone_client import PineconeIndexClient, PineconeIndexInfo
 from shared.schemas import VectorRecord
 
@@ -84,3 +87,73 @@ def test_query_returns_retrieval_hits(monkeypatch):
     assert hits[0].id == "vid:frame:000001"
     assert hits[0].score == 0.88
     assert hits[0].metadata["timestamp_seconds"] == 12
+
+
+def _client() -> PineconeIndexClient:
+    return PineconeIndexClient(
+        api_key="test-key",
+        info=PineconeIndexInfo(
+            name="transcript", host="example.pinecone.io", dimension=3, metric="dotproduct"
+        ),
+    )
+
+
+def _http_error(status: int = 503) -> HTTPError:
+    return HTTPError(
+        url="https://example.pinecone.io/query",
+        code=status,
+        msg=f"HTTP {status}",
+        hdrs=None,
+        fp=io.BytesIO(b'{"error":"transient"}'),
+    )
+
+
+def test_request_retries_transient_5xx_then_succeeds(monkeypatch):
+    """A single transient 5xx must not silently turn into a no-answer; the client
+    retries once and surfaces the eventual success."""
+    monkeypatch.setattr("shared.pinecone_client.time.sleep", lambda _s: None)
+    calls = []
+
+    def flaky(req, timeout):
+        calls.append(req.full_url)
+        if len(calls) == 1:
+            raise _http_error(503)
+        return FakeResponse({"matches": []})
+
+    monkeypatch.setattr("shared.pinecone_client.urlopen", flaky)
+
+    hits = _client().query([0.1, 0.2, 0.3])
+    assert hits == []
+    assert len(calls) == 2  # initial + 1 retry
+
+
+def test_request_does_not_retry_client_errors(monkeypatch):
+    """4xx errors are caller bugs (bad payload / wrong index) — never retry."""
+    monkeypatch.setattr("shared.pinecone_client.time.sleep", lambda _s: None)
+    calls = []
+
+    def always_400(req, timeout):
+        calls.append(req.full_url)
+        raise _http_error(400)
+
+    monkeypatch.setattr("shared.pinecone_client.urlopen", always_400)
+
+    with pytest.raises(RuntimeError, match="transient"):
+        _client().query([0.1, 0.2, 0.3])
+    assert len(calls) == 1  # no retries
+
+
+def test_request_retries_url_errors(monkeypatch):
+    """Connection errors (DNS, refused) also get retried with backoff."""
+    monkeypatch.setattr("shared.pinecone_client.time.sleep", lambda _s: None)
+    calls = []
+
+    def flaky(req, timeout):
+        calls.append(req.full_url)
+        if len(calls) == 1:
+            raise URLError("connection refused")
+        return FakeResponse({"matches": []})
+
+    monkeypatch.setattr("shared.pinecone_client.urlopen", flaky)
+    assert _client().query([0.1, 0.2, 0.3]) == []
+    assert len(calls) == 2

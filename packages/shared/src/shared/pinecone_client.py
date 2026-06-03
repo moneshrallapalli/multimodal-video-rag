@@ -3,13 +3,24 @@
 from __future__ import annotations
 
 import json
+import logging
+import random
+import time
 from dataclasses import dataclass
 from typing import Any
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from .config import settings
 from .schemas import RetrievalHit, VectorRecord
+
+logger = logging.getLogger(__name__)
+
+# Single retry on transient (5xx / connection) failures defends against a brief
+# Pinecone hiccup turning every search into a silent no-answer. Two attempts is
+# enough — anything systematic should fail loudly so the operator sees it.
+_MAX_RETRIES = 2
+_BASE_BACKOFF_SECONDS = 0.25
 
 
 @dataclass(frozen=True)
@@ -82,22 +93,51 @@ class PineconeIndexClient:
 
     def _request(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
         body = json.dumps(payload).encode("utf-8")
-        req = Request(
-            f"https://{self.info.host}{path}",
-            data=body,
-            headers={
-                "Api-Key": self.api_key,
-                "Content-Type": "application/json",
-            },
-            method="POST",
-        )
-        try:
-            with urlopen(req, timeout=30) as response:
-                raw = response.read().decode("utf-8")
-        except HTTPError as exc:
-            detail = exc.read().decode("utf-8")[:500]
-            raise RuntimeError(f"Pinecone {self.info.name}{path} failed: {detail}") from exc
-        return json.loads(raw) if raw else {}
+        url = f"https://{self.info.host}{path}"
+        last_exc: BaseException | None = None
+        for attempt in range(_MAX_RETRIES + 1):
+            req = Request(
+                url,
+                data=body,
+                headers={"Api-Key": self.api_key, "Content-Type": "application/json"},
+                method="POST",
+            )
+            try:
+                with urlopen(req, timeout=30) as response:
+                    raw = response.read().decode("utf-8")
+                return json.loads(raw) if raw else {}
+            except HTTPError as exc:
+                last_exc = exc
+                if exc.code < 500 or attempt == _MAX_RETRIES:
+                    # 4xx errors are caller bugs (bad payload, wrong index) —
+                    # never worth retrying. Final retry exhaustion also re-raises.
+                    detail = exc.read().decode("utf-8")[:500]
+                    raise RuntimeError(f"Pinecone {self.info.name}{path} failed: {detail}") from exc
+                logger.warning(
+                    "pinecone_retry index=%s path=%s status=%s attempt=%s",
+                    self.info.name,
+                    path,
+                    exc.code,
+                    attempt + 1,
+                )
+            except URLError as exc:
+                last_exc = exc
+                if attempt == _MAX_RETRIES:
+                    raise RuntimeError(
+                        f"Pinecone {self.info.name}{path} unreachable: {exc.reason}"
+                    ) from exc
+                logger.warning(
+                    "pinecone_retry index=%s path=%s reason=%s attempt=%s",
+                    self.info.name,
+                    path,
+                    exc.reason,
+                    attempt + 1,
+                )
+            # Exponential backoff with jitter: 0-0.5s, then 0.25-1s.
+            sleep_for = _BASE_BACKOFF_SECONDS * (2**attempt) * (0.5 + random.random())
+            time.sleep(sleep_for)
+        # Defensive — unreachable in practice because the loop above either returns or raises.
+        raise RuntimeError(f"Pinecone {self.info.name}{path} exhausted retries") from last_exc
 
 
 def _lookup_index(index_name: str, *, api_key: str) -> PineconeIndexInfo:
