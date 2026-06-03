@@ -6,7 +6,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-Modality = Literal["visual", "transcript"]
+Modality = Literal["visual", "transcript", "visual_caption"]
 QueryIntent = Literal["visual", "transcript", "hybrid", "timestamp", "summary", "no_answer"]
 JobStatus = Literal["queued", "downloading", "transcribing", "embedding", "completed", "failed"]
 
@@ -194,6 +194,7 @@ class IndexingSummary(BaseModel):
     video_id: str
     transcript_vectors: int = 0
     visual_vectors: int = 0
+    caption_vectors: int = 0
     bm25_stats: dict[str, Any] | None = None
 
 

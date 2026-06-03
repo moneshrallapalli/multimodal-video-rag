@@ -298,6 +298,40 @@ def test_worker_skips_bm25_upload_when_stats_absent():
     assert "videos/QkdBXUikRQc/vectors/bm25_stats.json" not in s3.objects
 
 
+class FakeCaptioner:
+    def __init__(self, captions: list[str] | None = None) -> None:
+        self.calls: list[list[Path]] = []
+        self._captions = captions or ["A person speaking", "A slide with text"]
+
+    def caption_frames(self, paths: list[Path]) -> list[str]:
+        self.calls.append(paths)
+        return self._captions[: len(paths)]
+
+
+def test_worker_generates_captions_and_passes_to_indexer():
+    jobs = FakeTable()
+    videos = FakeTable()
+    s3 = FakeS3()
+    indexer = FakeIndexer()
+    captioner = FakeCaptioner()
+    worker = IngestionWorker(
+        bucket="test-bucket",
+        jobs_table=jobs,
+        videos_table=videos,
+        s3_client=s3,
+        media=FakeMedia(),
+        indexer=indexer,
+        captioner=captioner,
+    )
+
+    worker.process(_message())
+
+    assert len(captioner.calls) == 1
+    assert len(captioner.calls[0]) == 2
+    assert indexer.calls[0]["captions"] == ["A person speaking", "A slide with text"]
+    assert "videos/QkdBXUikRQc/frames/captions.json" in s3.objects
+
+
 def test_worker_proceeds_when_lookup_fails_transiently():
     """A transient DDB read failure must not block the worker from doing the
     work — better to redo an idempotent step than to drop a real job."""

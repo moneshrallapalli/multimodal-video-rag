@@ -2,7 +2,7 @@
  * TypeScript mirror of the Pydantic contracts in `packages/shared/src/shared/schemas.py`.
  * Keep these in sync by hand; OpenAPI→TS codegen is a later improvement.
  */
-export type Modality = "visual" | "transcript";
+export type Modality = "visual" | "transcript" | "visual_caption";
 export type QueryIntent =
   | "visual"
   | "transcript"

@@ -6,7 +6,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-CandidateModality = Literal["visual", "transcript"]
+CandidateModality = Literal["visual", "transcript", "visual_caption"]
 
 
 class RetrievalCandidate(BaseModel):

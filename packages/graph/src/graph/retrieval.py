@@ -55,11 +55,12 @@ def transcript_candidate(hit: RetrievalHit, *, rank: int) -> RetrievalCandidate:
     start = _float(metadata.get("start_seconds"), 0.0)
     end = _float(metadata.get("end_seconds"), start)
     text = str(metadata.get("text") or "")
+    modality = str(metadata.get("modality") or "transcript")
     return RetrievalCandidate(
         id=hit.id,
         video_id=video_id,
         title=str(metadata.get("title") or "Indexed video"),
-        modality="transcript",
+        modality=modality,
         start_seconds=start,
         end_seconds=end,
         score=hit.score,

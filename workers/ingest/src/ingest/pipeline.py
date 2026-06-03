@@ -23,6 +23,7 @@ from shared.ingestion import (
 )
 from shared.schemas import IngestJobMessage, JobStatus, TranscriptArtifact, VideoMetadataArtifact
 
+from .captioning import FrameCaptioner
 from .indexing import VideoIndexer
 from .media import MediaProcessor, frame_artifacts
 
@@ -39,6 +40,7 @@ class IngestionWorker:
         s3_client: Any,
         media: MediaProcessor | None = None,
         indexer: VideoIndexer | None = None,
+        captioner: FrameCaptioner | None = None,
     ) -> None:
         self.bucket = bucket
         self.jobs_table = jobs_table
@@ -46,6 +48,7 @@ class IngestionWorker:
         self.s3 = s3_client
         self.media = media or MediaProcessor()
         self.indexer = indexer
+        self.captioner = captioner
 
     def process(self, message: IngestJobMessage) -> None:
         """Process one SQS ingestion message.
@@ -89,6 +92,16 @@ class IngestionWorker:
                     _model_list_json(frame_artifacts(message.video_id, frames, frame_keys)),
                 )
 
+                captions: list[str] | None = None
+                if self.captioner and frames:
+                    captions = self.captioner.caption_frames(
+                        [f.path for f in frames]
+                    )
+                    self._upload_json(
+                        f"videos/{message.video_id}/frames/captions.json",
+                        json.dumps(captions, indent=2),
+                    )
+
                 self._update_job(message.job_id, status="transcribing", progress=70)
                 transcript = media.transcribe_audio(audio_path, message.video_id)
                 self._upload_json(
@@ -103,6 +116,7 @@ class IngestionWorker:
                         transcript=transcript,
                         frames=frames,
                         frame_keys=frame_keys,
+                        captions=captions,
                     )
                     self._upload_json(
                         f"{artifact_prefix(message.video_id)}/vectors/indexing_summary.json",

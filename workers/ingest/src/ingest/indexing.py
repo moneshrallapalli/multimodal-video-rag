@@ -66,20 +66,29 @@ class VideoIndexer:
         transcript: TranscriptArtifact,
         frames: list[FrameFile],
         frame_keys: list[str],
+        captions: list[str] | None = None,
     ) -> IndexingSummary:
         transcript_records, bm25_stats = self._transcript_records(
             metadata=metadata, transcript=transcript
         )
+        caption_records: list[VectorRecord] = []
+        if captions:
+            caption_records = self._caption_records(
+                metadata=metadata, frames=frames, captions=captions
+            )
         visual_records = self._visual_records(
             metadata=metadata, frames=frames, frame_keys=frame_keys
         )
 
-        transcript_count = self.transcript_index.upsert(transcript_records)
+        transcript_count = self.transcript_index.upsert(
+            transcript_records + caption_records
+        )
         visual_count = self.visual_index.upsert(visual_records)
         return IndexingSummary(
             video_id=metadata.video_id,
             transcript_vectors=transcript_count,
             visual_vectors=visual_count,
+            caption_vectors=len(caption_records),
             bm25_stats=bm25_stats,
         )
 
@@ -121,6 +130,36 @@ class VideoIndexer:
                 )
             )
         return records, encoder.to_dict()
+
+    def _caption_records(
+        self,
+        *,
+        metadata: VideoMetadataArtifact,
+        frames: list[FrameFile],
+        captions: list[str],
+    ) -> list[VectorRecord]:
+        records: list[VectorRecord] = []
+        for index, (frame, caption) in enumerate(
+            zip(frames, captions, strict=True), start=1
+        ):
+            vec_id = f"{metadata.video_id}:caption:{index:06d}"
+            vector = self.embedder.embed_text(caption)
+            records.append(
+                VectorRecord(
+                    id=vec_id,
+                    values=vector,
+                    metadata=_compact_metadata({
+                        "video_id": metadata.video_id,
+                        "chunk_id": vec_id,
+                        "start_seconds": frame.timestamp_seconds,
+                        "end_seconds": frame.timestamp_seconds,
+                        "title": metadata.title,
+                        "text": caption,
+                        "modality": "visual_caption",
+                    }),
+                )
+            )
+        return records
 
     def _visual_records(
         self,
