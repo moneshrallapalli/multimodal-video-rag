@@ -7,7 +7,7 @@
     "judge": "not_run",
     "ragas_status": "not_run",
     "retrieval_depth": 10,
-    "generated_at": "2026-06-03T13:23:24+00:00",
+    "generated_at": "2026-06-03T21:20:34+00:00",
     "primary_config": "production"
   },
   "configs": [
@@ -176,13 +176,13 @@
     {
       "id": "production",
       "label": "Production",
-      "recall_at_5": 0.8915,
-      "recall_at_10": 0.907,
-      "mrr": 0.8283,
-      "timestamp_at_5s": 0.7674,
-      "timestamp_at_10s": 0.7752,
-      "modality_acc": 0.8837,
-      "no_answer_f1": 0.7619,
+      "recall_at_5": 0.9225,
+      "recall_at_10": 0.938,
+      "mrr": 0.8554,
+      "timestamp_at_5s": 0.7907,
+      "timestamp_at_10s": 0.7984,
+      "modality_acc": 0.907,
+      "no_answer_f1": 0.8421,
       "min_source_score": 0.2,
       "enable_hybrid_transcript": true,
       "enable_cross_encoder_rerank": true,
@@ -217,11 +217,11 @@
   "no_answer": {
     "true_positive": 16,
     "false_negative": 0,
-    "false_positive": 10,
-    "true_negative": 119,
-    "precision": 0.6154,
+    "false_positive": 6,
+    "true_negative": 123,
+    "precision": 0.7273,
     "recall": 1.0,
-    "f1": 0.7619
+    "f1": 0.8421
   },
   "no_answer_by_config": {
     "dense": {
@@ -281,11 +281,11 @@
     "production": {
       "true_positive": 16,
       "false_negative": 0,
-      "false_positive": 10,
-      "true_negative": 119,
-      "precision": 0.6154,
+      "false_positive": 6,
+      "true_negative": 123,
+      "precision": 0.7273,
       "recall": 1.0,
-      "f1": 0.7619
+      "f1": 0.8421
     }
   },
   "per_query": {
@@ -100039,7 +100039,7 @@
         "relevant_timestamps": [],
         "response": {
           "intent": "hybrid",
-          "rewritten_query": "\"We focus primarily on tech accessories and gadgets that enhance your daily life, but we don't actually do full smartphone reviews here at The Egg. However, we do occasionally cover smartphone cases, screen protectors, and other accessories that work with popular phone models. If you're looking for dedicated phone reviews, you might want to check out some of the other channels we recommend in our description.\"",
+          "rewritten_query": "\"We focus primarily on tech accessories and gadgets that enhance your daily life, but we don't actually do full smartphone reviews on this channel. However, we do occasionally cover smartphone cases, screen protectors, and other mobile accessories that might interest you.\"",
           "refused": false,
           "confidence": 0.393,
           "answer": "Top evidence is around 7:00 in \"The Egg - A Short Story\": You're a fetus. You're still growing. Once you've lived every human life throughout all time, you will have grown enough to be born. So the whole universe, it's just an egg. I answer it. Now it's time for you to move on to your next life. And I sense you on your way. Thank you.",
@@ -100057,82 +100057,82 @@
               "rank": 2,
               "video_id": "h6fcK_fRYaI",
               "modality": "visual",
-              "start_seconds": 45.0,
-              "end_seconds": 45.0,
+              "start_seconds": 165.0,
+              "end_seconds": 165.0,
               "score": 0.393,
-              "snippet": "Visual frame from The Egg - A Short Story at 0:45."
+              "snippet": "Visual frame from The Egg - A Short Story at 2:45."
             },
             {
               "rank": 3,
               "video_id": "h6fcK_fRYaI",
               "modality": "visual",
-              "start_seconds": 165.0,
-              "end_seconds": 165.0,
+              "start_seconds": 45.0,
+              "end_seconds": 45.0,
               "score": 0.387,
-              "snippet": "Visual frame from The Egg - A Short Story at 2:45."
+              "snippet": "Visual frame from The Egg - A Short Story at 0:45."
             },
             {
               "rank": 4,
               "video_id": "h6fcK_fRYaI",
               "modality": "visual_caption",
-              "start_seconds": 285.0,
-              "end_seconds": 285.0,
+              "start_seconds": 465.0,
+              "end_seconds": 465.0,
               "score": 0.387,
-              "snippet": "# Video Frame Description\n\nThis is a colorful, stylized illustration featuring a vibrant alien or robot character with a magenta spherical head and red body standing in a surreal landscape. The scene includes layered purple and blue terrain, floating geometric shapes and particles, dark purple organic forms on the left side, and a pale yellow sky, creating a whimsical, otherworldly environment."
+              "snippet": "# Video Frame Description\n\nThe frame displays a \"SUPPORT US\" section featuring two vibrant, illustrated panels set against a starry purple background. The left panel shows a figure floating near a glowing green planet with organic patterns, while the right panel depicts another figure near a colorful purple and pink planet with geometric designs, both rendered in a whimsical, space-themed art style. An \"Advertisement\" label appears in the bottom right corner."
             },
             {
               "rank": 5,
               "video_id": "h6fcK_fRYaI",
               "modality": "visual",
-              "start_seconds": 435.0,
-              "end_seconds": 435.0,
+              "start_seconds": 15.0,
+              "end_seconds": 15.0,
               "score": 0.381,
-              "snippet": "Visual frame from The Egg - A Short Story at 7:15."
+              "snippet": "Visual frame from The Egg - A Short Story at 0:15."
             },
             {
               "rank": 6,
               "video_id": "h6fcK_fRYaI",
-              "modality": "visual_caption",
-              "start_seconds": 465.0,
-              "end_seconds": 465.0,
+              "modality": "transcript",
+              "start_seconds": 53.0,
+              "end_seconds": 87.0,
               "score": 0.381,
-              "snippet": "# Video Frame Description\n\nThe frame displays a \"SUPPORT US\" section featuring two vibrant, illustrated panels set against a starry purple background. The left panel shows a figure floating near a glowing green planet with organic patterns, while the right panel depicts another figure near a colorful purple and pink planet with geometric designs, both rendered in a whimsical, space-themed art style. An \"Advertisement\" label appears in the bottom right corner."
+              "snippet": "You looked around. There was nothing this. Just you and me. What is this place? Is this the afterlife? More or less? Are you God? Yes. I'm God. My kids, my wife. What about them? Will they be alright? That's what I like to see, I said. You just died and your main concern is for your family."
             },
             {
               "rank": 7,
               "video_id": "h6fcK_fRYaI",
               "modality": "visual",
-              "start_seconds": 15.0,
-              "end_seconds": 15.0,
+              "start_seconds": 255.0,
+              "end_seconds": 255.0,
               "score": 0.375,
-              "snippet": "Visual frame from The Egg - A Short Story at 0:15."
+              "snippet": "Visual frame from The Egg - A Short Story at 4:15."
             },
             {
               "rank": 8,
               "video_id": "h6fcK_fRYaI",
               "modality": "visual_caption",
-              "start_seconds": 225.0,
-              "end_seconds": 225.0,
+              "start_seconds": 105.0,
+              "end_seconds": 105.0,
               "score": 0.375,
-              "snippet": "# Video Frame Description\n\nThis animated frame depicts a silhouetted head in profile with a glowing, colorful core at its center, surrounded by multiple illuminated beams or rays in various colors (pink, blue, orange, and cyan) pointing toward or emanating from the head. The background features a light blue gradient with subtle sparkles and circular design elements, creating a modern, digital aesthetic that suggests themes of ideas, energy, or mental processes."
+              "snippet": "# Video Frame Description\n\nTwo stylized purple cartoon characters with glowing golden outlines and white eyes are shown against a black background. The larger character on the left has a head filled with small stars and dots, while the smaller character on the right appears to be looking up at it, suggesting an interaction or conversation between the two figures."
             },
             {
               "rank": 9,
               "video_id": "h6fcK_fRYaI",
               "modality": "visual",
-              "start_seconds": 255.0,
-              "end_seconds": 255.0,
+              "start_seconds": 465.0,
+              "end_seconds": 465.0,
               "score": 0.369,
-              "snippet": "Visual frame from The Egg - A Short Story at 4:15."
+              "snippet": "Visual frame from The Egg - A Short Story at 7:45."
             },
             {
               "rank": 10,
               "video_id": "h6fcK_fRYaI",
               "modality": "transcript",
-              "start_seconds": 53.0,
-              "end_seconds": 87.0,
+              "start_seconds": 155.0,
+              "end_seconds": 185.0,
               "score": 0.369,
-              "snippet": "You looked around. There was nothing this. Just you and me. What is this place? Is this the afterlife? More or less? Are you God? Yes. I'm God. My kids, my wife. What about them? Will they be alright? That's what I like to see, I said. You just died and your main concern is for your family."
+              "snippet": "Where are we going? No, we're in particular. It's just nice to walk while we talk. So what's the point then? When I get reborn, I'll just be a blank slate, right? A baby. So all my experiences and everything, everything I did in this life, won't matter. Not so. You have, within you, all the knowledge and experiences of all your past lives."
             }
           ]
         },
@@ -105226,7 +105226,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "The key advice about starting before you're ready is to **begin despite not knowing everything**. Around 3:13, the speaker emphasizes that \"no one comes into a new project or a new field or a new career with knowing everything about it. Everyone is a beginner at some point.\" \n\nThe practical tip is to use the word \"yet\"\u2014instead of saying \"I don't know how to do it,\" say \"I don't know how to do it yet\" (around 3:38). This mindset shift transforms the statement into acknowledging that with time and effort, you *will* learn. To make this manageable, break big goals into small, measurable steps so you can celebrate progress and stay motivated.",
+          "answer": "The key advice about starting before you're ready is to **begin despite not knowing everything**. Around 3:13, the speaker emphasizes that \"no one comes into a new project or a new field or a new career with knowing everything about it. Everyone is a beginner at some point.\" \n\nThe practical tip is to use the word \"yet\"\u2014instead of saying \"I don't know how to do it,\" say \"I don't know how to do it yet\" (around 3:38). This mindset shift transforms the statement into acknowledging that with time and effort, you *will* learn. The speaker also recommends breaking big goals into small, measurable steps to make progress feel achievable and avoid paralysis.",
           "results": [
             {
               "rank": 1,
@@ -105349,7 +105349,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "She explains the power of the word \"yet\" around 3:13-3:38. She emphasizes that instead of saying \"I don't know how to do it,\" you should say \"I don't know how to do it yet.\" This simple addition transforms the meaning by implying that with time and effort, you will eventually succeed, rather than accepting defeat as permanent. This shift in language helps overcome the mental paralysis that prevents people from starting new projects.",
+          "answer": "She explains the power of the word \"yet\" around 3:13-3:38. She emphasizes that instead of saying \"I don't know how to do it,\" you should say \"I don't know how to do it yet.\" This simple addition transforms the meaning by implying that with time and effort, you will eventually succeed, rather than accepting defeat as permanent. This reframing helps overcome the paralysis that comes from believing a goal is too difficult.",
           "results": [
             {
               "rank": 1,
@@ -105472,7 +105472,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "The video **\"Stop Dreaming and Start Doing | Self-Sabotage\"** talks about lacking proper planning and small measurable steps. Around 3:38, it explains that the core issue preventing people from starting is \"lacking proper planning,\" and the solution is to \"cut them down into small, measurable steps\" instead of making big goals. The video then provides a concrete example around 4:04, showing how to break down a large goal (like becoming famous on YouTube) into actionable monthly targets.",
+          "answer": "The video **\"Stop Dreaming and Start Doing | Self-Sabotage\"** talks about lacking proper planning and small measurable steps. Around 3:38, it explains that the core issue preventing people from starting is \"lacking proper planning,\" and the solution is to \"cut them down into small, measurable steps\" instead of making big goals. The video then provides a concrete example around 4:04, showing how to break down a large goal (like becoming famous on YouTube) into specific monthly targets.",
           "results": [
             {
               "rank": 1,
@@ -105595,7 +105595,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.387,
-          "answer": "Around 4:04, she uses a YouTube goal as an example of breaking down big dreams into actionable steps. Instead of saying \"I want to be famous on YouTube by the end of the year,\" she explains you should set specific monthly targets like \"post 15 videos in the next month,\" then analyze which performs best and create similar content. This approach allows you to celebrate small wins throughout the year rather than waiting for one big goal.",
+          "answer": "Around 4:04, she uses a YouTube goal as an example of breaking down big dreams into actionable steps. Instead of saying \"I want to be famous on YouTube by the end of the year,\" she explains you should set specific monthly targets like \"post 15 videos in the next month,\" then analyze which performs best and create similar content. This approach allows you to celebrate small wins throughout the year rather than waiting for one big achievement.",
           "results": [
             {
               "rank": 1,
@@ -105841,7 +105841,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Around 5:21, she explains that when you step into a new way of life, \"you're going to build a new comfort zone around the things that actually move you forward.\" She emphasizes that this new comfort zone is built around what genuinely propels your progress, but it requires leaving behind your old life, past relationships, and past self.",
+          "answer": "Around 5:21, she explains that when you step into a new way of life, \"you're going to build a new comfort zone around the things that actually move you forward.\" She emphasizes that this new comfort zone replaces your old one, but comes with a cost\u2014you have to leave behind your past relationships or past self. Essentially, building a new comfort zone means intentionally surrounding yourself with things aligned with your growth rather than staying in familiar but limiting patterns.",
           "results": [
             {
               "rank": 1,
@@ -105968,7 +105968,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "You can see the speaker in a bedroom with wall art and bedside lamps throughout the video \"Stop Dreaming and Start Doing | Self-Sabotage.\" She appears around 0:15, 1:15, 1:45, 3:15, 3:45, 4:15, and 5:45, seated on a bed wearing a black off-shoulder top. The bedroom features a green-accented headboard, framed artwork on the walls, bedside lamps with warm lighting, and a nightstand decorated with flowers and personal items.",
+          "answer": "Yes, I found the speaker in a bedroom with wall art and bedside lamps. A woman with reddish-brown hair wearing a black off-shoulder top is seated on a bed in a modern bedroom throughout the video. The room features framed artwork on the walls, bedside lamps with warm lighting, a green-accented headboard, and a bedside table with flowers and decorative items. You can see her in this setting at multiple points, such as around 1:45, 3:15, and 4:15.",
           "results": [
             {
               "rank": 1,
@@ -106095,7 +106095,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Based on the indexed video evidence, there are multiple frames showing flowers beside the speaker. The clearest examples appear around **0:15**, **1:15**, **1:45**, **3:15**, **3:45**, **4:15**, and **5:45**, where the speaker sits on a bed with a bedside table displaying flowers and decorative items visible in the frame beside her. All of these frames show the same bedroom setup with flowers positioned on the nightstand next to where she's speaking.",
+          "answer": "Based on the indexed video, there are multiple frames showing flowers beside the speaker. The clearest examples are around **0:15**, **1:15**, **1:45**, **3:15**, **3:45**, **4:15**, and **5:45**. In all these frames, the woman in the black off-shoulder top is seated on the bed with a bedside table displaying flowers and decorative items visible beside her as she speaks to the camera.",
           "results": [
             {
               "rank": 1,
@@ -106226,7 +106226,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Around 0:00, she talks about fear being \"the answer\" to why we stop ourselves from chasing our dreams, explaining how our brain's alarm system tells us we're uncomfortable when getting out of our comfort zone. This discussion occurs while she's seated in the bedroom with the green-accented headboard and bedside lighting visible behind her.",
+          "answer": "Around 0:00, she talks about fear being the answer to why we stop ourselves from chasing our dreams, describing it as \"our brain's alarm system\" telling us we're uncomfortable. This discussion occurs while she's seated in the bedroom with the green-accented headboard and bedside lighting visible behind her.",
           "results": [
             {
               "rank": 1,
@@ -106349,7 +106349,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Based on the video, the key advice for getting unstuck from self-sabotage involves several strategies:\n\n**Start before you're ready** (around 2:49) \u2014 Don't wait until you feel completely prepared; begin your project despite fear and uncertainty. **Break goals into small, measurable steps** (around 4:04) \u2014 Instead of overwhelming big goals, create smaller milestones you can celebrate, like posting 15 videos monthly rather than aiming to be famous by year-end. **Reevaluate your self-perception** (around 5:21) \u2014 Challenge negative beliefs about yourself and understand that moving forward means leaving behind your old comfort zone and past self. The core message is to commit daily to getting out of your comfort zone while ignoring the fear that paralyzes you.",
+          "answer": "Based on the video, the key advice for getting unstuck from self-sabotage involves several strategies:\n\n**Start before you're ready** (around 2:49) \u2014 Don't wait until you feel completely prepared; begin your project despite fear and uncertainty. **Break goals into small, measurable steps** (around 4:04) \u2014 Instead of overwhelming big goals, create monthly targets you can celebrate incrementally. **Reevaluate your self-perception** (around 5:21) \u2014 Challenge negative beliefs about yourself that hold you back, understanding that moving forward may require leaving behind old relationships or versions of yourself. Finally, **commit daily to getting out of your comfort zone** (around 0:49) \u2014 Take consistent action despite fear rather than letting it paralyze you.",
           "results": [
             {
               "rank": 1,
@@ -106467,7 +106467,7 @@
           "rewritten_query": null,
           "refused": true,
           "confidence": 0.0,
-          "answer": "I could not find strong evidence for that in the indexed videos. The indexed frames from the \"Self-Sabotage\" video show a woman speaking in a bedroom setting and another woman in a garden holding a document, but the visual captions don't indicate any discussion of salary negotiation. The video appears to focus on self-sabotage as a concept rather than workplace negotiation tactics.",
+          "answer": "I could not find strong evidence for that in the indexed videos. The visual captions from the \"Self-Sabotage\" video show a woman speaking in a bedroom setting and another woman in a garden holding a document, but there is no specific mention of salary negotiation being discussed in any of the frames indexed.",
           "results": []
         },
         "metrics": {
@@ -106494,7 +106494,7 @@
           "rewritten_query": null,
           "refused": true,
           "confidence": 0.0,
-          "answer": "I could not find strong evidence for that in the indexed videos. While the context shows multiple visual frames from the \"Stop Dreaming and Start Doing | Self-Sabotage\" video at various timestamps, the only descriptive caption available (at 6:15) describes a dark, low-quality frame with a silhouetted figure\u2014not a whiteboard diagram. The other frame references lack detailed descriptions that would confirm the presence of a whiteboard diagram.",
+          "answer": "I could not find strong evidence for that in the indexed videos. While the context includes multiple frames from the \"Stop Dreaming and Start Doing | Self-Sabotage\" video, the only descriptive caption available (at 6:15) describes a dark, silhouetted indoor scene rather than a whiteboard diagram. The other frame references lack descriptions that would confirm the presence of a whiteboard diagram.",
           "results": []
         },
         "metrics": {
@@ -106649,7 +106649,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Around 1:58, she discusses both topics together. She explains that her parents warned her never to tell anyone her aspirations and dreams except the closest people, and they also taught her about \"the power of the evil eye\"\u2014the belief that if someone looks at you with bad intentions, jealousy, or anger, they send negative energy that prevents success. She connects these ideas by suggesting that not sharing your plans widely helps protect you from others' negativity and potential discouragement.",
+          "answer": "Around 1:58, she discusses both topics together. She explains that her parents warned her never to tell anyone her aspirations and dreams except the closest people, and they also taught her about \"the power of the evil eye\"\u2014the belief that if someone looks at you with bad intentions, jealousy, or anger, they send negative energy that prevents success. She connects these ideas by suggesting that not sharing your plans widely helps protect you from others' negativity and potential demotivation.",
           "results": [
             {
               "rank": 1,
@@ -106922,7 +106922,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "The finance video explains chasing financial freedom around **0:49**, where the speaker describes realizing they were \"secretly chasing freedom, more specifically financial freedom.\" They clarify that financial freedom meant having the ability to take time off, live slowly, and buy quality food\u2014not accumulating possessions or impressing others. This realization about what financial freedom actually means is what got them into personal finance and ultimately led them to focus on saving, side hustles, and investing.",
+          "answer": "The finance video explains chasing financial freedom around **0:49**, where the speaker describes realizing they were \"secretly chasing freedom, more specifically financial freedom.\" They clarify that financial freedom meant having the ability to take time off, live slowly, and buy quality food\u2014not accumulating possessions or impressing others. This realization about what financial freedom actually meant is what got them into personal finance and ultimately led them to focus on saving, side hustles, and investing.",
           "results": [
             {
               "rank": 1,
@@ -107045,7 +107045,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Around 1:39-2:50, the speaker compares the wealth game and status game by explaining that the status game is \"all about ego\" and signaling importance to others, while the wealth game focuses on building actual financial freedom. She illustrates the difference by contrasting her own mistake of playing the status game\u2014buying clothes for Instagram and posting only at fancy restaurants\u2014with the realization that \"wealth is what you don't see,\" meaning truly wealthy people often appear inconspicuous while building real assets in the background.",
+          "answer": "Around 1:39-2:50, the speaker compares the wealth game and status game by explaining that the status game is \"all about ego\" and signaling importance to others through appearances, while the wealth game focuses on building actual financial freedom. She illustrates the difference by sharing her own mistake of playing the status game\u2014buying clothes for Instagram and posting only at fancy restaurants\u2014versus her pivot to building real wealth, which \"you can't see\" from the outside. The key distinction is that wealth builders may have holes in their clothes but are secretly accumulating assets, whereas status players perform wealth without actually building it.",
           "results": [
             {
               "rank": 1,
@@ -107172,7 +107172,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "You can see \"the Status Game\" text displayed on the tablet on the desk around **2:15** and again at **2:45**. The clearest frame showing this text is at 2:15, where it's visible in the foreground on a white card or the tablet screen as the speaker sits at her wooden desk.",
+          "answer": "You can see the \"Status Game\" text displayed on the tablet at the desk around **2:15** and **2:45**. At 2:15, the white card or sign reading \"the Status Game\" is visible in the foreground of the frame, and at 2:45, the tablet on the desk displays \"the Status Game\" as the speaker discusses the concept during her presentation.",
           "results": [
             {
               "rank": 1,
@@ -107295,7 +107295,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.387,
-          "answer": "Around 3:15, you can see the Wealth Game frame with the book. The woman is holding \"Psychology of Money\" while sitting at her wooden desk, with \"the Wealth Game\" text visible in the lower right corner of the frame.",
+          "answer": "Around **3:15**, you can see the Wealth Game frame with the book. The woman is holding \"Psychology of Money\" while sitting at her wooden desk, with \"the Wealth Game\" text visible in the lower right corner of the frame.",
           "results": [
             {
               "rank": 1,
@@ -107418,7 +107418,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Based on the video around 3:36, an **anti-vision** is an outline of what you *don't* want in your life, as opposed to a traditional vision board focused on positive goals. She recommends it because being specific about what you want to *avoid* is crucial\u2014if you're not entirely clear about what to prevent, you risk climbing the wrong ladder or moving in an undesired direction. It complements positive goal-setting by adding clarity and intentionality to your life decisions.",
+          "answer": "Based on the video around 3:36, an **anti-vision** is an outline of what you *don't* want in your life, as opposed to a traditional vision board focused on positive goals. She recommends it because being specific about what you want to *avoid* is crucial\u2014if you're not entirely clear about what to avoid, you risk climbing the wrong ladder or moving in an undesired direction. It complements positive goal-setting by adding clarity and intentionality to your life decisions.",
           "results": [
             {
               "rank": 1,
@@ -107545,7 +107545,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "The frame with \"anti-vision\" text on screen appears around **4:15** and **4:45**. At 4:15, the label \"anti-vision\" is displayed in the upper left corner, and at 4:45, it appears in italics in the background behind the speaker at her desk.",
+          "answer": "The frame with \"anti-vision\" text on screen appears around **4:15** and **4:45**. At 4:15, a label reading \"anti-vision\" is displayed in the upper left corner while the speaker sits at her desk. The text appears again at 4:45 in italics behind her. This aligns with the transcript around 3:36 where she discusses the concept of having an \"anti-vision\" before setting goals.",
           "results": [
             {
               "rank": 1,
@@ -107668,7 +107668,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "She says this around 4:28 in the video \"10 Ways to Build an Unfair Advantage in Your 20s.\" She explains that while she used valuable sales skills from her nine-to-five job, she \"knew I didn't want that to be the next 40 years of my life,\" though she initially felt uncomfortable admitting this to herself.",
+          "answer": "She says this around 4:28 in the video \"10 Ways to Build an Unfair Advantage in Your 20s.\" She states: \"I knew I didn't want that to be the next 40 years of my life,\" referring to her nine-to-five job. She explains that while she was grateful for the position and used valuable skills there, she realized early on that she didn't want to spend the next four decades in that type of role.",
           "results": [
             {
               "rank": 1,
@@ -107914,7 +107914,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "The video **\"10 Ways to Build an Unfair Advantage in Your 20s\"** recommends building a museum of your ideas, around **7:11**. The speaker suggests putting consistent work out there\u2014whether blog articles, YouTube videos, or TikToks\u2014to build up a body of work that showcases your skills and values over time, ultimately creating visibility and demonstrating why someone might want to work with you.",
+          "answer": "The video **\"10 Ways to Build an Unfair Advantage in Your 20s\"** recommends building a museum of your ideas, around **7:11**. The speaker suggests consistently putting work out there\u2014whether blog articles, YouTube videos, or TikToks\u2014to build up a body of work that showcases your skills and values over time, ultimately creating visibility and demonstrating why someone might want to work with you.",
           "results": [
             {
               "rank": 1,
@@ -108160,7 +108160,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "The frame with \"1000 words/day\" text appears around **8:45** in the video. In this shot, the speaker sits at her wooden desk wearing a beige cardigan, with a notepad labeled \"1000 words/day\" visible in the foreground. She discusses how she started writing a thousand words daily as a habit for her newsletter and LinkedIn content.",
+          "answer": "I found the frame with \"1000 words/day\" text. Around **8:45**, there's a visual showing a woman sitting at a wooden desk with a notepad labeled \"1000 words/day\" in the foreground. This matches the context where she discusses starting the habit of writing a thousand words a day for her newsletter and LinkedIn around that same timestamp.",
           "results": [
             {
               "rank": 1,
@@ -108529,7 +108529,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "She defines high agency around **14:47** as \"the ability to act without permission.\" She further elaborates that it involves questioning the narratives and milestones society expects you to follow\u2014like marriage and children\u2014to determine if they actually serve you. High agency is about exploring different life paths and not just passively accepting what you're told, rather than being different for its own sake.",
+          "answer": "She defines high agency around **14:47** as \"the ability to act without permission.\" She further elaborates that it involves questioning the narratives and milestones society expects you to follow\u2014like marriage and children\u2014to determine if they actually serve you. High agency is about exploring different life paths and making intentional choices rather than passively following a predetermined script.",
           "results": [
             {
               "rank": 1,
@@ -108652,7 +108652,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Around 16:21, the video discusses negotiating salary and job hopping as examples of high agency in a career context. The speaker explains that from a career perspective, having high agency \"means negotiating your salary. That means potentially job hopping. That means being proactive.\" This is presented as part of building an unfair advantage in your 20s by taking control of your career path rather than passively accepting what's given to you.",
+          "answer": "Around 16:21, the video discusses negotiating salary and job hopping as examples of high agency in a career context. The speaker explains that from a career perspective, having high agency \"means negotiating your salary. That means potentially job hopping. That means being proactive.\" This is presented as part of building an unfair advantage in your 20s by taking control of your career path rather than passively accepting what's offered.",
           "results": [
             {
               "rank": 1,
@@ -109021,7 +109021,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Around 19:35, she discusses frugality and self-respect by stating: \"Frugality isn't restriction itself respect.\" She explains that her philosophy differs from typical personal finance advice\u2014rather than spending lavishly to inspire wealth-building, she argues that being frugal in your early 20s is about being \"very careful with where you put your money because your money was once time\" (around 19:58). She emphasizes that frugality means building actual wealth rather than performing it, which she frames as a matter of respecting the value of your time and effort.",
+          "answer": "Around 19:35, she discusses frugality and self-respect by stating: \"Frugality isn't restriction itself respect.\" She explains that her philosophy differs from typical personal finance advice\u2014rather than spending lavishly to inspire wealth-building, she argues that being frugal in your early 20s is about being \"very careful with where you put your money because your money was once time\" (around 19:58). She emphasizes that frugality means building actual wealth rather than performing it, especially when you're on a limited income.",
           "results": [
             {
               "rank": 1,
@@ -109144,7 +109144,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "She explains leverage and digital products around **23:37**. She describes how digital products like e-books are \"permissionless leverage\" that don't require gatekeepers\u2014you can make them once and sell them infinitely at zero replication cost. She illustrates this with a practical example around **23:13**, explaining how a gardener could create a gardening e-book that takes several hours to make but can generate thousands of pounds over time through light promotion.",
+          "answer": "She explains leverage and digital products around **23:37**. She describes how digital products like e-books are \"permissionless leverage\" that don't require gatekeepers\u2014you can make them once and sell them infinitely at zero replication cost. She illustrates this with an example around **23:13**, explaining how a gardener could create a gardening e-book that takes several hours to make but can generate thousands of pounds over time through light promotion.",
           "results": [
             {
               "rank": 1,
@@ -109423,20 +109423,111 @@
         "response": {
           "intent": "visual",
           "rewritten_query": null,
-          "refused": true,
-          "confidence": 0.0,
-          "answer": "I could not find strong evidence for that in the indexed videos. While the context shows a coach (Brum the Block) sitting at a desk in an office setting around 0:15 and 3:45, the descriptions don't specifically indicate he is positioned \"in front of\" an office setup in a way that would distinguish him as being prominently displayed before it. The frames show him at a desk during a video conference, but not clearly positioned in front of office infrastructure.",
-          "results": []
+          "refused": false,
+          "confidence": 0.387,
+          "answer": "I can confirm this scene appears in the video. Around 3:45, you can see the agile coach (Brum the Block) wearing glasses and a red, white, and blue striped sweater sitting at a desk in an office setup. Behind him is an office workspace with a whiteboard displaying pink and yellow sticky notes, a potted plant, desk organizers, and colleagues visible in the background. He's positioned in front of his monitor during the video conference call.",
+          "results": [
+            {
+              "rank": 1,
+              "video_id": "as9IYFrTiKc",
+              "modality": "transcript",
+              "start_seconds": 41.480000000000004,
+              "end_seconds": 74.92,
+              "score": 0.348,
+              "snippet": "real end users from Wiley, Wiley, the biggest broadcasting company in Finland. Who are awesome since I joined us in this agile partnership? The increment we are going to look at is a new and improved table component, Wiley wants to use to create and edit work orders. And work orders could be anything, like grabbing a live signal from a satellite feed and transferring it to a new studio to show a reporter live on scene. Or an order could be that a memory card needs to be taken out of a camera and uploaded"
+            },
+            {
+              "rank": 2,
+              "video_id": "as9IYFrTiKc",
+              "modality": "visual_caption",
+              "start_seconds": 225.0,
+              "end_seconds": 225.0,
+              "score": 0.333,
+              "snippet": "# Video Frame Description\n\nA man wearing glasses and a red, white, and blue striped sweater sits at a desk in an office setting, gesturing while speaking to the camera during what appears to be a video conference. On his monitor to the right, multiple participants are visible in a video call interface, and behind him on the wall are pink and yellow sticky notes arranged on a whiteboard, with colleagues visible in the background of the office space."
+            },
+            {
+              "rank": 3,
+              "video_id": "as9IYFrTiKc",
+              "modality": "visual_caption",
+              "start_seconds": 15.0,
+              "end_seconds": 15.0,
+              "score": 0.338,
+              "snippet": "# Video Frame Description\n\nA man wearing glasses and a red, white, and blue striped sweater sits at a desk during what appears to be a video conference call, with multiple participants visible on his monitor screen. Behind him is an office workspace with pink sticky notes on a whiteboard, a potted plant, desk organizers, and another person partially visible in the background."
+            },
+            {
+              "rank": 4,
+              "video_id": "as9IYFrTiKc",
+              "modality": "transcript",
+              "start_seconds": 208.28,
+              "end_seconds": 238.64000000000001,
+              "score": 0.304,
+              "snippet": "You can click here. Oh, okay. I think that's about to say, yeah, yeah, no worries. Yeah, yeah, you'll hear that, yeah, yeah, absolutely. And then you imagine the amount of time and energy that would have been wasted optimizing a checkmark feature that is not even going to be used. And the important detail is setting a firm time box. The time box helps everyone involved to focus on what is going to give the best possible"
+            },
+            {
+              "rank": 5,
+              "video_id": "as9IYFrTiKc",
+              "modality": "transcript",
+              "start_seconds": 254.56,
+              "end_seconds": 285.15999999999997,
+              "score": 0.343,
+              "snippet": "Uh, yeah, to perhaps let's try to keep them in the middle of the window. Don't mistake a review meeting for being a good news show either. More often than not, the most valuable outcome of a review meeting is transparency that has gains on important things that are still missing. How about the ops UI limit of 100 orders that has to be tackled because we do have busy days"
+            },
+            {
+              "rank": 6,
+              "video_id": "as9IYFrTiKc",
+              "modality": "visual_caption",
+              "start_seconds": 345.0,
+              "end_seconds": 345.0,
+              "score": 0.3,
+              "snippet": "# Video Conference Frame Description\n\nThis is a screenshot of a video conference call with nine participants displayed in a grid layout. All participants are wearing headsets with microphones and are positioned in front of their respective cameras in various indoor settings, appearing to be engaged in a professional or team meeting."
+            },
+            {
+              "rank": 7,
+              "video_id": "as9IYFrTiKc",
+              "modality": "transcript",
+              "start_seconds": 21.32,
+              "end_seconds": 51.32000000000001,
+              "score": 0.381,
+              "snippet": "But before we jump in, we need some context. In a review meeting, we inspect the increment and adapt based on what we discover. We have all the necessary people participating. We have the development team, the agile coach, the product owner, and most importantly, real end users from Wiley, Wiley, the biggest broadcasting company in Finland. Who are awesome since I joined us in this agile partnership?"
+            },
+            {
+              "rank": 8,
+              "video_id": "as9IYFrTiKc",
+              "modality": "visual_caption",
+              "start_seconds": 105.0,
+              "end_seconds": 105.0,
+              "score": 0.308,
+              "snippet": "# Video Frame Description\n\nThe frame shows a computer screen displaying what appears to be an order management or inventory system interface with a teal-colored sidebar menu on the left and a data table showing multiple orders with columns for order details, dates, times, and status information. At the bottom of the screen, there is a taskbar showing multiple participant avatars in circular icons, indicating this is likely a video conference or collaborative meeting with several attendees visible."
+            },
+            {
+              "rank": 9,
+              "video_id": "as9IYFrTiKc",
+              "modality": "transcript",
+              "start_seconds": 0.0,
+              "end_seconds": 30.120000000000005,
+              "score": 0.387,
+              "snippet": "There are hundreds of videos about what a perfect review meeting should be like, but how about showing you a real one instead, one that took place just a few weeks ago. I am Brum the Block, agile coach at Skyline Communications. But before we jump in, we need some context. In a review meeting, we inspect the increment and adapt based on what we discover."
+            },
+            {
+              "rank": 10,
+              "video_id": "as9IYFrTiKc",
+              "modality": "transcript",
+              "start_seconds": 228.16000000000003,
+              "end_seconds": 262.04,
+              "score": 0.364,
+              "snippet": "And the important detail is setting a firm time box. The time box helps everyone involved to focus on what is going to give the best possible outcome. And what prevents the participants from falling down a rabbit hole? Just a small heads up, we're at past 15 minutes mark for the end of our, uh, we still have a lot to show. Uh, yeah, to perhaps let's try to keep them in the middle of the window."
+            }
+          ]
         },
         "metrics": {
-          "recall_at_5": 0.0,
-          "recall_at_10": 0.0,
-          "mrr": 0.0,
-          "timestamp_at_5s": 0.0,
-          "timestamp_at_10s": 0.0,
+          "recall_at_5": 1.0,
+          "recall_at_10": 1.0,
+          "mrr": 1.0,
+          "timestamp_at_5s": 1.0,
+          "timestamp_at_10s": 1.0,
           "modality_correct": false,
           "expected_no_answer": false,
-          "predicted_refused": true
+          "predicted_refused": false
         },
         "judge": null
       },
@@ -109457,7 +109548,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Based on the indexed video, around 1:05, the product owner forgets to make room for feedback **during the sprint review meeting itself**. While he's very excited to show everything the team completed, he doesn't adequately allocate time for getting feedback from participants. As noted around 1:33, he only \"gives some room for some feedback, if there is\"\u2014highlighting that feedback collection should be a primary focus, not an afterthought, since the review meeting's goal is to inspect the increment and adapt based on discoveries.",
+          "answer": "Based on the indexed video, around 1:05, the product owner forgets to make room for feedback **during the sprint review meeting itself**. While he's very excited to show everything the team completed, he doesn't adequately allocate time for getting feedback from participants. As noted around 1:33, he only \"gives some room for some feedback, if there is\"\u2014highlighting that feedback collection should be a primary focus, not an afterthought, since the review meeting's goal is to inspect the increment and adapt based on stakeholder input.",
           "results": [
             {
               "rank": 1,
@@ -109580,7 +109671,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Around 1:33, the speaker explains the key difference: **with a demo, you show something and that's it\u2014everybody goes home**. In contrast, a review meeting uses the demo as just the beginning that serves as a trigger for feedback. The real goal of a review meeting is to gather input from stakeholders and end users to help the product owner think through what to prioritize next and maximize value for future iterations.",
+          "answer": "Around 1:33, the speaker explains the key difference: **with a demo, you show something and that's it\u2014everybody goes home**. In contrast, a review meeting uses the demo as just the beginning that serves as a trigger for feedback. The real goal of a review meeting (around 4:58) is not the demo itself, but giving product owners valuable insights to think about so they can update the product backlog and maximize value for the next iteration.",
           "results": [
             {
               "rank": 1,
@@ -109826,7 +109917,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "According to the video, the meeting gives developers context from end users by **putting developers and end users in the same room** during the sprint review meeting, around 1:58. As explained around 2:22, when developers see real end-user data and use cases (like orders from different programs: children's, sports, science, news, and culture), they can make informed decisions during development rather than relying on requirements written months earlier that may have changed.",
+          "answer": "According to the video, the meeting gives developers context from end users by **putting developers and end users in the same room** during the sprint review meeting (around 1:58). As explained around 2:22, when developers see real end-user data and use cases\u2014such as orders from different programs like children's, sports, science, news, and culture\u2014they can make informed decisions during development. This direct interaction is crucial because developers need to understand the actual context of how their work will be used, rather than relying solely on requirements written months earlier that may have changed.",
           "results": [
             {
               "rank": 1,
@@ -109957,7 +110048,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.358,
-          "answer": "The video shows multiple instances of remote meeting participant grids throughout \"A Real Sprint Review Meeting Example.\" Around 0:45, you can see a 3x3 grid with nine participants wearing headsets in grayscale feeds. At 5:45, there's another grid layout with nine participants, and around 6:15, a seven-participant grid is visible with most participants smiling at the camera. Additionally, at various points (3:15, 4:15, and 2:45), participant avatars and video feeds appear in conference toolbars at the bottom of shared screen displays during the meeting.",
+          "answer": "Yes, I can confirm the video grid of remote meeting participants appears multiple times in the indexed video.\n\nThe clearest full-screen grid view is shown **around 0:45**, which displays a 3x3 grid of nine participants, each wearing headsets with microphones in grayscale video feeds from different locations. Another prominent example appears **around 5:45**, showing nine participants in a similar grid layout, all wearing headsets and appearing engaged in a professional team meeting.\n\nAdditionally, throughout the sprint review meeting, participant grids appear at various timestamps (**around 1:45, 2:15, 2:45, 3:15, 4:15, 4:45, 5:15, and 6:15**), though some of these show the video conference window integrated into a larger screen displaying business management software alongside the meeting interface.",
           "results": [
             {
               "rank": 1,
@@ -110080,7 +110171,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Based on the indexed video, the checkmark feature was a UI element placed in front of rows in an old component, originally designed to enable multi-selection functionality (around 3:06). However, the development team decided not to implement it because they didn't understand its actual use case. Around 3:28, the speaker emphasizes that optimizing this checkmark feature wasn't worth the effort since it wasn't going to be used anyway, highlighting how much time and energy would have been wasted on a feature without clear user value.",
+          "answer": "Based on the indexed video, the checkmark feature was a UI element placed in front of rows in an old component, originally designed to enable multi-selection functionality (around 3:06). However, the development team decided not to implement it because they didn't understand its actual use case. Around 3:28, the speaker emphasizes that optimizing this checkmark feature wasn't worth the effort since it wasn't even going to be used, highlighting how much time and energy would have been wasted on a feature without clear user value.",
           "results": [
             {
               "rank": 1,
@@ -110203,7 +110294,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Based on the indexed video, around **3:48**, the meeting discusses setting a firm time box as an important detail for the Sprint Review. The speaker explains that \"the time box helps everyone involved to focus on what is going to give the best possible outcome\" and prevents participants from falling down rabbit holes. Later, around **3:28**, this concept is reinforced when the speaker again emphasizes \"the important detail is setting a firm time box.\"",
+          "answer": "Based on the indexed video, around **3:28-3:48**, the meeting discusses setting a firm time box for the Sprint Review. The speaker emphasizes that \"the important detail is setting a firm time box\" and explains that it \"helps everyone involved to focus on what is going to give the best possible outcome\" and prevents participants from \"falling down a rabbit hole.\" Later, around 3:48, you can hear a participant noting they're past the 15-minute mark, demonstrating the time box being actively managed during the meeting.",
           "results": [
             {
               "rank": 1,
@@ -110334,7 +110425,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Around **0:41**, the presenter introduces \"a new and improved table component\" that Wiley wants to use to create and edit work orders. The screen share displays this table component starting around **1:45**, showing a data table with columns for order details, dates, times, and status information in a teal-themed interface. Multiple subsequent timestamps (around **2:15**, **2:45**, **4:15**, and **4:45**) continue to show the table component being demonstrated during the sprint review meeting.",
+          "answer": "Yes, I can confirm the screen share with the table component is shown multiple times throughout the video. \n\nAround **0:41**, the presenter introduces \"a new and improved table component\" that Wiley wants to use to create and edit work orders. The table component is then displayed on screen starting around **1:45**, showing an order management interface with a teal sidebar menu and a data table with columns for order details, dates, times, and status information. This table remains visible through several timestamps including **2:15**, **2:45**, **4:15**, and **4:45**, where you can see the detailed table entries being discussed during the sprint review meeting with all participants visible at the bottom.",
           "results": [
             {
               "rank": 1,
@@ -111076,7 +111167,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Based on the indexed video evidence, I found multiple frames showing a dark table overlay in the product UI. The clearest examples appear around **2:45** and **5:15**, where the interface displays a data table with a dark teal or dark gray color scheme sidebar, showing order/operational information with columns for dates, times, and status. The frame at **4:15** also shows a similar dark-themed business management interface with a data table and popup dialog. These all feature the dark overlay styling you're looking for in the product UI.",
+          "answer": "Based on the indexed video evidence, I found a frame with a dark table overlay in the product UI around **4:15**. \n\nThe visual caption describes a desktop screen displaying a business management software interface with a data table containing order information, and notably mentions \"a popup dialog box with additional details\" \u2014 this dialog box would constitute the dark overlay you're asking about. The frame shows this overlay appearing over the main table interface during the sprint review demonstration.",
           "results": [
             {
               "rank": 1,
@@ -111207,7 +111298,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.387,
-          "answer": "Based on the indexed video, both feedback and screen sharing appear together throughout the sprint review. Around **1:58**, the transcript explicitly discusses how \"the demo is only the beginning and serves as a trigger for feedback,\" while the visual frames from **2:45**, **4:45**, and **5:15** show the screen share of the order management interface displayed alongside the video conference participant panel at the bottom. This combination of screen sharing the product demo with participants visible for feedback is maintained consistently throughout the meeting.",
+          "answer": "Around **1:33 to 2:15**, both feedback and screen share appear together in the sprint review. The transcript at 1:33 explicitly discusses getting feedback from participants (\"getting feedback\"), while the visual captions from 1:45, 2:15, and 2:45 all show the shared screen displaying the order management interface alongside the video conference participant avatars at the bottom, confirming both elements are present simultaneously during this portion of the meeting.",
           "results": [
             {
               "rank": 1,
@@ -111338,7 +111429,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Based on the indexed video, the sprint review is useful for several key reasons:\n\nAround 1:58, the demo serves as a trigger for feedback and provides crucial context to developers by connecting them directly with end users\u2014context that can only come from putting them in the same room. Around 5:21, the core goal is giving product owners substantial information to update the product backlog and maximize value for the next iteration. Additionally, around 6:09, the review creates a motivated team by letting developers see that their work means something to someone.",
+          "answer": "Based on the indexed video, the sprint review is useful for several key reasons:\n\nAround 1:58, the demo serves as a trigger for feedback and provides crucial context to developers by putting them in the same room as end users\u2014context they can only get directly from real users. Around 5:21, the review gives product owners valuable information to update the product backlog and maximize value for the next iteration. Additionally, around 4:14, the review provides transparency about what's missing and important, and around 6:09, it creates a motivated team by showing them that their work means something to someone.",
           "results": [
             {
               "rank": 1,
@@ -111456,7 +111547,7 @@
           "rewritten_query": null,
           "refused": true,
           "confidence": 0.0,
-          "answer": "I could not find strong evidence for that in the indexed videos. The sprint review video discusses the benefits of review meetings, including providing context to developers, gathering feedback, and team motivation, but there is no mention of anti-vision boards in the available transcript or visual evidence.",
+          "answer": "I could not find strong evidence for that in the indexed videos. The sprint review video discusses the purpose and benefits of review meetings\u2014such as gathering feedback, providing context to developers, and boosting team morale\u2014but there is no mention of anti-vision boards in the available transcript or visual evidence.",
           "results": []
         },
         "metrics": {
@@ -111483,7 +111574,7 @@
           "rewritten_query": null,
           "refused": true,
           "confidence": 0.0,
-          "answer": "I could not find strong evidence for that in the indexed videos. The indexed content shows \"A Real Sprint Review Meeting Example,\" which focuses on demonstrating a table component for work orders at a broadcasting company (Wiley), not a garden tutorial. The sprint review discusses timeboxing, product backlog prioritization, and user feedback\u2014but there is no garden-related content in the available evidence.",
+          "answer": "I could not find strong evidence for that in the indexed videos.\n\nThe indexed content shows \"A Real Sprint Review Meeting Example,\" which focuses on demonstrating a table component for work orders at a broadcasting company. There is no garden tutorial presented in this sprint review\u2014the demo is about a media management interface and work order system, not gardening.",
           "results": []
         },
         "metrics": {
@@ -111638,7 +111729,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Around 3:12 to 4:00, Simon Sinek contrasts Apple's messaging by first presenting how a normal company would market computers: \"We make great computers. They're beautifully designed, simple to use, and user-friendly. Want to buy one?\" He describes this as \"uninspiring.\" Then he shows how Apple actually communicates by starting with their \"why\": \"Everything we do, we believe in challenging the status quo, we believe in thinking differently,\" before mentioning the product features. As Sinek explains around 4:25, \"All I did was reverse the order of the information\"\u2014the key difference is that Apple leads with their belief and purpose, not their product features.",
+          "answer": "Around 3:12 to 4:00, Simon Sinek contrasts Apple's normal marketing message with their \"why-first\" approach. A typical Apple message would say \"We make great computers. They're beautifully designed, simple to use, and user-friendly. Want to buy one?\"\u2014which he calls \"uninspiring.\" Instead, Apple actually communicates by starting with their belief: \"Everything we do, we believe in challenging the status quo and thinking differently,\" then explains how their products embody this philosophy. By reversing the order of information and leading with \"why,\" Apple inspires people to buy based on shared values rather than just product features.",
           "results": [
             {
               "rank": 1,
@@ -111761,7 +111852,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Simon Sinek draws the lesson that **purpose and belief matter more than resources or credentials**. Around 9:15, he contrasts Langley\u2014who had $50,000 in funding, a Harvard position, and the best minds money could find\u2014with the Wright brothers, who had no money, no college education, and worked from a bicycle shop. The key difference, as Sinek explains around 9:38, was that the Wright brothers were \"driven by a cause, by a purpose, by a belief,\" while Langley \"wanted to be rich and famous\" and pursued results instead. This inspired belief attracted people who worked \"with blood and sweat and tears,\" whereas Langley's team \"just worked for the paycheck\"\u2014ultimately leading to the Wright brothers' success and Langley's failure.",
+          "answer": "Simon Sinek draws the lesson that **purpose and belief matter more than resources or credentials**. Around 8:04-10:23, he contrasts Langley\u2014who had $50,000 in funding, a Harvard position, top talent, and media attention\u2014with the Wright brothers, who had no money, no college education, and no public support. The key difference was that the Wright brothers were driven by a cause and belief in their mission, while Langley was motivated by wealth and fame. As a result, the Wright brothers' team worked \"with blood and sweat and tears,\" while Langley's hired minds merely \"worked for the paycheck.\" When the Wright brothers succeeded on December 17th, 1903, Langley quit because he hadn't achieved his personal goals\u2014proving that **people are inspired to give their best effort when they believe in the \"why,\" not just the paycheck**.",
           "results": [
             {
               "rank": 1,
@@ -112007,7 +112098,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Simon Sinek talks about the 250,000 people showing up to hear Dr. King around **15:14** and **16:01** in his TEDxPugetSound talk \"Start with Why.\" He uses this as an example of the law of diffusion of innovation, explaining that people showed up not for Dr. King himself, but because they believed in what he believed about America\u2014demonstrating how shared beliefs drive action and inspire movements.",
+          "answer": "Simon Sinek talks about the 250,000 people showing up to hear Dr. King around **15:14** and **16:01** in his TEDxPugetSound talk \"Start with Why.\" He uses this as an example of the law of diffusion of innovation, explaining that people showed up not for Dr. King himself, but because they believed in what he believed about America\u2014demonstrating how shared beliefs inspire action and spread through communities.",
           "results": [
             {
               "rank": 1,
@@ -112142,7 +112233,7 @@
           "rewritten_query": null,
           "refused": true,
           "confidence": 0.0,
-          "answer": "I could not find strong evidence for that in the indexed videos. While Simon Sinek introduces the concept of the \"golden circle\" with the three components (Why, How, What) around 1:58, the transcript excerpts provided don't describe or reference a visual flip chart showing these circles. The indexed content focuses on the verbal explanation of the concept rather than the visual presentation of it.",
+          "answer": "I could not find strong evidence for that in the indexed videos. While Simon Sinek introduces the concept of the \"golden circle\" with the three components \"Why? How? What?\" around 1:58, the transcript excerpts provided don't describe or reference a visual flip chart showing these circles. The indexed content focuses on the audio explanation of the concept rather than the visual presentation of it.",
           "results": []
         },
         "metrics": {
@@ -112174,7 +112265,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Simon Sinek says \"People don't buy what you do, they buy why you do it\" in his TEDx talk **\"Start with Why -- How Great Leaders Inspire Action\"** at TEDxPugetSound. This phrase appears multiple times throughout the talk, including around **4:25**, **10:46**, **12:48**, and **14:51**. Sinek uses this core principle to explain why customers are drawn to brands like Apple\u2014they connect with the company's purpose and beliefs, not just their products.",
+          "answer": "Simon Sinek says \"People don't buy what you do, they buy why you do it\" in his TEDx talk **\"Start with Why -- How Great Leaders Inspire Action\"** at TEDxPugetSound. This phrase appears multiple times throughout the talk, including around **4:25**, **10:46**, **12:48**, and **14:51**. Sinek uses this concept as the central thesis to explain why customers are drawn to brands like Apple\u2014they connect with the company's purpose and beliefs, not just their products.",
           "results": [
             {
               "rank": 1,
@@ -112292,7 +112383,7 @@
           "rewritten_query": null,
           "refused": true,
           "confidence": 0.0,
-          "answer": "I could not find strong evidence for that in the indexed videos. The context provided is from Simon Sinek's \"Start with Why\" TEDx talk, which focuses on leadership and organizational inspiration through the \"golden circle\" concept (Why, How, What). There is no mention of cooking, crab cakes, or any culinary content in these indexed segments.",
+          "answer": "I could not find strong evidence for that in the indexed videos. The context provided is from Simon Sinek's \"Start with Why\" TEDx talk, which focuses on leadership and organizational inspiration through the golden circle framework (Why, How, What). There is no mention of cooking, crab cakes, or any culinary content in these indexed segments.",
           "results": []
         },
         "metrics": {
@@ -112324,7 +112415,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Gordon Ramsay is trying to teach Shane how to make a crab cake using only verbal instructions, without any visual demonstration. Around 0:00, he explicitly states his challenge: \"I've got 15 minutes to teach him how to make the most amazing crab cake without actually showing him anything. All he's going to be doing is hearing my voice audio.\" Throughout the 15-minute challenge, Gordon guides Shane step-by-step through preparing the crab, dicing peppers, mixing ingredients, and forming the cakes\u2014relying entirely on spoken directions.",
+          "answer": "Gordon Ramsay is trying to teach Shane how to make a crab cake using only verbal instructions, without any visual demonstration. Around 0:00, he explicitly states: \"I've got 15 minutes to teach him how to make the most amazing crab cake without actually showing him anything. All he's going to be doing is hearing my voice audio.\" Throughout the challenge, Gordon guides Shane through each step\u2014from preparing the crab and dicing peppers to mixing ingredients and forming the cakes\u2014relying entirely on spoken directions.",
           "results": [
             {
               "rank": 1,
@@ -112447,7 +112538,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.387,
-          "answer": "Based on the video evidence, Gordon seasons the crab cake mixture around 2:25 with **salt, pepper, lemon zest, and lemon juice**. He flakes the crab meat into peppers, seasons it with salt and pepper, zests lemon into the mixture, and then squeezes fresh lemon juice into it. This seasoning happens before the mixture is formed into cakes and cooked.",
+          "answer": "Based on the video evidence, Gordon seasons the crab cake mixture around 2:25 with **salt, pepper, lemon zest, and lemon juice**. He flakes the crab meat into peppers, then seasons it with salt and pepper, zests lemon into the mixture, and squeezes fresh lemon juice in as well. This seasoning happens before the mixture is formed into cakes and cooked.",
           "results": [
             {
               "rank": 1,
@@ -112725,7 +112816,7 @@
           "rewritten_query": null,
           "refused": true,
           "confidence": 0.0,
-          "answer": "I could not find strong evidence for that in the indexed videos. While the context shows the crab cake preparation and plating process around 7:14-7:37, there's no indication that the final reveal \"goes wrong.\" Gordon appears to successfully complete the dish with proper plating, finishing touches, and presentation.",
+          "answer": "I could not find strong evidence for that in the indexed videos. The context shows the crab cake preparation and plating process going smoothly, with Gordon guiding Shane through forming, cooking, and plating the cakes around 4:51-7:37. However, there's no clear indication of where a \"final reveal\" goes wrong in these clips.",
           "results": []
         },
         "metrics": {
@@ -112767,20 +112858,111 @@
         "response": {
           "intent": "visual",
           "rewritten_query": null,
-          "refused": true,
-          "confidence": 0.0,
-          "answer": "I could not find strong evidence for that in the indexed videos. While the context shows Gordon and Shane cooking together in a bright professional kitchen wearing white aprons (visible around 5:15 and other timestamps), the video appears to be from a \"Back-to-Back Chef\" challenge rather than a casual cooking scene. The indexed frames show them actively cooking and preparing crab cakes, but I cannot confirm specific details about the exact lighting or framing you're requesting.",
-          "results": []
+          "refused": false,
+          "confidence": 0.364,
+          "answer": "Yes, I found strong evidence of this scene. Around **5:15**, Gordon and Shane are cooking together in a bright modern kitchen, both wearing white aprons. Gordon wears a green shirt while chopping vegetables on a cutting board in the foreground, and Shane wears a dark blue shirt working at the stove in the background. The kitchen features stainless steel appliances and white cabinetry, matching your description of a bright kitchen setting.",
+          "results": [
+            {
+              "rank": 1,
+              "video_id": "1Gdl-A1DvpA",
+              "modality": "visual_caption",
+              "start_seconds": 525.0,
+              "end_seconds": 525.0,
+              "score": 0.333,
+              "snippet": "# Video Frame Description\n\nTwo men wearing white aprons stand in a professional kitchen, each holding a plate with food (appears to be a protein dish with lettuce garnish). The man on the left wears glasses and a green shirt, while the man on the right wears a dark navy shirt and blonde hair, and both appear to be examining or tasting their dishes with forks. The kitchen behind them features stainless steel appliances and white subway tile backsplash."
+            },
+            {
+              "rank": 2,
+              "video_id": "1Gdl-A1DvpA",
+              "modality": "visual_caption",
+              "start_seconds": 495.0,
+              "end_seconds": 495.0,
+              "score": 0.329,
+              "snippet": "# Video Frame Description\n\nTwo men wearing white aprons stand in a professional kitchen, each holding plates of food. The man on the left wears glasses and a green cardigan over his apron, while the man on the right wears a dark navy sweater. They are positioned between two cooking stations with stoves, surrounded by various cooking ingredients, utensils, and bottles of olive oil on the countertops."
+            },
+            {
+              "rank": 3,
+              "video_id": "1Gdl-A1DvpA",
+              "modality": "visual_caption",
+              "start_seconds": 345.0,
+              "end_seconds": 345.0,
+              "score": 0.338,
+              "snippet": "# Video Frame Description\n\nTwo men wearing white aprons are standing in a modern kitchen with stainless steel appliances and white subway tile backsplash. Both are positioned at different countertops with various cooking ingredients and utensils visible around them, suggesting they are preparing to cook or participate in a cooking demonstration."
+            },
+            {
+              "rank": 4,
+              "video_id": "1Gdl-A1DvpA",
+              "modality": "visual_caption",
+              "start_seconds": 315.0,
+              "end_seconds": 315.0,
+              "score": 0.32,
+              "snippet": "# Video Frame Description\n\nTwo people are cooking together in a modern kitchen. The person in the foreground, wearing a green shirt and white apron, is chopping vegetables on a cutting board, while another person in a dark blue shirt and white apron works at the stove in the background. The kitchen features stainless steel appliances, white cabinetry, and various cooking ingredients and utensils visible on the counter, including olive oil, fresh vegetables, and cooking pots."
+            },
+            {
+              "rank": 5,
+              "video_id": "1Gdl-A1DvpA",
+              "modality": "visual_caption",
+              "start_seconds": 435.0,
+              "end_seconds": 435.0,
+              "score": 0.308,
+              "snippet": "# Video Frame Description\n\nA chef wearing a white apron and dark navy top is preparing food in a professional kitchen, actively handling fresh green lettuce or leafy greens over a clear glass bowl. The modern kitchen features stainless steel appliances and countertops, with other kitchen staff visible in the background working at different stations, suggesting this is a cooking class or professional kitchen demonstration."
+            },
+            {
+              "rank": 6,
+              "video_id": "1Gdl-A1DvpA",
+              "modality": "visual_caption",
+              "start_seconds": 405.0,
+              "end_seconds": 405.0,
+              "score": 0.304,
+              "snippet": "# Video Frame Description\n\nIn a modern kitchen set, a man wearing a white apron and dark navy cardigan is cooking at the foreground counter, while two other people work in the background near the stove. The scene is being filmed with professional camera equipment visible on tripods, and the kitchen is equipped with contemporary appliances, fresh ingredients, and flowers arranged on the counters."
+            },
+            {
+              "rank": 7,
+              "video_id": "1Gdl-A1DvpA",
+              "modality": "visual_caption",
+              "start_seconds": 15.0,
+              "end_seconds": 15.0,
+              "score": 0.3,
+              "snippet": "# Video Frame Description\n\nTwo men stand in a professional kitchen setting with white subway tile backsplash and stainless steel appliances visible behind them. The man on the left wears glasses, a green shirt, and a white apron, while the man on the right wears a dark navy shirt and appears to be gesturing or speaking, suggesting this is likely from a cooking show or culinary demonstration."
+            },
+            {
+              "rank": 8,
+              "video_id": "1Gdl-A1DvpA",
+              "modality": "transcript",
+              "start_seconds": 218.0,
+              "end_seconds": 248.0,
+              "score": 0.312,
+              "snippet": "Well, you cook it with a little bit of spice. Now from there. Lightly. Sprinkle. Your bread crumbs over the mix. All of it? No. Lightly sprinkle. Okay. Bread crumbs over the mix. Got it. And Shane, what we're trying to do here now is use the bread crumbs to bring the crab cake together. Take your sheet tray and then you take your cutter. And you press the crab meat. The secret here. Yeah. It's the press the crab meat into the cutter. You know we're up against it time-wise. I'm pressing."
+            },
+            {
+              "rank": 9,
+              "video_id": "1Gdl-A1DvpA",
+              "modality": "transcript",
+              "start_seconds": 194.0,
+              "end_seconds": 224.0,
+              "score": 0.348,
+              "snippet": "And it's teaspoon of Worcesters of sauce. And then a little touch of cayenne pepper. And then Shane. Yes. I just want you to take that and smell the sort of bowl and make sure it smells nice and fragrant. It does. And then taste a little bit. Taste the season. We can't season it after we've cooked it. So we've season it. Okay. It tastes good. It was a little spicy to be honest. That's the idea. Well, you cook it with a little bit of spice. Now from there. Lightly. Sprinkle. Your bread crumbs over the mix."
+            },
+            {
+              "rank": 10,
+              "video_id": "1Gdl-A1DvpA",
+              "modality": "transcript",
+              "start_seconds": 99.0,
+              "end_seconds": 130.0,
+              "score": 0.364,
+              "snippet": "Shane, if you work, nice and tidy, we'll produce a stunning crab cake. If you work in a mess, we'll produce a mess. Right. You're bell peppers. And then you take your knife and slice down, slice around. That way we get rid of the bitter parts in the center. All we do now is form a beautiful Julianne. Skin size quite rough. So put the skin side down onto the board. And then from there, chop. Now, the secret of these peppers is to make sure it's small dicing, okay? Okay. What do you consider a small Gordon? I would say half a centimeter."
+            }
+          ]
         },
         "metrics": {
-          "recall_at_5": 0.0,
-          "recall_at_10": 0.0,
-          "mrr": 0.0,
-          "timestamp_at_5s": 0.0,
-          "timestamp_at_10s": 0.0,
-          "modality_correct": false,
+          "recall_at_5": 1.0,
+          "recall_at_10": 1.0,
+          "mrr": 1.0,
+          "timestamp_at_5s": 1.0,
+          "timestamp_at_10s": 1.0,
+          "modality_correct": true,
           "expected_no_answer": false,
-          "predicted_refused": true
+          "predicted_refused": false
         },
         "judge": null
       },
@@ -112919,7 +113101,7 @@
           "rewritten_query": null,
           "refused": true,
           "confidence": 0.0,
-          "answer": "I could not find strong evidence for that in the indexed videos. The context provided contains only visual descriptions of cooking demonstrations from the Gordon Ramsay video, with no mention of smartphone awards or any awards-related discussion.",
+          "answer": "I could not find strong evidence for that in the indexed videos. The context provided contains only visual descriptions of cooking demonstrations from the Gordon Ramsay video, focusing on food preparation, kitchen settings, and ingredients. There is no mention of smartphone awards or any awards-related discussion in any of the indexed frames.",
           "results": []
         },
         "metrics": {
@@ -112951,7 +113133,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "According to Bren\u00e9 Brown around 3:08, connection matters because \"connection is why we're here. It's what gives purpose and meaning to our lives.\" She further explains around 3:33 that \"the ability to feel connected is neurobiologically...how we're wired, it's why we're here.\" Additionally, around 7:08, she notes that people with a strong sense of love and belonging believe they're worthy of connection, suggesting that connection is fundamental to human wellbeing and belonging.",
+          "answer": "According to Bren\u00e9 Brown around 3:08, connection matters because \"connection is why we're here. It's what gives purpose and meaning to our lives.\" She emphasizes that connection is neurobiologically how we're wired\u2014it's fundamental to human existence. Additionally, around 7:08, she notes that people with a strong sense of love and belonging believe they're worthy of connection, suggesting that connection is essential to our sense of belonging and self-worth.",
           "results": [
             {
               "rank": 1,
@@ -113074,7 +113256,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.387,
-          "answer": "In her TED talk, Bren\u00e9 Brown defines shame around 4:28 as **\"the fear of disconnection\"** \u2014 specifically, the worry that \"there is something about me that if other people know it or see it, that I won't be worthy of connection.\" She emphasizes that shame is universal and underpinned by the feeling of \"I'm not good enough,\" manifesting as beliefs like \"I'm not thin enough, smart enough, or promoted enough.\" Brown also notes that shame is rooted in the vulnerability required for genuine human connection.",
+          "answer": "In her TED talk, Bren\u00e9 Brown defines shame around 4:28 as **\"the fear of disconnection\"** \u2014 specifically, the worry that \"there is something about me that if other people know it or see it, that I won't be worthy of connection.\" She emphasizes that shame is universal and underpinned by the feeling of \"I'm not good enough,\" manifesting as beliefs like \"I'm not thin enough, smart enough, promoted enough.\" Brown also notes that shame is rooted in the vulnerability required for genuine human connection.",
           "results": [
             {
               "rank": 1,
@@ -113197,7 +113379,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "According to Bren\u00e9 Brown's research around 9:55, wholehearted people believe that **what made them vulnerable made them beautiful**. They view vulnerability not as comfortable or excruciating, but as necessary\u2014embracing it as essential for connection, love, and belonging. Additionally, around 19:28, they believe they are enough, which allows them to practice gratitude and joy even in moments of terror and uncertainty.",
+          "answer": "According to Bren\u00e9 Brown's research around 9:55, wholehearted people believe that **what made them vulnerable made them beautiful**. They view vulnerability not as comfortable or excruciating, but as necessary\u2014embracing it as essential for connection, love, and belonging. Additionally, around 19:28, they believe they are enough, which allows them to stop resisting vulnerability and instead practice gratitude in those moments of fear.",
           "results": [
             {
               "rank": 1,
@@ -113320,7 +113502,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Bren\u00e9 Brown quotes this idea around **1:31** in her TED talk \"The Power of Vulnerability.\" She recalls that during her first year as a doctoral student, a research professor told her: \"if you cannot measure it, it does not exist.\" She elaborates on this moment again around **1:55**, explaining how this statement from her professor initially struck her, though it contrasted with her social work background's more embracing approach to life's messiness.",
+          "answer": "Bren\u00e9 Brown quotes this idea around **1:31** in her TED talk \"The Power of Vulnerability.\" She recalls that during her first year as a doctoral student, a research professor told her: \"if you cannot measure it, it does not exist.\" She elaborates on this moment around **1:55**, explaining how this statement from her professor initially struck her, though it contrasted with her social work background's more embracing approach to life's messiness.",
           "results": [
             {
               "rank": 1,
@@ -113566,7 +113748,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Around 1:31 in Bren\u00e9 Brown's \"The Power of Vulnerability\" TED talk, she quotes her research professor saying: \"If you cannot measure it, it does not exist.\" This quote appears in the transcript as Brown recounts her early doctoral research experience, though the indexed videos don't show a specific slide displaying this text visually.",
+          "answer": "I found the quote you're looking for! Around **1:31** in Bren\u00e9 Brown's TED talk \"The Power of Vulnerability,\" her research professor tells her: \"If you cannot measure it, it does not exist.\" She repeats this same line again around **1:55** when discussing her academic background in social work and her initial approach to research.\n\nHowever, the indexed context doesn't include a visual description of a slide displaying this text\u2014only the transcript of her speaking these words.",
           "results": [
             {
               "rank": 1,
@@ -113689,7 +113871,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "**The Power of Vulnerability** by Bren\u00e9 Brown describes shame as the fear of disconnection. Around 4:28, Brown explains: \"shame is really easily understood as the fear of disconnection. Is there something about me that if other people know it or see it, that I won't be worthy of connection.\"",
+          "answer": "**\"The Power of Vulnerability\" by Bren\u00e9 Brown** describes shame as the fear of disconnection. Around 4:28, Brown explains: \"shame is really easily understood as the fear of disconnection. Is there something about me that if other people know it or see it, that I won't be worthy of connection.\"",
           "results": [
             {
               "rank": 1,
@@ -113839,7 +114021,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "According to Sam Altman around 0:46, OpenAI's structure changed because they initially made assumptions about what they'd need that \"turned out to be wrong.\" As the company realized they would need to do different things and acquire \"huge amounts more capital,\" they had to adapt the structure repeatedly. He describes it as a gradual process of patching the structure multiple times, resulting in something that \"does look kind of eyebrow raising,\" but says these were \"reasonable decisions at each point along the way.\"",
+          "answer": "According to Sam Altman around 0:46, OpenAI's structure changed because they initially made assumptions about what they'd need that \"turned out to be wrong.\" As the company evolved, they realized \"we were going to need to do different things and also have huge amounts more capital,\" so they had to patch the structure repeatedly. He acknowledges the final structure \"does look kind of eyebrow raising,\" but says they arrived at it gradually through reasonable decisions at each step.",
           "results": [
             {
               "rank": 1,
@@ -113962,7 +114144,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "According to Sam Altman around 3:00-3:25, Elon Musk wanted total control of OpenAI to turn it around, and specifically wanted to either convert OpenAI into a for-profit company he could control or have it acquired by Tesla. Altman states that Musk believed OpenAI was going to fail and saw these structural changes as necessary, but the team wanted to continue in the direction that OpenAI ultimately took, so Musk decided to leave.",
+          "answer": "According to Sam Altman around 3:00-3:25, Elon Musk wanted total control of OpenAI to turn it around, and specifically wanted to either convert OpenAI into a for-profit company he could control or have it acquired by and merged with Tesla. Altman states that Musk believed OpenAI was going to fail and saw these structural changes as necessary, but the team wanted to continue in the direction that OpenAI ultimately took, so Musk decided to leave.",
           "results": [
             {
               "rank": 1,
@@ -114085,7 +114267,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Based on the discussion, \"open\" to Sam Altman means **putting powerful technology in the hands of people for free as a public good** (around 4:16). He emphasizes that OpenAI doesn't monetize their free version with ads, but instead views it as part of their mission to distribute increasingly powerful AI tools freely so people can build with them (around 4:39). Altman notes this interpretation of \"open\" is central to fulfilling OpenAI's mission, though he acknowledges the nuance that they should open-source some things while not necessarily everything (around 5:00).",
+          "answer": "Based on the discussion, \"open\" to Sam Altman means **putting powerful technology in the hands of people for free as a public good** (around 4:16). He emphasizes that OpenAI doesn't monetize their free version with ads, but instead views it as part of their mission to distribute increasingly powerful AI tools freely to enable people to build an incredible future together (around 4:39). Altman acknowledges this extends beyond just open-sourcing code\u2014it's about accessibility and democratizing powerful technology, though he notes nuance is needed on which things should be open-sourced versus not (around 5:00).",
           "results": [
             {
               "rank": 1,
@@ -114208,7 +114390,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "They discuss the \"ClosedAI\" name joke and the lawsuit around **5:00-5:30**. According to Sam Altman, Elon proposed: \"change your name to ClosedAI and I'll drop the lawsuit.\" Altman then questions whether this joke will become a meme and what it says about how seriously Elon means the lawsuit, suggesting he doesn't think it's legally serious but rather meant to make a point about the future of AGI.",
+          "answer": "Around 5:00-5:30, Sam Altman discusses Elon's \"ClosedAI\" name joke during the Lex Fridman Podcast interview. Altman explains that Elon said, \"change your name to ClosedAI and I'll drop the lawsuit,\" which Altman characterizes as an \"astonishing thing to say\" that questions how seriously Elon means the lawsuit. Altman suggests the lawsuit is more about making a point regarding AGI's future rather than being legally serious.",
           "results": [
             {
               "rank": 1,
@@ -114331,7 +114513,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Based on the indexed video, around 9:12, Sam Altman expresses hope for an amicable relationship with Elon \"years in the future.\" He specifically hopes they can \"compete and win and explore these ideas together,\" emphasizing that while there may be competition for talent, \"it should be friendly competition.\" Altman envisions a scenario where they simply \"build cool shit\" and compete in a healthy way\u2014like having X's Grok beat GPT and then GPT beat Grok in turn, describing it as \"beautiful for everybody.\"",
+          "answer": "Based on the indexed video, around 9:12, Sam Altman expresses hope for an amicable relationship with Elon in the future, where they can \"compete and win and explore these ideas together.\" He specifically emphasizes that while there may be competition for talent, \"it should be friendly competition.\" Altman envisions a scenario where they simply \"build cool shit\" and compete through their respective AI systems\u2014with Grok beating GPT and GPT beating Grok in a beautiful competitive dynamic that benefits everyone.",
           "results": [
             {
               "rank": 1,
@@ -114452,20 +114634,111 @@
         "response": {
           "intent": "visual",
           "rewritten_query": null,
-          "refused": true,
-          "confidence": 0.0,
-          "answer": "I could not find strong evidence for that in the indexed videos.\n\nWhile the context includes a reference to a blog post screenshot titled \"OpenAI and Elon Musk\" dated March 5, 2024 (around 1:45), the description only provides a partial view of the blog post's opening content. There is no screenshot of an actual lawsuit document shown in the indexed video evidence\u2014only discussion of the lawsuit itself during Sam Altman's interview on the Lex Fridman Podcast.",
-          "results": []
+          "refused": false,
+          "confidence": 0.393,
+          "answer": "Yes, I found a screenshot of the OpenAI blog post related to the lawsuit around 1:45. The visual shows a blog post titled \"OpenAI and Elon Musk\" dated March 5, 2024, authored by Craig Brockman, Tya Schrader, Sam Altman, Theodore Zemmel, and others. The post begins with \"We are dedicated to the OpenAI mission and have pursued it every step of the way,\" and discusses OpenAI's mission regarding AI and AGI resource requirements, though portions of the text are partially blurred in the image.",
+          "results": [
+            {
+              "rank": 1,
+              "video_id": "TGdLss5Srnk",
+              "modality": "visual_caption",
+              "start_seconds": 105.0,
+              "end_seconds": 105.0,
+              "score": 0.358,
+              "snippet": "# Description of the Blog Post Frame\n\nThis is a screenshot of a blog post titled \"OpenAI and Elon Musk\" dated March 5, 2024, with authors listed as Craig Brockman, Tya Schrader, Sam Altman, Theodore Zemmel, and others. The post begins with the statement \"We are dedicated to the OpenAI mission and have pursued it every step of the way,\" followed by sections discussing OpenAI's mission to ensure AI benefits humanity and details about AGI resource requirements, though the full text is partially visible and somewhat blurred in the image."
+            },
+            {
+              "rank": 2,
+              "video_id": "TGdLss5Srnk",
+              "modality": "transcript",
+              "start_seconds": 377.04,
+              "end_seconds": 409.88,
+              "score": 0.32,
+              "snippet": "Just talking a little shit is great, but friendly competition versus like I personally hate lawsuits. Yeah, look, I think this whole thing is like unbecoming of a builder and I respect Elon is one of the great builders of our time and I know he knows what it's like to have like haters attack him and it makes me extra sad. He's doing it. Plus yeah, he's one of the greatest builders of all time potentially the greatest builder of all time. It makes me sad. And I think it makes a lot of people sound like there's a lot of people who really looked"
+            },
+            {
+              "rank": 3,
+              "video_id": "TGdLss5Srnk",
+              "modality": "transcript",
+              "start_seconds": 300.64,
+              "end_seconds": 336.68,
+              "score": 0.387,
+              "snippet": "out in the world, I'm going to get a huge deal for how we fulfill the mission. and source are not yet. I think we should open source some stuff and other stuff. It does become this like religious battle line where nuance is hard to have, but I think nuance is the right answer. So he said, change your name to close AI and I'll drop the lawsuit. I mean, is it going to become this battleground in the land of memes about the name that speaks to this seriousness with which Elon means the lawsuit?"
+            },
+            {
+              "rank": 4,
+              "video_id": "TGdLss5Srnk",
+              "modality": "transcript",
+              "start_seconds": 356.48,
+              "end_seconds": 388.6,
+              "score": 0.324,
+              "snippet": "the way. So look, I mean, Brock had not open sourced anything until people pointed out. It was a little bit hypocritical and then he announced that Grockle open sourced things this week. And I don't think open source versus not is what this is really about for him. Well, we'll talk about open source and not. I do think maybe criticize the competition is great. Just talking a little shit is great, but friendly competition versus like I personally hate lawsuits. Yeah, look, I think this whole thing is like unbecoming of a builder and I respect Elon"
+            },
+            {
+              "rank": 5,
+              "video_id": "TGdLss5Srnk",
+              "modality": "transcript",
+              "start_seconds": 180.84,
+              "end_seconds": 214.64000000000001,
+              "score": 0.312,
+              "snippet": "Can you describe that exactly the choosing to part ways? He thought open AI was going to fail. He wanted total control to sort of turn it around. We wanted to keep going in the direction that now has become open AI. He also wanted Tesla to be able to build an AGI effort at the various times he wanted to make open AI into a for-profit company that he could have control of or have it merge with Tesla. We don't want to do that and he decided to leave, which that's fine. You're saying, and that's one of the things that the blog post says is that he wanted"
+            },
+            {
+              "rank": 6,
+              "video_id": "TGdLss5Srnk",
+              "modality": "transcript",
+              "start_seconds": 330.2,
+              "end_seconds": 364.72,
+              "score": 0.393,
+              "snippet": "speaks to this seriousness with which Elon means the lawsuit? And I mean, that's like an astonishing thing to say. I think like what I don't think the lawsuit may maybe correct me if I'm wrong, but I don't think the lawsuit is legally serious. It's more to make a point about the future of AGI and the company that's currently leading the way. So look, I mean, Brock had not open sourced anything until people pointed out."
+            },
+            {
+              "rank": 7,
+              "video_id": "TGdLss5Srnk",
+              "modality": "transcript",
+              "start_seconds": 0.0,
+              "end_seconds": 31.36,
+              "score": 0.381,
+              "snippet": "Our mutual friend, Elon, sued OpenAI, what to use the essence of what he's criticizing to what degree does he have a point to what degree is he wrong? I don't know what it's really about. We started off just thinking we were going to be a research lab and having no idea about how this technology was going to go. It's hard to, because it was only, you know, seven or eight years ago. It's hard to go back and really remember what it was like then."
+            },
+            {
+              "rank": 8,
+              "video_id": "TGdLss5Srnk",
+              "modality": "transcript",
+              "start_seconds": 205.20000000000002,
+              "end_seconds": 238.28000000000003,
+              "score": 0.329,
+              "snippet": "We don't want to do that and he decided to leave, which that's fine. You're saying, and that's one of the things that the blog post says is that he wanted open AI to be basically acquired by Tesla in those same way that, or maybe something similar or maybe something more dramatic than the partnership with Microsoft. My memory is the proposal. It's just like, yeah, I get acquired by Tesla and I have Tesla, full control over it. I'm pretty sure that's what it was. So what is the word open in the open AI mean?"
+            },
+            {
+              "rank": 9,
+              "video_id": "TGdLss5Srnk",
+              "modality": "transcript",
+              "start_seconds": 522.72,
+              "end_seconds": 564.36,
+              "score": 0.348,
+              "snippet": "I don't think that's like how most people think about these things. It's just not possible to save a lot of money for startup if you do it this way. No, I think there's like laws that would make that pretty difficult. What do you hope this goes with the Elon, what this this tension, this dance, what do you hope this? Like if we go one, two, three years from now, you're a relationship with him on a personal level too. Like friendship, friendly competition, just all this kind of stuff. Yeah, I really respect Elon."
+            },
+            {
+              "rank": 10,
+              "video_id": "TGdLss5Srnk",
+              "modality": "transcript",
+              "start_seconds": 401.08000000000004,
+              "end_seconds": 433.0,
+              "score": 0.316,
+              "snippet": "Plus yeah, he's one of the greatest builders of all time potentially the greatest builder of all time. It makes me sad. And I think it makes a lot of people sound like there's a lot of people who really looked up to him for a long time and said this, I said, you know, in some interview or something and I missed the old Elon and the number of messages I got being like that exactly encapsulates how I feel. I think he should just win. He should just make X Grock beat GPT and then GPT beats Grock and it's just a competition and it's beautiful for everybody."
+            }
+          ]
         },
         "metrics": {
-          "recall_at_5": 0.0,
-          "recall_at_10": 0.0,
-          "mrr": 0.0,
-          "timestamp_at_5s": 0.0,
-          "timestamp_at_10s": 0.0,
-          "modality_correct": false,
+          "recall_at_5": 1.0,
+          "recall_at_10": 1.0,
+          "mrr": 1.0,
+          "timestamp_at_5s": 1.0,
+          "timestamp_at_10s": 1.0,
+          "modality_correct": true,
           "expected_no_answer": false,
-          "predicted_refused": true
+          "predicted_refused": false
         },
         "judge": null
       },
@@ -114486,7 +114759,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "The **Sam Altman on Elon Musk suing OpenAI | Lex Fridman Podcast** addresses this around **5:30**. Sam Altman states: \"I don't think the lawsuit is legally serious. It's more to make a point about the future of AGI and the company that's currently leading the way.\" This directly indicates that while the lawsuit may lack legal merit, it's fundamentally about making a statement regarding AGI development and OpenAI's leading position in the field.",
+          "answer": "The **Sam Altman on Elon Musk suing OpenAI | Lex Fridman Podcast** addresses this around **5:30**. Sam Altman states: \"I don't think the lawsuit is legally serious. It's more to make a point about the future of AGI and the company that's currently leading the way.\" This directly indicates that while the lawsuit may lack legal merit, it's fundamentally about making a statement regarding AGI and OpenAI's position in that space.",
           "results": [
             {
               "rank": 1,
@@ -114604,7 +114877,7 @@
           "rewritten_query": null,
           "refused": true,
           "confidence": 0.0,
-          "answer": "I could not find strong evidence for that in the indexed videos. The context shows Sam Altman participating in a podcast interview with Lex Fridman discussing OpenAI and Elon Musk, seated at a microphone throughout. There is no evidence of him demonstrating yoga poses.",
+          "answer": "I could not find strong evidence for that in the indexed videos. The indexed content shows Sam Altman participating in a podcast interview with Lex Fridman discussing OpenAI and Elon Musk, with no indication of yoga poses or yoga instruction.",
           "results": []
         },
         "metrics": {
@@ -114636,7 +114909,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Around 0:48, MKBHD introduces the 2024 Smartphone Awards by showing a desk full of phones from various manufacturers\u2014flagships and budget options, big and small\u2014that all share one thing in common: they all launched during 2024. He then says \"So let's give out some awards,\" launching into the award categories. He frames it as one of the most highly anticipated videos of the year where he rewards and highlights the best (and worst) smartphones.",
+          "answer": "Around 0:48, MKBHD introduces the 2024 Smartphone Awards by showing a desk full of phones from various manufacturers\u2014flagships and budget options, big and small\u2014that all share one thing in common: they all launched during 2024. He then transitions directly into awarding categories, starting with \"best big phone,\" explaining that the awards are designed to recognize and highlight the absolute best smartphones of the year.",
           "results": [
             {
               "rank": 1,
@@ -114759,7 +115032,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Around 9:55, MKBHD picks the Nothing Phone 2a for best value because it launched at $350 and packed flagship features: a big, bright 120Hz screen with uniform bezels, a 5,000mAh battery with 45W charging, a serviceable 50MP main camera plus ultra-wide, and an under-display fingerprint reader. He emphasizes that it delivers maximum value for the price\u2014essentially flagship-level specs and thoughtful design (like the glyph interface) at a mid-range price point.",
+          "answer": "Around 9:55, MKBHD picks the Nothing Phone 2a for best value because it launched at $350 and packed flagship features: a large, bright 120Hz screen with uniform bezels, a 5,000mAh battery with 45W charging, a serviceable 50MP main camera plus ultra-wide, and an under-display fingerprint reader. He emphasizes that it delivers maximum value for the price\u2014essentially flagship-level specs and thoughtful design (like the glyph interface) at a mid-range price point.",
           "results": [
             {
               "rank": 1,
@@ -114882,7 +115155,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "According to MKBHD's 2024 Smartphone Awards (around 25:03), the Samsung Galaxy S24 Ultra is the MVP because it's \"just so good at everything.\" He explains that the phone excels across all categories\u2014it has a great screen with an exceptional anti-reflective coating, powerful chip, excellent battery life with fast charging, consistently strong cameras, reliable software with updates, and even standout details like a quality vibration motor and speakers. MKBHD uses a golf analogy, comparing it to golfer Scottie Scheffler for its all-around excellence, and notes it's the phone he actually used most during 2024.",
+          "answer": "According to MKBHD's 2024 Smartphone Awards (around 25:03), the Samsung Galaxy S24 Ultra is the MVP because it's \"just so good at everything.\" He explains that the phone excels across all categories\u2014it has a great screen with an exceptional anti-reflective coating, a powerful chip, excellent battery life with fast charging, consistently strong cameras, reliable software with updates, and even standout details like a quality vibration motor and speakers. MKBHD uses a golf analogy, comparing it to golfer Scottie Scheffler for its all-around excellence, and notes it's the phone he actually used most during 2024.",
           "results": [
             {
               "rank": 1,
@@ -115005,7 +115278,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Around 1:56, MKBHD names the Samsung Galaxy S24 Ultra as the best big phone in his Smartphone Awards 2024 video. He explains that \"one big phone that kind of nailed everything about being a big phone\" was the winner, praising Samsung for having \"got this formula down to a science\" with their use of space in the Ultra series.",
+          "answer": "Around 1:56, MKBHD names the Samsung Galaxy S24 Ultra as the best big phone in his Smartphone Awards 2024 video. He explains that Samsung \"has got this formula down to a science\" and \"made a really good use of space in the ultra series of phones for years now,\" noting that the S24 Ultra \"nailed everything about being a big phone.\"",
           "results": [
             {
               "rank": 1,
@@ -115259,7 +115532,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Around 6:15 and 9:45, you can see a white table in MKBHD's studio covered with multiple smartphones arranged in rows, displaying various color options including red, blue, black, green, and pink. The person is examining and discussing these different color variants as part of the Smartphone Awards 2024 presentation.",
+          "answer": "Yes, I found that scene! Around **6:15**, there's a table covered with multiple smartphones arranged in rows on a white surface in MKBHD's studio. The visual shows various color options including red, blue, black, green, pink, and other hues, with a person in business attire examining the display. This appears to be part of the Smartphone Awards 2024 presentation.",
           "results": [
             {
               "rank": 1,
@@ -115532,7 +115805,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.387,
-          "answer": "At the beginning of The Egg, the narrator dies in a car accident around 0:00. As described, they were on their way home when a truck skidded into them, causing a fatal but painless collision that left their body severely shattered. After dying, they meet God, who explains what has happened and begins to reveal the nature of existence to them.",
+          "answer": "At the beginning of The Egg, the narrator dies in a car accident around 0:00. As described, they were on their way home when a truck skidded into them, causing a fatal but painless collision that left their body utterly shattered. After dying, they meet God, who explains what has happened and begins to reveal the nature of existence to them.",
           "results": [
             {
               "rank": 1,
@@ -115655,7 +115928,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "In \"The Egg,\" God explains that reincarnation is real and that the person has lived many past lives. Around 2:35, God tells the protagonist that \"you have, within you, all the knowledge and experiences of all your past lives\" even though they don't consciously remember them. God further reveals around 5:21 that \"with each new life, you grow and mature and become a larger and greater intellect,\" and that ultimately the protagonist will live every human life throughout all time before becoming like God. The core message is that reincarnation serves spiritual growth and maturation toward godhood.",
+          "answer": "In \"The Egg,\" God explains that reincarnation is real and that the person has lived many past lives. Around 2:35, God tells the protagonist that \"you have, within you, all the knowledge and experiences of all your past lives\" even though you don't consciously remember them. God further reveals around 5:21 that \"with each new life, you grow and mature and become a larger and greater intellect,\" and that ultimately the protagonist will live every human life throughout all time before becoming like God.",
           "results": [
             {
               "rank": 1,
@@ -115778,7 +116051,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "According to the story, when it says every human being is you, it means you are literally every person who has ever lived or will ever live\u2014different incarnations of the same soul. Around 5:47, the character explains: \"I'm every human being who ever lived...I'm Abraham Lincoln. And you're John Wilkes Booth too.\" This concept emphasizes that every act of kindness or harm you commit is ultimately directed at yourself (around 6:11), since all human experiences throughout history belong to the same consciousness growing and maturing across different lives.",
+          "answer": "According to the story, when it says every human being is you, it means you are literally every person who has ever lived or will ever live\u2014different incarnations of a single soul. Around 5:47, the character explains: \"I'm every human being who ever lived...I'm Abraham Lincoln. And you're John Wilkes Booth too.\" This concept emphasizes that every act of kindness or harm you commit is ultimately directed at yourself (around 6:11), since all human experiences belong to the same consciousness growing and maturing across different lives. The universe itself is described as an \"egg\" where you develop by living every human life until you're ready to be \"born\" as a god-like being.",
           "results": [
             {
               "rank": 1,
@@ -115901,7 +116174,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Around 4:57, God explains that \"the meaning of life, the reason I made this whole universe, is for you to mature.\" He elaborates that with each new life, you grow and mature into a larger and greater intellect. This process continues until you've lived every human life throughout all time (around 7:00), at which point you will have grown enough to be born as a god-like being.",
+          "answer": "Around 4:57, God explains that \"the meaning of life, the reason I made this whole universe, is for you to mature.\" He elaborates that with each new life, you grow and mature into a larger and greater intellect. This process continues until you've lived every human life throughout all time, at which point you will have grown enough to be born as a god-like being (around 7:00).",
           "results": [
             {
               "rank": 1,
@@ -116024,7 +116297,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Around 7:00, the character reveals that \"the whole universe, it's just an egg.\" This is explained as part of the protagonist's spiritual journey\u2014they're told they're a fetus still growing, and once they've lived every human life throughout all time, they will have matured enough to be born. The universe itself is essentially a vessel for this singular soul's development.",
+          "answer": "Around 7:00, the character reveals that \"the whole universe, it's just an egg.\" This is explained as part of the protagonist's spiritual journey\u2014they're told they're a fetus still growing, and once they've lived every human life throughout all time, they will have matured enough to be born. The universe itself is essentially an incubation space for this singular soul's development.",
           "results": [
             {
               "rank": 1,
@@ -116157,20 +116430,111 @@
         "response": {
           "intent": "visual",
           "rewritten_query": null,
-          "refused": true,
-          "confidence": 0.0,
-          "answer": "I could not find strong evidence for that in the indexed videos.\n\nWhile the video contains several colorful purple and magenta animated characters throughout (around 1:45, 4:15, and 5:45), they are not specifically identified as \"space beings\" in the indexed captions. The characters appear as stylized blob-like or abstract figures rather than distinctly alien entities, and the context doesn't confirm they represent space beings from the story.",
-          "results": []
+          "refused": false,
+          "confidence": 0.381,
+          "answer": "Yes, I found the colorful purple animated space beings from The Egg. Around **4:15**, there are abstract, blob-like characters featuring a large dark purple figure with tentacle-like appendages and white dot eyes, alongside a smaller magenta character against a vibrant gradient background. Additionally, around **1:45**, you can see two stylized purple cartoon characters with glowing golden outlines and white eyes set against a black background, with one featuring a head filled with stars and dots.",
+          "results": [
+            {
+              "rank": 1,
+              "video_id": "h6fcK_fRYaI",
+              "modality": "visual_caption",
+              "start_seconds": 465.0,
+              "end_seconds": 465.0,
+              "score": 0.358,
+              "snippet": "# Video Frame Description\n\nThe frame displays a \"SUPPORT US\" section featuring two vibrant, illustrated panels set against a starry purple background. The left panel shows a figure floating near a glowing green planet with organic patterns, while the right panel depicts another figure near a colorful purple and pink planet with geometric designs, both rendered in a whimsical, space-themed art style. An \"Advertisement\" label appears in the bottom right corner."
+            },
+            {
+              "rank": 2,
+              "video_id": "h6fcK_fRYaI",
+              "modality": "visual_caption",
+              "start_seconds": 255.0,
+              "end_seconds": 255.0,
+              "score": 0.381,
+              "snippet": "# Video Frame Description\n\nThis colorful animated illustration features abstract, blob-like characters against a vibrant gradient background. A large dark purple figure with a curved tentacle-like appendage and white dot eyes dominates the left side, while a smaller magenta character sits to the right, all set against a yellow sky transitioning to blue and purple landscape elements below."
+            },
+            {
+              "rank": 3,
+              "video_id": "h6fcK_fRYaI",
+              "modality": "visual_caption",
+              "start_seconds": 315.0,
+              "end_seconds": 315.0,
+              "score": 0.324,
+              "snippet": "# Video Frame Description\n\nThis is a vibrant, neon-styled cyberpunk cityscape featuring a skyline of colorful skyscrapers in shades of magenta, cyan, orange, and yellow against a deep purple night sky. In the top-left corner, there is a small turquoise spaceship or aircraft with a glowing outline, suggesting this may be from a video game or animated scene."
+            },
+            {
+              "rank": 4,
+              "video_id": "h6fcK_fRYaI",
+              "modality": "visual_caption",
+              "start_seconds": 285.0,
+              "end_seconds": 285.0,
+              "score": 0.353,
+              "snippet": "# Video Frame Description\n\nThis is a colorful, stylized illustration featuring a vibrant alien or robot character with a magenta spherical head and red body standing in a surreal landscape. The scene includes layered purple and blue terrain, floating geometric shapes and particles, dark purple organic forms on the left side, and a pale yellow sky, creating a whimsical, otherworldly environment."
+            },
+            {
+              "rank": 5,
+              "video_id": "h6fcK_fRYaI",
+              "modality": "visual_caption",
+              "start_seconds": 45.0,
+              "end_seconds": 45.0,
+              "score": 0.338,
+              "snippet": "# Video Frame Description\n\nThis abstract animated graphic features a dark background with a large purple curved shape outlined in bright orange, resembling a stylized smile or crescent. Two white circles positioned within the composition suggest eyes, while various small colored dots (purple, pink, and orange) are scattered throughout the purple shape, creating a playful, whimsical design that evokes a friendly face or character."
+            },
+            {
+              "rank": 6,
+              "video_id": "h6fcK_fRYaI",
+              "modality": "visual_caption",
+              "start_seconds": 345.0,
+              "end_seconds": 345.0,
+              "score": 0.375,
+              "snippet": "# Video Frame Description\n\nTwo stylized digital characters with glowing purple and magenta bodies and white eyes stand on either side of a central spherical object featuring orange and white stripes with glowing internal elements. The scene is set against a dark background filled with scattered blue and purple particles, creating a futuristic, space-like atmosphere."
+            },
+            {
+              "rank": 7,
+              "video_id": "h6fcK_fRYaI",
+              "modality": "visual_caption",
+              "start_seconds": 435.0,
+              "end_seconds": 435.0,
+              "score": 0.348,
+              "snippet": "# Video Frame Description\n\nThis is an abstract digital animation featuring a dark purple background with a large black oval shape in the center. The scene is decorated with scattered glowing particles in cyan, blue, and orange colors, along with two turquoise four-pointed star shapes positioned on the left and right sides of the composition."
+            },
+            {
+              "rank": 8,
+              "video_id": "h6fcK_fRYaI",
+              "modality": "visual_caption",
+              "start_seconds": 375.0,
+              "end_seconds": 375.0,
+              "score": 0.329,
+              "snippet": "# Image Description\n\nThis colorful, stylized illustration depicts a diverse group of people of various ages gathered in a vibrant outdoor landscape with purple trees, green foliage, and rolling golden hills under a sunny yellow sky. The figures are rendered in bright neon colors (blues, purples, and magentas) and appear to be socializing, playing, and interacting together in a cheerful, community-oriented scene."
+            },
+            {
+              "rank": 9,
+              "video_id": "h6fcK_fRYaI",
+              "modality": "visual_caption",
+              "start_seconds": 105.0,
+              "end_seconds": 105.0,
+              "score": 0.369,
+              "snippet": "# Video Frame Description\n\nTwo stylized purple cartoon characters with glowing golden outlines and white eyes are shown against a black background. The larger character on the left has a head filled with small stars and dots, while the smaller character on the right appears to be looking up at it, suggesting an interaction or conversation between the two figures."
+            },
+            {
+              "rank": 10,
+              "video_id": "h6fcK_fRYaI",
+              "modality": "visual_caption",
+              "start_seconds": 405.0,
+              "end_seconds": 405.0,
+              "score": 0.364,
+              "snippet": "# Video Frame Description\n\nThis animated illustration depicts a stylized figure with a magenta/pink head sitting atop an undulating purple serpentine or tentacle-like form against a dark background. The composition is decorated with scattered glowing dots in yellow, orange, and white that create a cosmic or magical atmosphere throughout the scene."
+            }
+          ]
         },
         "metrics": {
-          "recall_at_5": 0.0,
-          "recall_at_10": 0.0,
-          "mrr": 0.0,
+          "recall_at_5": 1.0,
+          "recall_at_10": 1.0,
+          "mrr": 0.5,
           "timestamp_at_5s": 0.0,
           "timestamp_at_10s": 0.0,
-          "modality_correct": false,
+          "modality_correct": true,
           "expected_no_answer": false,
-          "predicted_refused": true
+          "predicted_refused": false
         },
         "judge": null
       },
@@ -116587,7 +116951,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Around 7:48, Adriene teaches the alignment of **head, heart, and pelvis in line** in tabletop position. She also emphasizes drawing the shoulders away from the ears and keeping the neck long, noting that the head is an extension of the spine rather than hanging or crunching down.",
+          "answer": "Around 7:26, Adriene teaches the alignment of \"head in the heart, heart of the pelvis\" in tabletop position. She emphasizes maintaining integrity by not collapsing into the bones, and she also stresses drawing the shoulders away from the ears while keeping the neck long, with the head as an extension of the spine rather than hanging or crunching.",
           "results": [
             {
               "rank": 1,
@@ -116710,7 +117074,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Based on the indexed videos, Adriene teaches cat-cow spinal flex in a home yoga setting during her \"Yoga For Complete Beginners - 20 Minute Home Yoga Workout.\" Around 8:13-9:07, she demonstrates the movement in what appears to be a tabletop position on a yoga mat, cueing students to loop the shoulders and drop the belly on the inhale, then travel up the spine on the exhale. However, the specific location (studio, room type, etc.) is not detailed in the available transcript evidence.",
+          "answer": "Based on the indexed videos, Adriene teaches cat-cow spinal flex in a home yoga setting during her \"Yoga For Complete Beginners - 20 Minute Home Yoga Workout.\" Around 8:13-8:41, she demonstrates the movement in what appears to be a tabletop position on a yoga mat, cueing students to loop the shoulders, drop the belly on the inhale, and then travel up the spine on the exhale. The specific location beyond \"home\" is not detailed in the available transcript evidence.",
           "results": [
             {
               "rank": 1,
@@ -116833,7 +117197,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Based on the video evidence, Adriene guides the first downward dog around 12:33. She transitions into it from a Heart-to-Earth pose (puppy posture), lifting the sit bones up and dropping each heel one at a time. She emphasizes pressing the palms into the earth and maintaining length in the spine, while noting that beginners shouldn't worry about what downward dog is \"supposed to look like.\"",
+          "answer": "Based on the indexed video, Adriene guides the first downward dog around 12:33. She cues it by lifting the sit bones up, dropping the left heel then the right heel to come into the pose. She emphasizes pressing the palms into the earth and maintaining length in the spine rather than worrying about what downward dog is \"supposed to look like.\"",
           "results": [
             {
               "rank": 1,
@@ -116968,7 +117332,7 @@
           "rewritten_query": null,
           "refused": true,
           "confidence": 0.0,
-          "answer": "I could not find strong evidence for that in the indexed videos. While the context shows that Adriene begins the class in a cross-legged position (sukhasana) around 0:30, the indexed transcripts don't contain visual descriptions of the room or confirm she remains seated cross-legged throughout. The evidence focuses on her verbal instructions rather than visual details of her positioning and environment.",
+          "answer": "I could not find strong evidence for that in the indexed videos. While the context shows that Adriene begins the session in a cross-legged position (sukhasana) around 0:30, there is no visual description or frame caption provided that confirms she is seated cross-legged on a yoga mat in a bright room. The indexed content contains only transcripts without visual_caption entries that would describe the scene you're asking about.",
           "results": []
         },
         "metrics": {
@@ -117118,7 +117482,7 @@
           "rewritten_query": null,
           "refused": true,
           "confidence": 0.0,
-          "answer": "I could not find strong evidence for that in the indexed videos. The indexed content shows only a beginner yoga workout video with Adriene, which focuses on yoga poses and stretches. There is no discussion of bromate in reservoirs or any water quality topics.",
+          "answer": "I could not find strong evidence for that in the indexed videos. The indexed content is from a beginner yoga workout video with Adriene, which focuses on yoga poses and stretches rather than water quality or reservoir chemistry topics like bromate.",
           "results": []
         },
         "metrics": {
@@ -117150,7 +117514,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Based on the indexed videos, the YC startup ideas talk is trying to help founders **avoid common mistakes and learn how to identify and develop good startup ideas**. Around 1:11, the speaker outlines the talk's three parts: first, explaining the most common mistakes founders make with startup ideas; second, how to know if an idea is good; and third, how to come up with new ones. The talk draws from YC's experience rejecting thousands of applications and helping companies pivot, aiming to help founders avoid the pitfalls that cause good founders to develop bad ideas.",
+          "answer": "Based on the indexed videos, the YC startup ideas talk is trying to help founders **avoid common mistakes and learn how to identify and develop good startup ideas**. Around 1:11, the speaker outlines the talk's three parts: first, explaining the most common mistakes founders make with startup ideas; second, discussing how to know if an idea is good; and third, how to come up with new ones. The talk draws from YC's experience rejecting thousands of applications and helping companies pivot, aiming to help founders avoid the pitfalls that lead good founders to bad ideas.",
           "results": [
             {
               "rank": 1,
@@ -117396,7 +117760,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "According to the YC startup ideas talk, **tarpit ideas** are common startup ideas that have circulated for years and keep attracting founders in batches, but they never seem to go anywhere\u2014founders get \"stuck in tar\" working on them (around 2:53 and 3:17). \n\nThese ideas form around widespread problems that many potential founders encounter and seem easily solvable with a startup, but they're ultimately unproductive. The speaker notes that when people sit down to explicitly think of startup ideas, they're especially likely to land on these same tarpit ideas, whereas organically-discovered ideas tend to be better ones (around 20:00).",
+          "answer": "According to the YC startup ideas talk, **tarpit ideas** are common startup ideas that have circulated for years and keep attracting founders in batches, but they never seem to go anywhere\u2014founders get \"stuck in tar\" working on them (around 2:53 and 3:17). \n\nThese ideas form around widespread problems that many potential founders encounter and seem easily solvable with a startup, but they're fundamentally flawed. The speaker notes that when people sit down to explicitly think of startup ideas, they're especially likely to come up with these same tarpit ideas, whereas organically-discovered ideas tend to be better (around 20:00).",
           "results": [
             {
               "rank": 1,
@@ -117519,7 +117883,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "The YC talk defines founder-market fit with PlanGrid around 6:54. It explains that PlanGrid, an iPad app for viewing construction blueprints, exemplifies good founder-market fit because the founders Tracy and Ralph were perfectly suited to the idea\u2014Tracy had construction industry expertise while Ralph was an excellent developer. The speaker emphasizes that founder-market fit means \"this team is obviously the right team to work on the idea.\"",
+          "answer": "The YC talk defines founder-market fit with PlanGrid around 6:54. It explains that PlanGrid, an iPad app for viewing construction blueprints, exemplifies good founder-market fit because the founders\u2014Tracy and Ralph\u2014were perfectly suited to the idea: Tracy had construction industry expertise, and Ralph was an excellent developer. As the speaker notes, \"this team is obviously the right team to work on the idea,\" which is what founder-market fit looks like.",
           "results": [
             {
               "rank": 1,
@@ -117642,7 +118006,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "According to YC, at least 70% of the top YC companies got their startup ideas organically, rather than by sitting down and explicitly trying to think of a startup idea. This finding comes from analyzing the YC Top 100 companies by valuation, as discussed around 20:00 in the \"How to Get and Evaluate Startup Ideas\" talk from Startup School.",
+          "answer": "According to YC, at least 70 percent of top YC companies got their startup ideas organically. This is stated around 20:00 in the \"How to Get and Evaluate Startup Ideas\" talk from Startup School, where it notes that among the YC top 100 companies by valuation, at least 70% had their startup ideas occur to them organically rather than through deliberately sitting down to brainstorm ideas.",
           "results": [
             {
               "rank": 1,
@@ -117765,7 +118129,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Around 3:45, the YC slide titled \"What causes tarpit ideas\" explains that tarpit ideas form around **widespread problems that many potential founders encounter, and problems that seem like they could be easily solved with a startup**. As elaborated in the transcript, these are common startup ideas that have circulated for years\u2014like the stereotypical \"app to coordinate meetups with friends\"\u2014that appear superficially plausible but are actually much harder to solve than they seem.",
+          "answer": "Around 3:45, the YC slide titled \"What causes tarpit ideas\" is shown. According to the slide and accompanying explanation, tarpit ideas form around **widespread problems that lots of potential founders encounter**, and they appear to be problems that **could be easily solved with a startup solution**. These ideas are tantalizing because they seem superficially plausible, but they turn out to be much harder than they appear\u2014like the classic example of an app to coordinate meeting up with friends.",
           "results": [
             {
               "rank": 1,
@@ -117888,7 +118252,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "The video **\"How to Get and Evaluate Startup Ideas | Startup School\"** warns founders not to get stuck on tarpit ideas, starting around **3:17**. Tarpit ideas are common startup concepts that have circulated for years\u2014like a college student's idea to streamline friend meetup planning\u2014that seem superficially plausible but have structural reasons making them nearly impossible to solve, causing founders to waste months without progress.",
+          "answer": "The video **\"How to Get and Evaluate Startup Ideas\" from Startup School** warns founders not to get stuck on tarpit ideas, starting around **3:17**. Tarpit ideas are common startup concepts that have circulated for years\u2014like a friend-coordination app\u2014that seem superficially plausible but have structural reasons making them nearly impossible to solve, causing founders to waste months without progress.",
           "results": [
             {
               "rank": 1,
@@ -118284,7 +118648,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.387,
-          "answer": "According to Tim Urban's talk, the dark playground is \"a place that all procrastinators know very well\" where leisure activities happen at times when they're not supposed to be happening (around 6:32). The key characteristic is that the fun experienced there \"isn't actually fun because it's completely unearned,\" and instead \"the air is filled with guilt, dread, anxiety, self-hatred\" and other negative procrastinator feelings (around 6:56). It's essentially an \"easy and fun place\" outside the realm of productive work, but the enjoyment is poisoned by the awareness that important tasks remain undone.",
+          "answer": "According to Tim Urban's talk, the dark playground is \"a place that all of you procrastinators out there know very well\" where leisure activities happen at times when they're not supposed to be happening (around 6:32). The key characteristic is that the fun you have there \"isn't actually fun because it's completely unearned and the air is filled with guilt, dread, anxiety, self-hatred, all those good procrastinator feelings\" (around 6:56). It's essentially an \"easy and fun place\" outside the circle of things that make sense, where procrastinators escape to instead of doing important work.",
           "results": [
             {
               "rank": 1,
@@ -118407,7 +118771,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.387,
-          "answer": "Tim Urban introduces the panic monster around **7:17** in his TED talk \"Inside the Mind of a Master Procrastinator.\" He describes it as \"a guardian angel\" that is \"dormant most of the time\" but wakes up when a deadline approaches or there's danger of public embarrassment or career disaster.",
+          "answer": "Tim Urban introduces the panic monster around **7:17** in his TED talk \"Inside the Mind of a Master Procrastinator.\" He describes it as \"a guardian angel\" that is normally dormant but suddenly wakes up when a deadline approaches or there's danger of public embarrassment or career disaster.",
           "results": [
             {
               "rank": 1,
@@ -118530,7 +118894,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Tim Urban shows the life calendar with boxes for every week during his TED talk around 12:50. He describes it as \"one box for every week of a 90-year life\" and emphasizes how relatively few boxes there are, especially considering that many have already been used up. He uses this visual to encourage the audience to take a long, hard look at how they're spending their time and what they might be procrastinating on.",
+          "answer": "Tim Urban shows the life calendar with boxes for every week around **12:50** in his TED talk. He describes it as \"one box for every week of a 90-year life\" and emphasizes how relatively few boxes there are, especially considering that many have already been used up. He uses this visual to encourage the audience to take a hard look at how they're spending their time and what they might be procrastinating on.",
           "results": [
             {
               "rank": 1,
@@ -118657,7 +119021,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "I found evidence of this slide in Tim Urban's TED talk \"Inside the Mind of a Master Procrastinator.\" Around 3:45, there's a diagram showing a stick figure at a ship's wheel inside a brain, illustrating the concept of the \"Rational Decision-Maker\" controlling decision-making. This visual appears early in the talk as Urban introduces the key characters in his procrastination framework\u2014the rational decision maker who should be steering, contrasted with the instant gratification monkey that often takes over instead.",
+          "answer": "Yes, I found that slide. Around 3:45, Tim Urban presents a diagram showing the \"Rational Decision-Maker\" as a stick figure at the helm of a ship's wheel inside a brain. The minimalist illustration uses a brown steering wheel and a pink brain to symbolize how rational decision-making controls the brain's functions.",
           "results": [
             {
               "rank": 1,
@@ -118930,7 +119294,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "According to Veritasium, around 0:00, the shade balls' main purpose is **not to reduce evaporation**. While the balls do absorb heat on top, the bottom stays cool and they contain mostly air (a good thermal insulator), so minimal heat transfers to the water. Additionally, open reservoirs have greater surface area and airflow that actually increase evaporation. The real purposes are to block sunlight and prevent bromate formation, deter birds and wildlife, and reduce algae growth.",
+          "answer": "According to Veritasium, around 0:00, the shade balls' main purpose is **not to reduce evaporation**. While the balls do absorb heat on top, the bottom stays cool and they contain mostly air (a good thermal insulator), so minimal heat transfers to the water. The actual main purposes are to block sunlight and prevent bromate formation in the water, and to deter birds and wildlife from landing on the reservoir.",
           "results": [
             {
               "rank": 1,
@@ -119053,7 +119417,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "The shade balls are partially filled with water to keep them weighted down in the reservoir. Around 1:17, the explanation notes that LA Reservoir experiences high winds, and without water inside the balls, they would blow around and scatter across nearby freeways. The water also makes the balls uneven, causing them to wobble and become significantly more difficult to move, especially when they form tightly packed structures.",
+          "answer": "The shade balls are partially filled with water to keep them weighted down in the reservoir. Around 1:17, the explanation notes that LA Reservoir experiences high winds, and without water inside the balls, they would roll away and scatter across nearby freeways. The water also makes the balls uneven, causing them to wobble and become significantly more difficult to displace, especially when they form tightly packed structures.",
           "results": [
             {
               "rank": 1,
@@ -119176,7 +119540,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "# How Bromide, Chlorine, and Sunlight Explain the Shade Balls\n\nThe shade balls solve a chemical problem created by the combination of these three elements. Around 4:03, the video explains that bromide (naturally occurring in the water source) reacts with chlorine (the required disinfectant) in bright sunlight to form bromate, a harmful contaminant. Since the water source contains bromide and chlorine is necessary for disinfection, the only controllable variable was sunlight. Around 6:24, the shade balls\u2014colored black to block all light\u2014prevent the sunlight-triggered bromide-chlorine reaction that creates bromate, effectively solving the contamination problem without removing either bromide or chlorine from the water.",
+          "answer": "# How Bromide, Chlorine, and Sunlight Explain the Shade Balls\n\nThe shade balls solve a chemical problem created by the combination of these three elements. Around 4:03, the video explains that bromide (naturally occurring in the water source) reacts with chlorine (the required disinfectant) in bright sunlight to form bromate, a harmful contaminant. Since the water source contains bromide and chlorine is necessary for disinfection, the only controllable variable was sunlight. Around 6:24, the shade balls\u2014which are black to block all light\u2014prevent the sunlight-triggered bromide-chlorine reaction that creates bromate, effectively solving the water quality problem.",
           "results": [
             {
               "rank": 1,
@@ -119557,7 +119921,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Yes, the indexed videos show the Los Angeles reservoir covered with black shade balls. Around 7:15, there's a visual showing \"a vast field of black floating shade balls covering a body of water\" with the spherical objects \"densely packed across the surface\" at LA Reservoir. The video documents 96 million shade balls deployed there, with their primary purpose being to block sunlight and prevent the formation of bromate\u2014a harmful compound created when bromide in the water is exposed to UV light\u2014rather than simply reducing evaporation as commonly believed.",
+          "answer": "Yes, I can confirm the Los Angeles reservoir covered with black shade balls is shown in the indexed videos. Around **7:15**, there's a visual of a vast field of black floating shade balls densely packed across the water surface, creating strong shadows and contrast against the rippled water beneath them. This is the LA Reservoir with its 96 million shade balls, which were deployed primarily to block sunlight and prevent bromide from forming in the drinking water\u2014not mainly for evaporation reduction as commonly believed.",
           "results": [
             {
               "rank": 1,
@@ -119680,7 +120044,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "The video \"Why Are 96,000,000 Black Balls on This Reservoir?\" states around 4:26 that \"the only choice we have is to remove sunlight.\" This was necessary because the open reservoir contained bromide and chlorine, which when exposed to sunlight formed bromate\u2014a problematic compound that couldn't be controlled through other means.",
+          "answer": "The video \"Why Are 96,000,000 Black Balls on This Reservoir?\" states around 4:26 that \"the only choice we have is to remove sunlight.\" This was necessary because the reservoir had bromide in the water that, when combined with chlorine and exposed to sunlight, formed bromate\u2014a harmful compound that needed to be eliminated to keep the drinking water safe.",
           "results": [
             {
               "rank": 1,
@@ -119798,7 +120162,7 @@
           "rewritten_query": null,
           "refused": true,
           "confidence": 0.0,
-          "answer": "I could not find strong evidence for that in the indexed videos. The black balls reservoir video focuses entirely on the shade balls' purpose in reducing bromate formation and evaporation at the LA Reservoir. There is no discussion of phones or MVP phone models from 2024 in any of the provided transcript excerpts.",
+          "answer": "I could not find strong evidence for that in the indexed videos. The black balls reservoir video focuses entirely on shade balls used in the LA Reservoir to prevent bromate formation and reduce evaporation. There is no discussion of phones or the 2024 MVP phone in any of the indexed content.",
           "results": []
         },
         "metrics": {
@@ -119830,7 +120194,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "The \"How to Get and Evaluate Startup Ideas\" video from Startup School warns about a solution in search of a problem around 2:03. The speaker explains that this happens when founders start with a technology (like AI) and then look for problems to solve with it, rather than starting with a real problem people care about. As noted around 2:03, this approach is dangerous because founders will likely find only \"made up problems that people don't really care about, rather than a real problem that people actually care about.\"",
+          "answer": "The \"How to Get and Evaluate Startup Ideas\" video from Startup School warns about a solution in search of a problem around 2:03. The speaker explains that this occurs when founders start with a technology (like AI) and then look for problems to solve with it, rather than starting with a real problem people care about. As noted around 2:03, this approach is dangerous because founders will likely find only \"made up problems that people don't really care about, rather than a real problem that people actually care about.\"",
           "results": [
             {
               "rank": 1,
@@ -119953,7 +120317,7 @@
           "rewritten_query": null,
           "refused": false,
           "confidence": 0.393,
-          "answer": "Based on the indexed videos, **\"The Power of Vulnerability\" by Bren\u00e9 Brown** defines shame as fear of disconnection. Around 4:28, Brown states: \"shame is really easily understood as the fear of disconnection. Is there something about me that if other people know it or see it, that I won't be worthy of connection.\" The self-sabotage video does not provide this specific definition of shame.",
+          "answer": "In \"The Power of Vulnerability,\" Bren\u00e9 Brown defines shame as the fear of disconnection around 4:28. She explains it as: \"Is there something about me that if other people know it or see it, that I won't be worthy of connection.\" The self-sabotage video does not provide this specific definition of shame.",
           "results": [
             {
               "rank": 1,
@@ -120084,7 +120448,7 @@
           "rewritten_query": null,
           "refused": true,
           "confidence": 0.0,
-          "answer": "I could not find strong evidence for that in the indexed videos. While Tim Urban's talk \"Inside the Mind of a Master Procrastinator\" features extensive brain diagrams showing the Rational Decision-Maker alongside the Instant Gratification Monkey and Panic Monster, the transcript excerpts provided don't specify the exact timestamps or locations where these doodles appear throughout the diagram-heavy portions of the talk.",
+          "answer": "I could not find strong evidence for that in the indexed videos. While Tim Urban's talk \"Inside the Mind of a Master Procrastinator\" features extensive brain diagrams showing the Rational Decision-Maker alongside the Instant Gratification Monkey and Panic Monster, the transcript excerpts provided don't specify the exact timestamps or locations where these doodles appear throughout the diagram-heavy sections of the talk.",
           "results": []
         },
         "metrics": {
@@ -120116,7 +120480,7 @@
           "rewritten_query": null,
           "refused": true,
           "confidence": 0.0,
-          "answer": "Simon Sinek states this principle multiple times throughout his TEDxPugetSound talk \"Start with Why.\" Around 4:25, he directly says: \"People don't buy what you do. People buy why you do it.\" He repeats this core message at several other points in the talk (around 10:46, 5:14, 12:48, and 14:51), emphasizing that people are motivated by the purpose and beliefs behind what you do, not just the product itself.\n\nI could not find evidence of this phrase being used by YC in the indexed videos.",
+          "answer": "Simon Sinek states this principle repeatedly throughout his TEDxPugetSound talk \"Start with Why.\" Around 4:25, he directly says: \"People don't buy what you do. People buy why you do it.\" He reiterates this core message multiple times throughout the talk (at 10:46, 5:14, 5:38, 12:48, 13:12, 14:51, and other timestamps), emphasizing that people are motivated by belief and purpose rather than the product itself.\n\nI could not find strong evidence for this phrase being stated by YC in the indexed videos.",
           "results": []
         },
         "metrics": {

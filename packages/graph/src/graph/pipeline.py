@@ -323,6 +323,7 @@ class QueryPipeline:
             answer = self.answer_generator.generate(
                 query=state["query"],
                 context=state.get("context", ""),
+                intent=state.get("intent"),
             )
         except Exception:
             # Bedrock throttling / network errors fall back to extractive answers

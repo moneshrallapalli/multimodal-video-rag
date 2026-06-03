@@ -9,7 +9,7 @@ from shared import settings
 
 
 class AnswerGenerator(Protocol):
-    def generate(self, *, query: str, context: str) -> str: ...
+    def generate(self, *, query: str, context: str, intent: str | None = None) -> str: ...
     def rewrite_query(self, *, query: str) -> str: ...
 
 
@@ -26,9 +26,9 @@ class BedrockAnswerGenerator:
         )
         self.model_id = model_id or settings.bedrock_llm_model_id
 
-    def generate(self, *, query: str, context: str) -> str:
+    def generate(self, *, query: str, context: str, intent: str | None = None) -> str:
         return self._invoke(
-            prompt=_prompt(query=query, context=context),
+            prompt=_prompt(query=query, context=context, intent=intent),
             max_tokens=450,
             temperature=0.1,
         )
@@ -54,13 +54,23 @@ class BedrockAnswerGenerator:
         return _extract_text(response).strip()
 
 
-def _prompt(*, query: str, context: str) -> str:
+def _prompt(*, query: str, context: str, intent: str | None = None) -> str:
+    visual_rules = ""
+    if intent == "visual":
+        visual_rules = (
+            "- Evidence labeled \"visual_caption\" contains AI-generated frame descriptions. "
+            "These are approximate — treat them as strong evidence when they describe the "
+            "same scene the user asks about, even if exact wording differs.\n"
+            "- For visual queries, if any context entry describes a matching scene, confirm "
+            "the match and cite the timestamp. Do NOT refuse.\n"
+        )
+
     return f"""You answer questions over indexed video evidence.
 
 Rules:
 - Use only the evidence in CONTEXT.
 - Cite timestamps naturally, for example "around 1:15".
-- If the context is weak or unrelated, say:
+{visual_rules}- If the context is weak or unrelated, say:
   "I could not find strong evidence for that in the indexed videos."
 - Be concise: 2-4 sentences.
 

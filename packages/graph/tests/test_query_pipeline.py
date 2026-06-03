@@ -50,8 +50,8 @@ class FakeAnswerer:
         self.calls = []
         self.rewrite_calls = []
 
-    def generate(self, *, query: str, context: str) -> str:
-        self.calls.append({"query": query, "context": context})
+    def generate(self, *, query: str, context: str, intent: str | None = None) -> str:
+        self.calls.append({"query": query, "context": context, "intent": intent})
         return self.answer
 
     def rewrite_query(self, *, query: str) -> str:
@@ -607,7 +607,7 @@ def test_bedrock_answer_failure_logs_and_falls_back_to_extractive(caplog):
     import logging
 
     class BrokenAnswerer:
-        def generate(self, *, query: str, context: str) -> str:
+        def generate(self, *, query: str, context: str, intent: str | None = None) -> str:
             raise RuntimeError("bedrock throttled")
 
     pipeline = QueryPipeline(
@@ -650,7 +650,7 @@ def test_llm_refusal_answer_propagates_as_refused():
     must propagate refused=True rather than silently returning a bad answer."""
 
     class RefusingAnswerer:
-        def generate(self, *, query: str, context: str) -> str:
+        def generate(self, *, query: str, context: str, intent: str | None = None) -> str:
             return (
                 "I could not find strong evidence for that in the indexed videos. "
                 "The video focuses on different topics."
@@ -674,3 +674,22 @@ def test_llm_refusal_answer_propagates_as_refused():
     assert "could not find strong evidence" in response.answer.lower()
     assert response.confidence == 0.0
     assert response.results == []
+
+
+def test_visual_intent_passes_intent_to_answer_generator():
+    """Visual-intent queries pass intent='visual' to the answer generator so
+    the prompt can include visual-evidence-aware guidance."""
+
+    answerer = FakeAnswerer()
+    pipeline = QueryPipeline(
+        embedder=FakeEmbedder(),
+        transcript_index=FakeIndex([_transcript_hit()]),
+        visual_index=FakeIndex([_visual_hit()]),
+        answer_generator=answerer,
+        config=GraphConfig(enable_answer_generation=True),
+    )
+
+    pipeline.run(SearchRequest(query="Show me the speaker in the bedroom"))
+
+    assert answerer.calls
+    assert answerer.calls[0]["intent"] == "visual"
