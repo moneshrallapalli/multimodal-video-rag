@@ -28,12 +28,16 @@ Implemented:
 - modality accuracy
 - no-answer confusion matrix, precision, recall, and F1
 - dense retrieval gate comparison
+- BM25 sparse transcript retrieval ablation
+- cross-encoder rerank ablation
+- query rewrite ablation
 
 Skipped in the seed run:
 
 - RAGAS / LLM judge metrics
-- BM25 sparse retrieval
-- reranking
-- query rewrite
+- expanded multi-video benchmark
 
-Those require more indexed videos and the Phase 5 deepening pass.
+The current dashboard output includes six configs: dense, dense loose gate, dense
+strict gate, hybrid BM25, hybrid + rerank, and hybrid + rewrite. The remaining
+eval gap is scale: more videos, more hand-labeled queries, and optional judge
+metrics once the deterministic benchmark is larger.

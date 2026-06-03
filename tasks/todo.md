@@ -8,7 +8,7 @@ The day-to-day plan lives in per-phase files. Use this as a jumping-off point.
 - `phase-4.md` — LangGraph query pipeline — DONE
 - `phase-5.md` — seed evaluation — DONE
 - `phase-6.md` — deployment + observability — DONE
-- `phase-7-cleanup.md` — pre-reveal cleanup (audit follow-ups) — **in progress**
+- `phase-7-cleanup.md` — pre-reveal cleanup (audit follow-ups) — DONE
 
 ## Engineering rules of the road
 - `lessons.md` — gotchas hit during the build, with the rule to avoid repeating
@@ -23,5 +23,6 @@ The day-to-day plan lives in per-phase files. Use this as a jumping-off point.
 
 ## Status snapshot
 - Phases 0-6 complete; both prod endpoints live and answering 200.
-- Phase 7 cleanup is in flight — see `phase-7-cleanup.md` for the live checklist.
+- Phase 7 cleanup is complete: BM25 hybrid retrieval, cross-encoder rerank,
+  query rewrite ablation, deploy, and live smoke are done.
 - All Python tests + web build green in CI.
