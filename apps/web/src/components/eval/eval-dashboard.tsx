@@ -36,13 +36,20 @@ type EvalDataWithJudge = typeof data & {
   };
 };
 
-const METRICS = [
-  { key: "recall_at_5", label: "Recall@5" },
-  { key: "recall_at_10", label: "Recall@10" },
+const CORE_METRICS = [
   { key: "mrr", label: "MRR" },
   { key: "timestamp_at_5s", label: "Timestamp@5s" },
+  { key: "no_answer_f1", label: "No-answer F1" },
+] as const;
+
+const SATURATED_METRICS = [
+  { key: "recall_at_5", label: "Recall@5" },
+  { key: "recall_at_10", label: "Recall@10" },
   { key: "modality_acc", label: "Modality acc" },
 ] as const;
+
+type CoreMetricKey = (typeof CORE_METRICS)[number]["key"];
+type SaturatedMetricKey = (typeof SATURATED_METRICS)[number]["key"];
 
 const ragasByConfig = data.ragas as Record<string, RagasRow | undefined>;
 const judgeByConfig = Object.fromEntries(
@@ -56,10 +63,10 @@ export function EvalDashboard() {
   const [selectedId, setSelectedId] = useState<string>(
     data.configs[data.configs.length - 1].id,
   );
+  const [showSaturated, setShowSaturated] = useState(false);
   const selected = data.configs.find((c) => c.id === selectedId) as Config;
   const ragas = ragasByConfig[selectedId];
   const judge = judgeByConfig[selectedId];
-  const maxR5 = Math.max(...data.configs.map((c) => c.recall_at_5));
   const na = data.no_answer;
   const metaStatus = (data.meta as { status: string }).status;
   const isReal = metaStatus === "real_seed" || metaStatus === "real_expanded";
@@ -91,22 +98,47 @@ export function EvalDashboard() {
       </div>
 
       <div className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold">
-          Retrieval ablation{" "}
-          <span className="font-normal text-muted-foreground">
-            · {data.meta.golden_set_size} golden queries · top-{data.meta.retrieval_depth}
-          </span>
-        </h2>
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-sm font-semibold">
+            Retrieval ablation{" "}
+            <span className="font-normal text-muted-foreground">
+              · {data.meta.golden_set_size} golden queries · top-{data.meta.retrieval_depth}
+            </span>
+          </h2>
+          <button
+            type="button"
+            onClick={() => setShowSaturated((v) => !v)}
+            className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+          >
+            {showSaturated ? "Hide saturated metrics" : "Show all metrics"}
+          </button>
+        </div>
+        {showSaturated && (
+          <p className="text-xs text-muted-foreground">
+            Recall and modality accuracy are near-ceiling on this 3-video corpus — retrieving
+            top-10 from ~130 vectors means relevant chunks almost always appear. MRR and
+            Timestamp@5s are what actually discriminate between configs.
+          </p>
+        )}
         <div className="overflow-hidden rounded-xl border border-border bg-card">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Config</TableHead>
-                {METRICS.map((m) => (
+                {CORE_METRICS.map((m) => (
                   <TableHead key={m.key} className="text-right">
                     {m.label}
                   </TableHead>
                 ))}
+                {showSaturated &&
+                  SATURATED_METRICS.map((m) => (
+                    <TableHead
+                      key={m.key}
+                      className="text-right text-muted-foreground"
+                    >
+                      {m.label}
+                    </TableHead>
+                  ))}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -117,23 +149,20 @@ export function EvalDashboard() {
                   className={cn("cursor-pointer", selectedId === c.id && "bg-primary/5")}
                 >
                   <TableCell className="font-medium">{c.label}</TableCell>
-                  {METRICS.map((m) => (
+                  {CORE_METRICS.map((m) => (
                     <TableCell key={m.key} className="text-right tabular-nums">
-                      {m.key === "recall_at_5" ? (
-                        <div className="flex items-center justify-end gap-2">
-                          <div className="hidden h-1.5 w-16 rounded-full bg-muted sm:block">
-                            <div
-                              className="h-full rounded-full bg-primary"
-                              style={{ width: `${(c.recall_at_5 / maxR5) * 100}%` }}
-                            />
-                          </div>
-                          <span>{pct(c[m.key])}</span>
-                        </div>
-                      ) : (
-                        pct(c[m.key])
-                      )}
+                      {pct(c[m.key as CoreMetricKey])}
                     </TableCell>
                   ))}
+                  {showSaturated &&
+                    SATURATED_METRICS.map((m) => (
+                      <TableCell
+                        key={m.key}
+                        className="text-right tabular-nums text-muted-foreground"
+                      >
+                        {pct(c[m.key as SaturatedMetricKey])}
+                      </TableCell>
+                    ))}
                 </TableRow>
               ))}
             </TableBody>
