@@ -6,6 +6,17 @@ export function mmss(seconds: number): string {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
+/** Seconds → compact duration label (e.g. 1930 → "32m 10s"). */
+export function durationLabel(seconds: number | null): string {
+  if (seconds === null) return "Unknown";
+  const s = Math.max(0, Math.floor(seconds));
+  const hours = Math.floor(s / 3600);
+  const minutes = Math.floor((s % 3600) / 60);
+  const remSeconds = s % 60;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m ${String(remSeconds).padStart(2, "0")}s`;
+}
+
 /** 0–1 score → integer percent string (e.g. 0.842 → "84%"). */
 export function pct(score: number): string {
   return `${Math.round(score * 100)}%`;

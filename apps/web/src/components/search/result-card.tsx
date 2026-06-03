@@ -1,6 +1,7 @@
 "use client";
 
 import { Clock, ExternalLink, Play } from "lucide-react";
+import Image from "next/image";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,8 +37,13 @@ export function ResultCard({
       )}
     >
       <div className="relative hidden h-[72px] w-32 shrink-0 overflow-hidden rounded-lg bg-muted sm:block">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={result.thumbnail_url} alt="" className="h-full w-full object-cover" />
+        <Image
+          src={result.thumbnail_url}
+          alt=""
+          fill
+          sizes="128px"
+          className="object-cover"
+        />
         <span className="absolute right-1 bottom-1 rounded bg-black/75 px-1 text-[10px] font-medium text-white">
           {mmss(result.start_seconds)}
         </span>

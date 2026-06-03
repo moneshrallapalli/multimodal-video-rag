@@ -8,6 +8,7 @@ import type { DemoVideo, SearchResponse, SearchResult } from "@/lib/types";
 import { AnswerPanel } from "./answer-panel";
 import { ResultList } from "./result-list";
 import { SearchBar } from "./search-bar";
+import { VideoLibrary } from "./video-library";
 import { VideoFilter } from "./video-filter";
 import { YouTubePlayer } from "./youtube-player";
 
@@ -74,12 +75,20 @@ export function SearchView() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-3">
-        <SearchBar
-          value={query}
-          onChange={setQuery}
-          onSubmit={() => runSearch()}
-          loading={loading}
-        />
+        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start">
+          <SearchBar
+            value={query}
+            onChange={setQuery}
+            onSubmit={() => runSearch()}
+            loading={loading}
+          />
+          <VideoFilter
+            videos={videos}
+            value={videoFilter}
+            onChange={setVideoFilter}
+            className="lg:-mt-5"
+          />
+        </div>
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="mr-1 text-xs font-medium text-muted-foreground">Try:</span>
           {EXAMPLES.map((ex) => (
@@ -93,7 +102,6 @@ export function SearchView() {
             </button>
           ))}
         </div>
-        <VideoFilter videos={videos} value={videoFilter} onChange={setVideoFilter} />
       </div>
 
       {error && (
@@ -127,13 +135,16 @@ export function SearchView() {
         </div>
       ) : (
         !error && (
-          <p className="text-sm text-muted-foreground">
-            Search the {indexedCount || "seed"} indexed video
-            {indexedCount === 1 ? "" : "s"} by what was{" "}
-            <span className="text-foreground">said</span> or{" "}
-            <span className="text-foreground">shown</span>. Results jump the player to the
-            exact moment.
-          </p>
+          <div className="flex flex-col gap-5">
+            <p className="text-sm text-muted-foreground">
+              Search the {indexedCount || "seed"} indexed video
+              {indexedCount === 1 ? "" : "s"} by what was{" "}
+              <span className="text-foreground">said</span> or{" "}
+              <span className="text-foreground">shown</span>. Results jump the player to the
+              exact moment.
+            </p>
+            <VideoLibrary videos={videos} />
+          </div>
         )
       )}
     </div>

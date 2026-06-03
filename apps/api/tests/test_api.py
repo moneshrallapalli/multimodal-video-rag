@@ -1,4 +1,4 @@
-"""Endpoint coverage for the Phase 1 mocked API."""
+"""Endpoint coverage for the public API."""
 
 from __future__ import annotations
 
@@ -54,6 +54,13 @@ def test_videos(client):
     assert {v["id"] for v in data} == expected_ids
     assert all(v["thumbnail_url"].startswith("https://") for v in data)
     assert {v["id"] for v in data if v["indexed"]} == expected_ids
+    assert next(v for v in data if v["id"] == "Th8JoIan4dg")["artifact_stats"] == {
+        "transcript_segments": 544,
+        "transcript_chunks": 80,
+        "visual_frames": 20,
+        "indexed_vectors": 100,
+        "frame_interval_seconds": 30,
+    }
 
 
 def test_search_answerable(client):

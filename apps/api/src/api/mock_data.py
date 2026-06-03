@@ -1,9 +1,4 @@
-"""Deterministic mock data for the Phase 1 skeleton.
-
-Everything here is fake-but-shaped: real demo videos, plausible timestamped moments,
-and an in-memory job store. Later phases replace these functions with real ingestion
-and retrieval behind the same `shared.schemas` contracts.
-"""
+"""Deterministic fallback data and public seed catalog."""
 
 from __future__ import annotations
 
@@ -22,6 +17,7 @@ from shared.schemas import (
     SearchRequest,
     SearchResponse,
     SearchResult,
+    VideoArtifactStats,
 )
 
 # Standard refusal copy (blueprint §12). Never guess when evidence is weak.
@@ -39,6 +35,16 @@ def _watch(video_id: str) -> str:
     return f"https://youtu.be/{video_id}"
 
 
+def _stats(segments: int, chunks: int, frames: int) -> VideoArtifactStats:
+    return VideoArtifactStats(
+        transcript_segments=segments,
+        transcript_chunks=chunks,
+        visual_frames=frames,
+        indexed_vectors=chunks + frames,
+        frame_interval_seconds=30,
+    )
+
+
 # ── Public demo library (indexed corpus) ──────────────────────────────
 
 DEMO_VIDEOS: list[DemoVideo] = [
@@ -46,118 +52,144 @@ DEMO_VIDEOS: list[DemoVideo] = [
         id="QkdBXUikRQc",
         title="Stop Dreaming and Start Doing | Self-Sabotage",
         author="Olga Loiek",
+        domain="Self-improvement",
         thumbnail_url=_thumb("QkdBXUikRQc"),
         youtube_url=_watch("QkdBXUikRQc"),
         duration_seconds=720,
         indexed=True,
+        artifact_stats=_stats(98, 15, 2),
     ),
     DemoVideo(
         id="DVtcZQ2QdBg",
         title="10 Ways to Build an Unfair Advantage in Your 20s",
         author="Mia McGrath",
+        domain="Career / Finance",
         thumbnail_url=_thumb("DVtcZQ2QdBg"),
         youtube_url=_watch("DVtcZQ2QdBg"),
         duration_seconds=1521,
         indexed=True,
+        artifact_stats=_stats(925, 63, 20),
     ),
     DemoVideo(
         id="as9IYFrTiKc",
         title="A Real Sprint Review Meeting Example",
         author="DataMiner by Skyline Communications",
+        domain="Product / Agile",
         thumbnail_url=_thumb("as9IYFrTiKc"),
         youtube_url=_watch("as9IYFrTiKc"),
         duration_seconds=404,
         indexed=True,
+        artifact_stats=_stats(92, 17, 13),
     ),
     DemoVideo(
         id="u4ZoJKF_VuA",
         title="Start with Why: How Great Leaders Inspire Action",
         author="Simon Sinek",
+        domain="TED / Leadership",
         thumbnail_url=_thumb("u4ZoJKF_VuA"),
         youtube_url=_watch("u4ZoJKF_VuA"),
         duration_seconds=1083,
         indexed=True,
+        artifact_stats=_stats(345, 45, 20),
     ),
     DemoVideo(
         id="1Gdl-A1DvpA",
         title="Gordon Ramsay Challenges Amateur Cook to Keep Up with Him",
         author="Bon Appetit",
+        domain="Cooking",
         thumbnail_url=_thumb("1Gdl-A1DvpA"),
         youtube_url=_watch("1Gdl-A1DvpA"),
         duration_seconds=544,
         indexed=True,
+        artifact_stats=_stats(320, 23, 18),
     ),
     DemoVideo(
         id="iCvmsMzlF7o",
         title="The Power of Vulnerability",
         author="Brene Brown",
+        domain="Psychology",
         thumbnail_url=_thumb("iCvmsMzlF7o"),
         youtube_url=_watch("iCvmsMzlF7o"),
         duration_seconds=1249,
         indexed=True,
+        artifact_stats=_stats(305, 53, 20),
     ),
     DemoVideo(
         id="TGdLss5Srnk",
         title="Sam Altman on Elon Musk suing OpenAI",
         author="Lex Fridman",
+        domain="Podcast",
         thumbnail_url=_thumb("TGdLss5Srnk"),
         youtube_url=_watch("TGdLss5Srnk"),
         duration_seconds=595,
         indexed=True,
+        artifact_stats=_stats(147, 24, 20),
     ),
     DemoVideo(
         id="E76CUtSHMrU",
         title="Smartphone Awards 2024!",
         author="Marques Brownlee",
+        domain="Tech Review",
         thumbnail_url=_thumb("E76CUtSHMrU"),
         youtube_url=_watch("E76CUtSHMrU"),
         duration_seconds=1645,
         indexed=True,
+        artifact_stats=_stats(345, 69, 20),
     ),
     DemoVideo(
         id="h6fcK_fRYaI",
         title="The Egg - A Short Story",
         author="Kurzgesagt - In a Nutshell",
+        domain="Science Animation",
         thumbnail_url=_thumb("h6fcK_fRYaI"),
         youtube_url=_watch("h6fcK_fRYaI"),
         duration_seconds=444,
         indexed=True,
+        artifact_stats=_stats(121, 18, 16),
     ),
     DemoVideo(
         id="v7AYKMP6rOE",
         title="Yoga For Complete Beginners - 20 Minute Home Yoga Workout",
         author="Yoga With Adriene",
+        domain="Fitness",
         thumbnail_url=_thumb("v7AYKMP6rOE"),
         youtube_url=_watch("v7AYKMP6rOE"),
         duration_seconds=1415,
         indexed=True,
+        artifact_stats=_stats(240, 57, 20),
     ),
     DemoVideo(
         id="Th8JoIan4dg",
         title="How to Get and Evaluate Startup Ideas",
         author="Y Combinator",
+        domain="Business / Startup",
         thumbnail_url=_thumb("Th8JoIan4dg"),
         youtube_url=_watch("Th8JoIan4dg"),
         duration_seconds=1930,
         indexed=True,
+        artifact_stats=_stats(544, 80, 20),
     ),
     DemoVideo(
         id="arj7oStGLkU",
         title="Inside the Mind of a Master Procrastinator",
         author="Tim Urban",
+        domain="Comedy / TED",
         thumbnail_url=_thumb("arj7oStGLkU"),
         youtube_url=_watch("arj7oStGLkU"),
         duration_seconds=836,
         indexed=True,
+        artifact_stats=_stats(201, 35, 20),
     ),
     DemoVideo(
         id="uxPdPpi5W4o",
         title="Why Are 96,000,000 Black Balls on This Reservoir?",
         author="Veritasium",
+        domain="Science / News",
         thumbnail_url=_thumb("uxPdPpi5W4o"),
         youtube_url=_watch("uxPdPpi5W4o"),
         duration_seconds=705,
         indexed=True,
+        artifact_stats=_stats(282, 30, 20),
     ),
 ]
 

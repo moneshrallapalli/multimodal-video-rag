@@ -70,12 +70,25 @@ export function EvalDashboard() {
   const na = data.no_answer;
   const metaStatus = (data.meta as { status: string }).status;
   const isReal = metaStatus === "real_seed" || metaStatus === "real_expanded";
+  const generatedAt = new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "UTC",
+  }).format(new Date(data.meta.generated_at));
 
   return (
     <div className="flex flex-col gap-6">
       <div className="rounded-lg border border-amber-300/60 bg-amber-50 px-4 py-2.5 text-sm text-amber-900">
-        <span className="font-medium">{isReal ? "Real evaluation." : "Sample data."}</span>{" "}
-        {data.meta.note}
+        <p>
+          <span className="font-medium">{isReal ? "Real evaluation." : "Sample data."}</span>{" "}
+          {data.meta.note}
+        </p>
+        <dl className="mt-2 grid gap-2 text-xs sm:grid-cols-4">
+          <MetaDatum label="Golden set" value="eval/golden/expanded.jsonl" />
+          <MetaDatum label="Generated" value={`${generatedAt} UTC`} />
+          <MetaDatum label="Judge" value={data.meta.judge} />
+          <MetaDatum label="Primary config" value={data.meta.primary_config} />
+        </dl>
       </div>
 
       <div className="flex flex-wrap items-center gap-1.5">
@@ -115,9 +128,9 @@ export function EvalDashboard() {
         </div>
         {showSaturated && (
           <p className="text-xs text-muted-foreground">
-            Recall and modality accuracy are near-ceiling on this 3-video corpus — retrieving
-            top-10 from ~130 vectors means relevant chunks almost always appear. MRR and
-            Timestamp@5s are what actually discriminate between configs.
+            Recall and modality accuracy can look similar because top-10 retrieval is generous
+            on this focused {data.meta.indexed_video_count}-video corpus. MRR, Timestamp@5s,
+            and No-answer F1 are the more useful regression signals here.
           </p>
         )}
         <div className="overflow-hidden rounded-xl border border-border bg-card">
@@ -219,6 +232,15 @@ function Metric({ label, value }: { label: string; value: number }) {
     <div className="flex items-center justify-between gap-2">
       <dt className="text-muted-foreground capitalize">{label}</dt>
       <dd className="font-medium tabular-nums">{pct(value)}</dd>
+    </div>
+  );
+}
+
+function MetaDatum({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-amber-300/60 bg-white/60 px-2 py-1">
+      <dt className="text-amber-950/65">{label}</dt>
+      <dd className="truncate font-medium">{value}</dd>
     </div>
   );
 }

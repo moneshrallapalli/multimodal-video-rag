@@ -21,6 +21,7 @@ from .schemas import (
     TranscriptChunk,
     TranscriptSegment,
     VectorRecord,
+    VideoArtifactStats,
     VideoMetadataArtifact,
 )
 
@@ -47,6 +48,7 @@ __all__ = [
     "TranscriptArtifact",
     "TranscriptChunk",
     "TranscriptSegment",
+    "VideoArtifactStats",
     "VideoMetadataArtifact",
     "VectorRecord",
     "RetrievalHit",

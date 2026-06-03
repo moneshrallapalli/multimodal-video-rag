@@ -1,6 +1,6 @@
 /**
  * TypeScript mirror of the Pydantic contracts in `packages/shared/src/shared/schemas.py`.
- * Keep these in sync by hand (Phase 1); OpenAPI→TS codegen is a later improvement.
+ * Keep these in sync by hand; OpenAPI→TS codegen is a later improvement.
  */
 export type Modality = "visual" | "transcript";
 export type QueryIntent =
@@ -18,14 +18,24 @@ export type JobStatus =
   | "completed"
   | "failed";
 
+export interface VideoArtifactStats {
+  transcript_segments: number | null;
+  transcript_chunks: number | null;
+  visual_frames: number | null;
+  indexed_vectors: number | null;
+  frame_interval_seconds: number | null;
+}
+
 export interface DemoVideo {
   id: string;
   title: string;
   author: string;
+  domain: string | null;
   thumbnail_url: string;
   youtube_url: string;
   duration_seconds: number | null;
   indexed: boolean;
+  artifact_stats: VideoArtifactStats | null;
 }
 
 export interface SearchRequest {

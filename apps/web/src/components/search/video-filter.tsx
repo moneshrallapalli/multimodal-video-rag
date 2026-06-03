@@ -1,69 +1,51 @@
 "use client";
 
-import type { DemoVideo } from "@/lib/types";
-import { truncate } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { ChevronDown } from "lucide-react";
 
-function FilterChip({
-  active,
-  disabled = false,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  disabled?: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={cn(
-        "rounded-full border px-3 py-1 text-xs transition-colors",
-        disabled
-          ? "cursor-not-allowed border-border bg-muted text-muted-foreground/60"
-          : active
-            ? "border-primary bg-primary/10 font-medium text-primary"
-            : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground",
-      )}
-    >
-      {children}
-    </button>
-  );
-}
+import type { DemoVideo } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 export function VideoFilter({
   videos,
   value,
   onChange,
+  className,
 }: {
   videos: DemoVideo[];
   value: string | null;
   onChange: (id: string | null) => void;
+  className?: string;
 }) {
   if (videos.length === 0) return null;
-  const indexedCount = videos.filter((v) => v.indexed).length;
+
+  const indexed = videos.filter((v) => v.indexed);
+  const selected = value ? videos.find((v) => v.id === value) : null;
+
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      <span className="mr-1 text-xs font-medium text-muted-foreground">Filter:</span>
-      <FilterChip active={value === null} onClick={() => onChange(null)}>
-        {indexedCount === 1 ? "Indexed video" : "All indexed"}
-      </FilterChip>
-      {videos.map((v) => (
-        <FilterChip
-          key={v.id}
-          active={value === v.id}
-          disabled={!v.indexed}
-          onClick={() => {
-            if (v.indexed) onChange(v.id);
-          }}
+    <label className={cn("flex min-w-0 flex-col gap-1", className)}>
+      <span className="text-xs font-medium text-muted-foreground">Video scope</span>
+      <span className="relative block">
+        <select
+          value={value ?? "all"}
+          onChange={(event) =>
+            onChange(event.target.value === "all" ? null : event.target.value)
+          }
+          className="h-11 w-full appearance-none rounded-lg border border-border bg-card px-3 pr-9 text-sm font-medium text-foreground shadow-xs outline-none transition-colors hover:border-primary/40 focus:border-primary focus:ring-3 focus:ring-ring/30"
+          aria-label="Video filter"
         >
-          {truncate(v.title, 26)}
-          {!v.indexed ? " · not indexed yet" : ""}
-        </FilterChip>
-      ))}
-    </div>
+          <option value="all">All indexed videos ({indexed.length})</option>
+          {videos.map((video) => (
+            <option key={video.id} value={video.id} disabled={!video.indexed}>
+              {video.title}
+              {!video.indexed ? " - not indexed yet" : ""}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted-foreground" />
+      </span>
+      <span className="truncate text-xs text-muted-foreground">
+        {selected ? selected.author : "Corpus-wide retrieval"}
+      </span>
+    </label>
   );
 }

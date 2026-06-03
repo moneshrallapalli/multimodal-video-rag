@@ -1,9 +1,4 @@
-"""Typed request/response contracts shared by the API and mirrored in the web app.
-
-These models are the single source of truth for the Phase 1 mocked endpoints. Later
-phases replace the mock implementations behind these exact shapes, so the frontend does
-not change when real ingestion, retrieval, and generation land.
-"""
+"""Typed request/response contracts shared by the API and mirrored in the web app."""
 
 from __future__ import annotations
 
@@ -19,16 +14,28 @@ JobStatus = Literal["queued", "downloading", "transcribing", "embedding", "compl
 # ── Public: demo library + search ─────────────────────────────────────
 
 
+class VideoArtifactStats(BaseModel):
+    """Counts derived from persisted ingestion artifacts."""
+
+    transcript_segments: int | None = None
+    transcript_chunks: int | None = None
+    visual_frames: int | None = None
+    indexed_vectors: int | None = None
+    frame_interval_seconds: int | None = None
+
+
 class DemoVideo(BaseModel):
     """A video in the read-only public demo library."""
 
     id: str  # YouTube video id
     title: str
     author: str
+    domain: str | None = None
     thumbnail_url: str
     youtube_url: str
     duration_seconds: int | None = None
     indexed: bool = True
+    artifact_stats: VideoArtifactStats | None = None
 
 
 class SearchRequest(BaseModel):
