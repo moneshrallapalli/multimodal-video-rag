@@ -67,13 +67,16 @@ export function EvalDashboard() {
   const selected = data.configs.find((c) => c.id === selectedId) as Config;
   const ragas = ragasByConfig[selectedId];
   const judge = judgeByConfig[selectedId];
-  const na = data.no_answer;
+  const naByConfig = (data as Record<string, unknown>).no_answer_by_config as
+    | Record<string, typeof data.no_answer>
+    | undefined;
+  const na = naByConfig?.[selectedId] ?? data.no_answer;
   const metaStatus = (data.meta as { status: string }).status;
   const isReal = metaStatus === "real_seed" || metaStatus === "real_expanded";
   const generatedAt = new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
     timeStyle: "short",
-    timeZone: "UTC",
+    timeZone: "America/New_York",
   }).format(new Date(data.meta.generated_at));
 
   return (
@@ -85,7 +88,7 @@ export function EvalDashboard() {
         </p>
         <dl className="mt-2 grid gap-2 text-xs sm:grid-cols-4">
           <MetaDatum label="Golden set" value="eval/golden/expanded.jsonl" />
-          <MetaDatum label="Generated" value={`${generatedAt} UTC`} />
+          <MetaDatum label="Generated" value={`${generatedAt} ET`} />
           <MetaDatum label="Judge" value={data.meta.judge} />
           <MetaDatum label="Primary config" value={data.meta.primary_config} />
         </dl>
@@ -183,6 +186,8 @@ export function EvalDashboard() {
         </div>
       </div>
 
+      <MetricMethodology selected={selected} na={na} />
+
       <div className="grid gap-4 md:grid-cols-2">
         <div className="rounded-xl border border-border bg-card p-4">
           <h3 className="text-sm font-semibold">Answer quality — {selected.label}</h3>
@@ -263,6 +268,109 @@ function MatrixCell({
     >
       <div className="text-lg font-semibold tabular-nums">{value}</div>
       <div className="text-xs text-muted-foreground">{label}</div>
+    </div>
+  );
+}
+
+function MetricMethodology({
+  selected,
+  na,
+}: {
+  selected: Config;
+  na: typeof data.no_answer;
+}) {
+  const [open, setOpen] = useState(false);
+  const n = data.meta.golden_set_size;
+  const k = data.meta.retrieval_depth;
+
+  return (
+    <div className="rounded-xl border border-border bg-card">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-semibold transition-colors hover:bg-muted/30"
+      >
+        <span>How metrics are calculated — {selected.label}</span>
+        <span
+          className={cn(
+            "text-xs text-muted-foreground transition-transform",
+            open && "rotate-180",
+          )}
+        >
+          ▼
+        </span>
+      </button>
+      {open && (
+        <div className="grid gap-4 border-t border-border px-4 py-4 text-sm md:grid-cols-2">
+          <FormulaCard
+            title="MRR (Mean Reciprocal Rank)"
+            formula="MRR = (1/N) × Σ (1 / rank_i)"
+            description={`For each of the ${n} queries, find the rank of the first relevant result. Average the reciprocal ranks. Higher = relevant results appear earlier.`}
+            value={selected.mrr}
+          />
+          <FormulaCard
+            title={`Recall@${k}`}
+            formula={`R@${k} = queries_with_hit_in_top_${k} / total_queries`}
+            description={`Fraction of queries where at least one relevant result appears in the top ${k}. Measures coverage — can we find something?`}
+            value={selected.recall_at_5}
+          />
+          <FormulaCard
+            title="Timestamp@5s"
+            formula="T@5s = hits_within_5s / total_answerable"
+            description="Fraction of answerable queries where the top result's timestamp is within 5 seconds of the ground-truth timestamp. Measures temporal precision."
+            value={selected.timestamp_at_5s}
+          />
+          <FormulaCard
+            title="No-answer F1"
+            formula="F1 = 2 × (P × R) / (P + R)"
+            description={`Precision = ${na.true_positive} / (${na.true_positive} + ${na.false_positive}) = ${pct(na.precision)}. Recall = ${na.true_positive} / (${na.true_positive} + ${na.false_negative}) = ${pct(na.recall)}. Harmonic mean balances over-refusal vs. missed refusal.`}
+            value={na.f1}
+          />
+          <FormulaCard
+            title="Modality accuracy"
+            formula="Acc = correct_modality / total_answerable"
+            description="Fraction of answerable queries where the top result modality (transcript vs. visual) matches the expected modality from the golden set."
+            value={selected.modality_acc}
+          />
+          <FormulaCard
+            title="Config features"
+            formula=""
+            description={`Hybrid BM25: ${selected.enable_hybrid_transcript ? "on" : "off"} · Cross-encoder rerank: ${selected.enable_cross_encoder_rerank ? "on" : "off"} · Query rewrite: ${selected.enable_query_rewrite ? "on" : "off"} · Answer generation: ${selected.enable_answer_generation ? "on" : "off"}`}
+            value={null}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FormulaCard({
+  title,
+  formula,
+  description,
+  value,
+}: {
+  title: string;
+  formula: string;
+  description: string;
+  value: number | null;
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-muted/20 p-3">
+      <div className="flex items-center justify-between gap-2">
+        <h4 className="text-xs font-semibold">{title}</h4>
+        {value !== null && (
+          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold tabular-nums text-primary">
+            {pct(value)}
+          </span>
+        )}
+      </div>
+      {formula && (
+        <code className="mt-1.5 block rounded bg-muted px-2 py-1 font-mono text-xs">
+          {formula}
+        </code>
+      )}
+      <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{description}</p>
     </div>
   );
 }
