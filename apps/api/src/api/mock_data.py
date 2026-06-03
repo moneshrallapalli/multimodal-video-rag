@@ -57,7 +57,7 @@ DEMO_VIDEOS: list[DemoVideo] = [
         youtube_url=_watch("QkdBXUikRQc"),
         duration_seconds=720,
         indexed=True,
-        artifact_stats=_stats(98, 15, 2),
+        artifact_stats=_stats(98, 15, 13),
     ),
     DemoVideo(
         id="DVtcZQ2QdBg",
