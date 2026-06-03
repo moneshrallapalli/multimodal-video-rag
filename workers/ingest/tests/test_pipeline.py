@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
@@ -97,8 +98,9 @@ class FakeMedia:
 
 
 class FakeIndexer:
-    def __init__(self) -> None:
+    def __init__(self, *, bm25_stats: dict | None = None) -> None:
         self.calls = []
+        self._bm25_stats = bm25_stats
 
     def index_video(self, **kwargs) -> IndexingSummary:
         self.calls.append(kwargs)
@@ -106,6 +108,7 @@ class FakeIndexer:
             video_id=kwargs["metadata"].video_id,
             transcript_vectors=1,
             visual_vectors=len(kwargs["frames"]),
+            bm25_stats=self._bm25_stats,
         )
 
 
@@ -202,6 +205,48 @@ def test_worker_skips_already_completed_job_on_redelivery():
     assert s3.files == []
     assert s3.objects == {}
     assert indexer.calls == []
+
+
+def test_worker_uploads_bm25_stats_when_present():
+    """Hybrid retrieval needs the fitted encoder state at query time — the worker
+    must persist it alongside the other indexing artifacts so the API can load it."""
+    jobs = FakeTable()
+    videos = FakeTable()
+    s3 = FakeS3()
+    bm25_stats = {"avgdl": 12.4, "doc_freq": {"sabotage": 2}, "n_docs": 5}
+    indexer = FakeIndexer(bm25_stats=bm25_stats)
+    worker = IngestionWorker(
+        bucket="test-bucket",
+        jobs_table=jobs,
+        videos_table=videos,
+        s3_client=s3,
+        media=FakeMedia(),
+        indexer=indexer,
+    )
+
+    worker.process(_message())
+
+    assert "videos/QkdBXUikRQc/vectors/bm25_stats.json" in s3.objects
+    stored = json.loads(s3.objects["videos/QkdBXUikRQc/vectors/bm25_stats.json"])
+    assert stored == bm25_stats
+
+
+def test_worker_skips_bm25_upload_when_stats_absent():
+    """Single-modality indexing (frames only, no transcript) leaves bm25_stats
+    as None — must not write a bogus artifact."""
+    s3 = FakeS3()
+    worker = IngestionWorker(
+        bucket="test-bucket",
+        jobs_table=FakeTable(),
+        videos_table=FakeTable(),
+        s3_client=s3,
+        media=FakeMedia(),
+        indexer=FakeIndexer(bm25_stats=None),
+    )
+
+    worker.process(_message())
+
+    assert "videos/QkdBXUikRQc/vectors/bm25_stats.json" not in s3.objects
 
 
 def test_worker_proceeds_when_lookup_fails_transiently():

@@ -7,7 +7,7 @@ not change when real ingestion, retrieval, and generation land.
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -174,11 +174,16 @@ class VectorRecord(BaseModel):
 
 
 class IndexingSummary(BaseModel):
-    """Counts from a Phase 3 indexing pass."""
+    """Counts from a Phase 3 indexing pass.
+
+    `bm25_stats` carries the fitted BM25 encoder state when hybrid sparse
+    indexing was performed; clients persist it to S3 for query-time hybrid use.
+    """
 
     video_id: str
     transcript_vectors: int = 0
     visual_vectors: int = 0
+    bm25_stats: dict[str, Any] | None = None
 
 
 class RetrievalHit(BaseModel):

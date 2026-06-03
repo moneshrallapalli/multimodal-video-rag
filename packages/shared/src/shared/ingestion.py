@@ -54,3 +54,8 @@ def transcript_key(video_id: str) -> str:
 
 def frame_key(video_id: str, frame_number: int) -> str:
     return f"{artifact_prefix(video_id)}/frames/frame_{frame_number:06d}.jpg"
+
+
+def bm25_stats_key(video_id: str) -> str:
+    """S3 key for the per-video BM25 encoder state (used at query time for hybrid)."""
+    return f"{artifact_prefix(video_id)}/vectors/bm25_stats.json"

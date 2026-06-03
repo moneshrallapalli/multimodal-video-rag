@@ -109,3 +109,52 @@ def test_video_indexer_handles_empty_transcript_and_frames():
     assert summary.visual_vectors == 0
     assert transcript_index.records == []
     assert visual_index.records == []
+
+
+def test_video_indexer_attaches_bm25_sparse_values_to_transcript_records(tmp_path):
+    """Transcript records carry both dense values AND BM25 sparse values for
+    Pinecone hybrid search. The summary includes the fitted BM25 stats so the
+    worker can persist them for query-time encoding."""
+    image = tmp_path / "frame.jpg"
+    image.write_bytes(b"fake")
+    transcript_index = FakeIndex()
+    visual_index = FakeIndex()
+    indexer = VideoIndexer(
+        bucket="test-bucket",
+        embedder=FakeEmbedder(),
+        transcript_index=transcript_index,
+        visual_index=visual_index,
+        transcript_chunk_seconds=20,
+        transcript_chunk_overlap_seconds=5,
+    )
+
+    summary = indexer.index_video(
+        metadata=VideoMetadataArtifact(
+            video_id="QkdBXUikRQc",
+            youtube_url="https://youtu.be/QkdBXUikRQc",
+            title="Test Talk",
+        ),
+        transcript=TranscriptArtifact(
+            video_id="QkdBXUikRQc",
+            segments=[
+                TranscriptSegment(
+                    start_seconds=0, end_seconds=10, text="hello speaker discusses sabotage"
+                ),
+                TranscriptSegment(
+                    start_seconds=10, end_seconds=20, text="another sample about comfort zone"
+                ),
+            ],
+        ),
+        frames=[FrameFile(path=image, timestamp_seconds=12)],
+        frame_keys=["videos/QkdBXUikRQc/frames/frame_000001.jpg"],
+    )
+
+    transcript_record = transcript_index.records[0]
+    assert transcript_record.sparse_values is not None
+    assert transcript_record.sparse_values.indices
+    assert transcript_record.sparse_values.values
+    # Summary carries fitted BM25 stats so the worker can persist them for query-time.
+    assert summary.bm25_stats is not None
+    assert summary.bm25_stats["n_docs"] >= 1
+    assert "avgdl" in summary.bm25_stats
+    assert "doc_freq" in summary.bm25_stats

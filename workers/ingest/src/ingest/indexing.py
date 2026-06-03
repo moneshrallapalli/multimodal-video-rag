@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from shared import settings
+from shared.bm25 import BM25Encoder
 from shared.embedding import BedrockEmbedder
 from shared.indexing import chunk_transcript, frame_vector_id
 from shared.pinecone_client import PineconeIndexClient
 from shared.schemas import (
     FrameArtifact,
     IndexingSummary,
+    SparseVector,
     TranscriptArtifact,
     TranscriptChunk,
     VectorRecord,
@@ -63,7 +67,9 @@ class VideoIndexer:
         frames: list[FrameFile],
         frame_keys: list[str],
     ) -> IndexingSummary:
-        transcript_records = self._transcript_records(metadata=metadata, transcript=transcript)
+        transcript_records, bm25_stats = self._transcript_records(
+            metadata=metadata, transcript=transcript
+        )
         visual_records = self._visual_records(
             metadata=metadata, frames=frames, frame_keys=frame_keys
         )
@@ -74,6 +80,7 @@ class VideoIndexer:
             video_id=metadata.video_id,
             transcript_vectors=transcript_count,
             visual_vectors=visual_count,
+            bm25_stats=bm25_stats,
         )
 
     def _transcript_records(
@@ -81,21 +88,39 @@ class VideoIndexer:
         *,
         metadata: VideoMetadataArtifact,
         transcript: TranscriptArtifact,
-    ) -> list[VectorRecord]:
+    ) -> tuple[list[VectorRecord], dict[str, Any]]:
+        """Build dense+sparse transcript records and return the BM25 stats.
+
+        BM25 is fit per-video for now (single-video idf semantics). With more
+        than one indexed video, prefer refitting against the union corpus so
+        cross-video queries score consistently — that change is corpus-wide
+        bookkeeping, not a code change here.
+        """
         chunks = chunk_transcript(
             transcript,
             target_seconds=self.transcript_chunk_seconds,
             overlap_seconds=self.transcript_chunk_overlap_seconds,
         )
-        vectors = self.embedder.embed_texts([chunk.text for chunk in chunks])
-        return [
-            VectorRecord(
-                id=chunk.chunk_id,
-                values=vector,
-                metadata=_compact_metadata(_transcript_metadata(metadata, chunk)),
+        chunk_texts = [chunk.text for chunk in chunks]
+        vectors = self.embedder.embed_texts(chunk_texts)
+        encoder = BM25Encoder.fit(chunk_texts)
+        records: list[VectorRecord] = []
+        for chunk, vector in zip(chunks, vectors, strict=True):
+            sparse = encoder.encode_document(chunk.text)
+            sparse_vector = (
+                SparseVector(indices=list(sparse["indices"]), values=list(sparse["values"]))
+                if sparse["indices"]
+                else None
             )
-            for chunk, vector in zip(chunks, vectors, strict=True)
-        ]
+            records.append(
+                VectorRecord(
+                    id=chunk.chunk_id,
+                    values=vector,
+                    metadata=_compact_metadata(_transcript_metadata(metadata, chunk)),
+                    sparse_values=sparse_vector,
+                )
+            )
+        return records, encoder.to_dict()
 
     def _visual_records(
         self,

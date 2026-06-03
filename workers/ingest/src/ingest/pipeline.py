@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -10,6 +11,7 @@ from typing import Any
 from shared.ingestion import (
     artifact_prefix,
     audio_key,
+    bm25_stats_key,
     frame_key,
     metadata_key,
     transcript_key,
@@ -101,6 +103,14 @@ class IngestionWorker:
                         f"{artifact_prefix(message.video_id)}/vectors/indexing_summary.json",
                         summary.model_dump_json(indent=2),
                     )
+                    if summary.bm25_stats:
+                        # Persist the fitted BM25 stats so query-time hybrid
+                        # retrieval can re-encode user queries without re-reading
+                        # the transcript corpus.
+                        self._upload_json(
+                            bm25_stats_key(message.video_id),
+                            json.dumps(summary.bm25_stats),
+                        )
 
                 self._put_video_record(message, metadata)
                 self._update_job(
