@@ -151,8 +151,9 @@ def run_eval(
                 )
             if graph_config.enable_hybrid_transcript:
                 pipeline.transcript_bm25 = _bm25_for_row(row, bm25_encoders)
+            vid_filter = [row.video_id] if row.video_id else None
             response = pipeline.run(
-                SearchRequest(query=row.query, video_id=row.video_id, top_k=retrieval_depth)
+                SearchRequest(query=row.query, video_ids=vid_filter, top_k=retrieval_depth)
             )
             score = score_query(row, response)
             judgment = None

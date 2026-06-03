@@ -98,7 +98,7 @@ class QueryPipeline:
         state = self.graph.invoke(
             {
                 "query": request.query.strip(),
-                "video_id": request.video_id,
+                "video_ids": request.video_ids,
                 "top_k": request.top_k,
                 "errors": [],
             }
@@ -194,16 +194,13 @@ class QueryPipeline:
     def _retrieve_transcript(self, state: GraphState) -> GraphState:
         if state.get("refused") or not state.get("should_retrieve_transcript"):
             return {"transcript_hits": []}
-        query = _active_query(state)
-        vector = self.embedder.embed_text(query)
-        # Hybrid path: alpha-blend the dense vector with a BM25 sparse encoding
-        # of the query. Falls through to pure dense when hybrid is disabled or
-        # no BM25 encoder is configured (e.g. corpus not yet indexed).
+        embed_query = _embed_query(state)
+        vector = self.embedder.embed_text(embed_query)
         sparse_vector: dict[str, Any] | None = None
         query_vector = vector
-        bm25_encoder = self._transcript_bm25_for(state.get("video_id"))
+        bm25_encoder = self._transcript_bm25_for(state.get("video_ids"))
         if self.config.enable_hybrid_transcript and bm25_encoder is not None:
-            sparse = bm25_encoder.encode_query(query)
+            sparse = bm25_encoder.encode_query(state["query"])
             if sparse["indices"]:
                 query_vector, sparse_vector = hybrid_blend(
                     vector, sparse, alpha=self.config.hybrid_alpha
@@ -211,7 +208,7 @@ class QueryPipeline:
         hits = self.transcript_index.query(
             query_vector,
             top_k=self.config.retrieve_top_k,
-            metadata_filter=_video_filter(state.get("video_id")),
+            metadata_filter=_video_filter(state.get("video_ids")),
             sparse_vector=sparse_vector,
         )
         return {
@@ -226,12 +223,12 @@ class QueryPipeline:
     def _retrieve_visual(self, state: GraphState) -> GraphState:
         if state.get("refused") or not state.get("should_retrieve_visual"):
             return {"visual_hits": []}
-        query = _active_query(state)
-        vector = self.embedder.embed_visual_query(query)
+        embed_query = _embed_query(state)
+        vector = self.embedder.embed_visual_query(embed_query)
         hits = self.visual_index.query(
             vector,
             top_k=self.config.retrieve_top_k,
-            metadata_filter=_video_filter(state.get("video_id")),
+            metadata_filter=_video_filter(state.get("video_ids")),
         )
         return {
             "visual_hits": [
@@ -245,16 +242,18 @@ class QueryPipeline:
     def _fuse_results(self, state: GraphState) -> GraphState:
         transcript = [_candidate(data) for data in state.get("transcript_hits", [])]
         visual = [_candidate(data) for data in state.get("visual_hits", [])]
-        query = _active_query(state)
+        query = state["query"]
         fused = reciprocal_rank_fusion(
             [transcript, visual],
             rrf_k=self.config.rrf_k,
         )
         reranked = lexical_rerank(fused, query=query)
-        if self.config.enable_cross_encoder_rerank and state.get("intent") in {
-            "transcript",
-            "summary",
-        }:
+        modalities = {c.modality for c in reranked}
+        has_mixed = len(modalities) > 1
+        intent_eligible = state.get("intent") in {"transcript", "summary"}
+        if self.config.enable_cross_encoder_rerank and (
+            intent_eligible or has_mixed
+        ):
             reranked = cross_encoder_rerank(
                 reranked,
                 query=query,
@@ -270,7 +269,7 @@ class QueryPipeline:
         transcript_candidates = [_candidate(d) for d in state.get("transcript_hits", [])]
         visual_candidates = [_candidate(d) for d in state.get("visual_hits", [])]
         fused_candidates = [_candidate(data) for data in state.get("fused", [])]
-        query = _active_query(state)
+        query = state["query"]
 
         # Per-modality dense gate (transcript uses dotproduct, visual uses cosine;
         # the score distributions differ, so a single threshold across both
@@ -324,7 +323,7 @@ class QueryPipeline:
             }
         try:
             answer = self.answer_generator.generate(
-                query=_active_query(state),
+                query=state["query"],
                 context=state.get("context", ""),
             )
         except Exception:
@@ -371,9 +370,10 @@ class QueryPipeline:
             ],
         )
 
-    def _transcript_bm25_for(self, video_id: str | None) -> BM25Encoder | None:
+    def _transcript_bm25_for(self, video_ids: list[str] | None) -> BM25Encoder | None:
+        single_id = video_ids[0] if video_ids and len(video_ids) == 1 else None
         if self.transcript_bm25_resolver is not None:
-            return self.transcript_bm25_resolver(video_id)
+            return self.transcript_bm25_resolver(single_id)
         return self.transcript_bm25
 
 
@@ -381,14 +381,16 @@ def _candidate(data: dict[str, Any]) -> RetrievalCandidate:
     return RetrievalCandidate.model_validate(data)
 
 
-def _active_query(state: GraphState) -> str:
+def _embed_query(state: GraphState) -> str:
     return state.get("rewritten_query") or state["query"]
 
 
-def _video_filter(video_id: str | None) -> dict[str, Any] | None:
-    if not video_id:
+def _video_filter(video_ids: list[str] | None) -> dict[str, Any] | None:
+    if not video_ids:
         return None
-    return {"video_id": {"$eq": video_id}}
+    if len(video_ids) == 1:
+        return {"video_id": {"$eq": video_ids[0]}}
+    return {"video_id": {"$in": video_ids}}
 
 
 def _rewrite_terms(query: str) -> list[str]:

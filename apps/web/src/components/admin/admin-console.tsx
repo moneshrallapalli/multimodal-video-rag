@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { ApiError, api } from "@/lib/api";
-import type { Job } from "@/lib/types";
+import type { IngestRequest, Job } from "@/lib/types";
 
 import { AdminLogin } from "./admin-login";
 import { IngestForm } from "./ingest-form";
@@ -65,9 +65,9 @@ export function AdminConsole() {
     }
   }
 
-  async function handleIngest(url: string) {
+  async function handleIngest(req: IngestRequest) {
     try {
-      const r = await api.ingest(url);
+      const r = await api.ingest(req);
       setJobs((prev) => [r.job, ...prev]);
       toast.success("Job queued");
     } catch {

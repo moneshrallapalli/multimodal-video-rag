@@ -431,7 +431,7 @@ def mock_search(req: SearchRequest) -> SearchResponse:
     q_tokens = _tokenize(req.query)
     pref = _preferred_modality(intent)
 
-    moments = [m for m in _MOMENTS if req.video_id is None or m[0] == req.video_id]
+    moments = [m for m in _MOMENTS if not req.video_ids or m[0] in req.video_ids]
 
     scored: list[tuple[float, int, _Moment]] = []
     for m in moments:

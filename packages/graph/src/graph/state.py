@@ -25,7 +25,7 @@ class GraphState(TypedDict, total=False):
     incrementally."""
 
     query: str
-    video_id: str | None
+    video_ids: list[str] | None
     top_k: int
     rewritten_query: str
     intent: QueryIntent

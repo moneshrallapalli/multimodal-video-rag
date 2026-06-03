@@ -79,7 +79,13 @@ class DynamoIngestionStore:
         jobs.sort(key=lambda job: job.created_at, reverse=True)
         return JobsResponse(jobs=jobs)
 
-    def enqueue(self, youtube_url: str) -> IngestResponse:
+    def enqueue(
+        self,
+        youtube_url: str,
+        *,
+        frame_interval_seconds: int | None = None,
+        max_frames: int | None = None,
+    ) -> IngestResponse:
         normalized = normalize_youtube_url(youtube_url)
         job_id = job_id_for_video(normalized.video_id)
         now = utc_now_iso()
@@ -115,6 +121,8 @@ class DynamoIngestionStore:
             video_id=normalized.video_id,
             youtube_url=normalized.youtube_url,
             requested_at=now,
+            frame_interval_seconds=frame_interval_seconds,
+            max_frames=max_frames,
         )
         self._sqs.send_message(QueueUrl=self._queue_url, MessageBody=message.model_dump_json())
         return IngestResponse(job=_item_to_job(item))
@@ -140,7 +148,16 @@ def list_jobs() -> JobsResponse:
     return _dynamo_store().list_jobs()
 
 
-def enqueue_ingestion(youtube_url: str) -> IngestResponse:
+def enqueue_ingestion(
+    youtube_url: str,
+    *,
+    frame_interval_seconds: int | None = None,
+    max_frames: int | None = None,
+) -> IngestResponse:
     if not real_ingestion_enabled():
         return mock_data.add_job(youtube_url)
-    return _dynamo_store().enqueue(youtube_url)
+    return _dynamo_store().enqueue(
+        youtube_url,
+        frame_interval_seconds=frame_interval_seconds,
+        max_frames=max_frames,
+    )

@@ -1,6 +1,7 @@
 /** Typed client for the FastAPI backend. Base URL is configurable for deployment. */
 import type {
   DemoVideo,
+  IngestRequest,
   IngestResponse,
   JobsResponse,
   SearchRequest,
@@ -56,9 +57,9 @@ export const api = {
   logout: () => http<SessionStatus>("/api/admin/logout", { method: "POST" }),
   session: () => http<SessionStatus>("/api/admin/session"),
   jobs: () => http<JobsResponse>("/api/admin/jobs"),
-  ingest: (youtube_url: string) =>
+  ingest: (body: IngestRequest) =>
     http<IngestResponse>("/api/admin/ingest", {
       method: "POST",
-      body: JSON.stringify({ youtube_url }),
+      body: JSON.stringify(body),
     }),
 };

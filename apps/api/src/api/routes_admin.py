@@ -44,6 +44,10 @@ def jobs() -> JobsResponse:
 @router.post("/ingest", response_model=IngestResponse, dependencies=[Depends(auth.require_admin)])
 def ingest(body: IngestRequest) -> IngestResponse:
     try:
-        return enqueue_ingestion(body.youtube_url)
+        return enqueue_ingestion(
+            body.youtube_url,
+            frame_interval_seconds=body.frame_interval_seconds,
+            max_frames=body.max_frames,
+        )
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc

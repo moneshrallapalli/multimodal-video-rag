@@ -35,7 +35,7 @@ class GraphConfig(BaseModel):
     # produces modality-flip bugs at near-tied scores (see eval q006). Defaults
     # match the legacy 0.2 so behavior is identical until tuned.
     min_transcript_source_score: float = 0.2
-    min_visual_source_score: float = 0.2
+    min_visual_source_score: float = 0.4
     # Confidence/display score = clamp(fused_RRF_score * confidence_scale, 0, 1).
     # The 24.0 default is empirically calibrated for rrf_k=60: at rank 1 the RRF
     # contribution from one list is 1/(60+1) ≈ 0.0164, so a candidate that tops

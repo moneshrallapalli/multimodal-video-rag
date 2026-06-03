@@ -57,12 +57,13 @@ class IngestionWorker:
         """
         if self._already_completed(message.job_id):
             return
+        media = self._media_for(message)
         try:
             self._update_job(message.job_id, status="downloading", progress=10)
             with TemporaryDirectory(prefix=f"ingest-{message.video_id}-") as tmp:
                 work_dir = Path(tmp)
 
-                metadata = self.media.fetch_metadata(message.youtube_url)
+                metadata = media.fetch_metadata(message.youtube_url)
                 self._upload_json(
                     metadata_key(message.video_id), metadata.model_dump_json(indent=2)
                 )
@@ -73,11 +74,11 @@ class IngestionWorker:
                     title=metadata.title,
                 )
 
-                source_path = self.media.download_video(message.youtube_url, work_dir)
-                audio_path = self.media.extract_audio(source_path, work_dir)
+                source_path = media.download_video(message.youtube_url, work_dir)
+                audio_path = media.extract_audio(source_path, work_dir)
                 self._upload_file(audio_path, audio_key(message.video_id), "audio/mp4")
 
-                frames = self.media.extract_frames(source_path, work_dir)
+                frames = media.extract_frames(source_path, work_dir)
                 frame_keys: list[str] = []
                 for index, frame in enumerate(frames, start=1):
                     key = frame_key(message.video_id, index)
@@ -89,7 +90,7 @@ class IngestionWorker:
                 )
 
                 self._update_job(message.job_id, status="transcribing", progress=70)
-                transcript = self.media.transcribe_audio(audio_path, message.video_id)
+                transcript = media.transcribe_audio(audio_path, message.video_id)
                 self._upload_json(
                     transcript_key(message.video_id),
                     transcript.model_dump_json(indent=2),
@@ -128,6 +129,16 @@ class IngestionWorker:
         except Exception as exc:
             self._update_job(message.job_id, status="failed", progress=0, error=str(exc)[:500])
             raise
+
+    def _media_for(self, message: IngestJobMessage) -> MediaProcessor:
+        if message.frame_interval_seconds is None and message.max_frames is None:
+            return self.media
+        interval = message.frame_interval_seconds or self.media.frame_interval_seconds
+        return MediaProcessor(
+            frame_interval_seconds=interval,
+            max_frames=message.max_frames or self.media.max_frames,
+            whisper_model_size=self.media.whisper_model_size,
+        )
 
     def _already_completed(self, job_id: str) -> bool:
         """Cheap pre-check: if SQS redelivered a finished job, skip re-doing the

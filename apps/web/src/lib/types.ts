@@ -40,7 +40,7 @@ export interface DemoVideo {
 
 export interface SearchRequest {
   query: string;
-  video_id?: string | null;
+  video_ids?: string[] | null;
   top_k?: number;
 }
 
@@ -65,6 +65,12 @@ export interface SearchResponse {
   refused: boolean;
   confidence: number;
   results: SearchResult[];
+}
+
+export interface IngestRequest {
+  youtube_url: string;
+  frame_interval_seconds?: number | null;
+  max_frames?: number | null;
 }
 
 export interface Job {

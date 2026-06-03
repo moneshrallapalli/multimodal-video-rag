@@ -24,7 +24,7 @@ type Seek = { videoId: string; seconds: number; title: string };
 
 export function SearchView() {
   const [videos, setVideos] = useState<DemoVideo[]>([]);
-  const [videoFilter, setVideoFilter] = useState<string | null>(null);
+  const [videoFilter, setVideoFilter] = useState<string[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<SearchResponse | null>(null);
@@ -47,7 +47,7 @@ export function SearchView() {
     setLoading(true);
     setError(null);
     try {
-      const r = await api.search({ query: term, video_id: videoFilter });
+      const r = await api.search({ query: term, video_ids: videoFilter.length ? videoFilter : null });
       setResponse(r);
       setSeek(
         r.results.length

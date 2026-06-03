@@ -36,8 +36,8 @@ class BedrockAnswerGenerator:
     def rewrite_query(self, *, query: str) -> str:
         return self._invoke(
             prompt=_rewrite_prompt(query=query),
-            max_tokens=80,
-            temperature=0.0,
+            max_tokens=150,
+            temperature=0.3,
         )
 
     def _invoke(self, *, prompt: str, max_tokens: int, temperature: float) -> str:
@@ -76,9 +76,10 @@ ANSWER:
 
 def _rewrite_prompt(*, query: str) -> str:
     return (
-        "Rewrite this video search query to be more specific and lexically rich, "
-        "preserving intent.\n"
-        "Return only the rewritten query.\n\n"
+        "Given this search query about a video, write a short passage (2-3 sentences) "
+        "that a video transcript might contain if it answered this question. "
+        "Write it as if quoting the transcript, not as a direct answer.\n"
+        "Return only the passage, no preamble.\n\n"
         f"QUERY:\n{query}\n"
     )
 

@@ -40,7 +40,7 @@ class DemoVideo(BaseModel):
 
 class SearchRequest(BaseModel):
     query: str = Field(min_length=1, max_length=500)
-    video_id: str | None = None  # optional single-video filter
+    video_ids: list[str] | None = None
     top_k: int = Field(default=8, ge=1, le=20)
 
 
@@ -82,6 +82,8 @@ class SessionStatus(BaseModel):
 
 class IngestRequest(BaseModel):
     youtube_url: str = Field(min_length=1)
+    frame_interval_seconds: int | None = Field(default=None, ge=5, le=300)
+    max_frames: int | None = Field(default=None, ge=1, le=100)
 
 
 class Job(BaseModel):
@@ -116,6 +118,8 @@ class IngestJobMessage(BaseModel):
     video_id: str
     youtube_url: str
     requested_at: str
+    frame_interval_seconds: int | None = None
+    max_frames: int | None = None
 
 
 class VideoMetadataArtifact(BaseModel):

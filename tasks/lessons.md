@@ -44,6 +44,12 @@ Engineering gotchas hit while building this repo, with the rule to avoid repeati
   cross-encoders opt-in until cold-start and p95 search latency are proven live, or serve them from
   a warmed, async, or separate compute path.
 
+- **yt-dlp breaks silently when the Docker image goes stale.** YouTube changes its extraction API
+  frequently; a pinned `>=2025.1` won't protect against future breakage. Rule: pin yt-dlp to a
+  *recent* nightly in the Dockerfile (e.g. `pip install yt-dlp==2026.5.30`), add deno as a JS
+  runtime (`curl -fsSL https://deno.land/install.sh | DENO_INSTALL=/usr/local sh`), and re-deploy
+  whenever ingestion starts failing with exit status 1.
+
 ## Framework
 
 - **shadcn `sonner.tsx` imports `next-themes`.** If you aren't using a theme provider, simplify it

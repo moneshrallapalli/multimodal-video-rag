@@ -31,7 +31,7 @@ def _client_key(request: Request) -> str:
 def cache_key_for(req: SearchRequest) -> str:
     payload = {
         "query": " ".join(req.query.lower().split()),
-        "video_id": req.video_id or "",
+        "video_ids": ",".join(sorted(req.video_ids)) if req.video_ids else "",
         "top_k": req.top_k,
         "search_config": _search_config_fingerprint(),
     }

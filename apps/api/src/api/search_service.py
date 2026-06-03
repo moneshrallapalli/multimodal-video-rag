@@ -33,9 +33,9 @@ def search_videos(req: SearchRequest) -> SearchResponse:
         # legitimate weak-evidence refusal on the dashboard. The metric filter on
         # `search_pipeline_error` log lines counts these.
         logger.exception(
-            "search_pipeline_error query_len=%s video_id=%s",
+            "search_pipeline_error query_len=%s video_ids=%s",
             len(req.query),
-            req.video_id or "",
+            req.video_ids or [],
         )
         return SearchResponse(
             query=req.query,

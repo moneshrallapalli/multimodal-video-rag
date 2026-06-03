@@ -139,7 +139,7 @@ def test_visual_query_routes_to_visual_index_only_with_video_filter():
     )
 
     response = pipeline.run(
-        SearchRequest(query="Show me the speaker at a desk", video_id="QkdBXUikRQc")
+        SearchRequest(query="Show me the speaker at a desk", video_ids=["QkdBXUikRQc"])
     )
 
     assert response.refused is False
@@ -358,7 +358,7 @@ def test_hybrid_transcript_uses_bm25_resolver_for_video_filter():
     )
 
     pipeline.run(
-        SearchRequest(query="Where do they explain self sabotage?", video_id="QkdBXUikRQc")
+        SearchRequest(query="Where do they explain self sabotage?", video_ids=["QkdBXUikRQc"])
     )
 
     assert calls == ["QkdBXUikRQc"]
@@ -437,11 +437,31 @@ def test_cross_encoder_rerank_skips_visual_intent_when_enabled():
     assert response.results[0].modality == "visual"
 
 
-def test_query_rewrite_uses_rewritten_query_downstream_when_enabled():
+def test_cross_encoder_rerank_fires_on_mixed_modality_hybrid_intent():
+    from graph.models import GraphConfig
+
+    fake_reranker = FakeCrossEncoderReranker(scores=[0.2, 0.8])
+    pipeline = QueryPipeline(
+        embedder=FakeEmbedder(),
+        transcript_index=FakeIndex([_transcript_hit(score=0.5)]),
+        visual_index=FakeIndex([_visual_hit(score=0.5)]),
+        answer_generator=FakeAnswerer(),
+        config=GraphConfig(enable_cross_encoder_rerank=True),
+        cross_encoder_reranker=fake_reranker,
+    )
+
+    response = pipeline.run(SearchRequest(query="self sabotage", top_k=2))
+
+    assert response.intent == "hybrid"
+    assert len(fake_reranker.calls) == 1
+
+
+def test_hyde_uses_passage_for_embedding_but_original_query_for_answer():
     from graph.models import GraphConfig
 
     embedder = FakeEmbedder()
-    answerer = FakeAnswerer(rewrite="self sabotage fear of failure planning")
+    hyde_passage = "self sabotage fear of failure planning"
+    answerer = FakeAnswerer(rewrite=hyde_passage)
     pipeline = QueryPipeline(
         embedder=embedder,
         transcript_index=FakeIndex([_transcript_hit()]),
@@ -452,11 +472,10 @@ def test_query_rewrite_uses_rewritten_query_downstream_when_enabled():
 
     response = pipeline.run(SearchRequest(query="why does she get stuck?", top_k=2))
 
-    assert response.rewritten_query == "self sabotage fear of failure planning"
+    assert response.rewritten_query == hyde_passage
     assert answerer.rewrite_calls == ["why does she get stuck?"]
-    assert embedder.text_queries == ["self sabotage fear of failure planning"]
-    assert embedder.visual_queries == ["self sabotage fear of failure planning"]
-    assert answerer.calls[0]["query"] == "self sabotage fear of failure planning"
+    assert embedder.text_queries == [hyde_passage]
+    assert answerer.calls[0]["query"] == "why does she get stuck?"
 
 
 def test_query_rewrite_skips_visual_intent():
