@@ -20,15 +20,6 @@ from .mock_data import NO_ANSWER_MESSAGE, mock_search
 from .reranking import LambdaCrossEncoderReranker, LocalCrossEncoderReranker
 
 logger = logging.getLogger("video_rag.api.search")
-logger.setLevel(logging.INFO)
-
-# Module-level diagnostic: logs once on cold start to confirm settings loaded.
-logger.info(
-    "search_service_init pinecone_key_set=%s cross_encoder=%s secret_name=%r",
-    bool(settings.pinecone_api_key),
-    settings.enable_cross_encoder_rerank,
-    settings.secrets_manager_secret_name,
-)
 
 
 def search_videos(req: SearchRequest) -> SearchResponse:
