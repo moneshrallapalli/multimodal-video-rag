@@ -323,6 +323,30 @@ def test_hybrid_transcript_blends_dense_and_sparse_vectors_when_enabled():
     assert call["sparse_vector"]["values"]
 
 
+def test_hybrid_transcript_uses_bm25_resolver_for_video_filter():
+    from graph.models import GraphConfig
+    from shared.bm25 import BM25Encoder
+
+    calls: list[str | None] = []
+    encoder = BM25Encoder.fit(["sabotage is fear of starting", "comfort zone blocks growth"])
+    transcript = FakeIndex([_transcript_hit()])
+    pipeline = QueryPipeline(
+        embedder=FakeEmbedder(),
+        transcript_index=transcript,
+        visual_index=FakeIndex([]),
+        answer_generator=FakeAnswerer(),
+        config=GraphConfig(enable_hybrid_transcript=True),
+        transcript_bm25_resolver=lambda video_id: calls.append(video_id) or encoder,
+    )
+
+    pipeline.run(
+        SearchRequest(query="Where do they explain self sabotage?", video_id="QkdBXUikRQc")
+    )
+
+    assert calls == ["QkdBXUikRQc"]
+    assert transcript.calls[0]["sparse_vector"] is not None
+
+
 def test_hybrid_transcript_falls_back_to_dense_when_encoder_absent():
     """Toggling hybrid on without supplying a BM25 encoder must NOT blow up —
     we silently fall back to dense so the demo keeps working pre-deploy."""

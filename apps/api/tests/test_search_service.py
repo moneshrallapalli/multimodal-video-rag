@@ -61,3 +61,51 @@ def test_search_service_returns_safe_refusal_on_graph_error(monkeypatch, caplog)
     # Critical: the failure must emit `search_pipeline_error` so the CloudWatch
     # metric filter can distinguish API failures from legitimate refusals.
     assert any("search_pipeline_error" in record.message for record in caplog.records)
+
+
+def test_pipeline_uses_runtime_graph_feature_flags(monkeypatch):
+    captured = {}
+
+    class CapturingPipeline:
+        def __init__(self, **kwargs) -> None:
+            captured.update(kwargs)
+
+    monkeypatch.setattr(settings, "enable_hybrid_transcript", True)
+    monkeypatch.setattr(settings, "enable_cross_encoder_rerank", True)
+    monkeypatch.setattr(settings, "enable_query_rewrite", True)
+    monkeypatch.setattr(settings, "hybrid_alpha", 0.42)
+    monkeypatch.setattr(search_service, "QueryPipeline", CapturingPipeline)
+    search_service._pipeline.cache_clear()
+
+    try:
+        search_service._pipeline()
+    finally:
+        search_service._pipeline.cache_clear()
+
+    config = captured["config"]
+    assert config.enable_hybrid_transcript is True
+    assert config.enable_cross_encoder_rerank is True
+    assert config.enable_query_rewrite is True
+    assert config.hybrid_alpha == 0.42
+    assert captured["transcript_bm25_resolver"] is search_service._bm25_encoder
+
+
+def test_bm25_encoder_loads_from_s3_by_video_id(monkeypatch):
+    calls: list[tuple[str, str]] = []
+    fake_encoder = object()
+
+    def fake_load_from_s3(*, bucket: str, video_id: str):
+        calls.append((bucket, video_id))
+        return fake_encoder
+
+    monkeypatch.setattr(settings, "s3_bucket", "artifact-bucket")
+    monkeypatch.setattr(search_service.BM25Encoder, "load_from_s3", staticmethod(fake_load_from_s3))
+    search_service._bm25_encoder.cache_clear()
+
+    try:
+        assert search_service._bm25_encoder("video-a") is fake_encoder
+        assert search_service._bm25_encoder("video-a") is fake_encoder
+    finally:
+        search_service._bm25_encoder.cache_clear()
+
+    assert calls == [("artifact-bucket", "video-a")]

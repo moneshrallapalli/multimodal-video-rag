@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 from typing import Any
 
 from langgraph.graph import END, StateGraph
@@ -69,6 +70,7 @@ class QueryPipeline:
         answer_generator: AnswerGenerator | None = None,
         config: GraphConfig | None = None,
         transcript_bm25: BM25Encoder | None = None,
+        transcript_bm25_resolver: Callable[[str | None], BM25Encoder | None] | None = None,
         cross_encoder_reranker: CrossEncoderReranker | None = None,
     ) -> None:
         self.embedder = embedder or BedrockEmbedder()
@@ -88,6 +90,7 @@ class QueryPipeline:
         # is set, transcript queries blend dense + sparse via Pinecone hybrid.
         # Otherwise we fall back to dense-only — the same behavior as before.
         self.transcript_bm25 = transcript_bm25
+        self.transcript_bm25_resolver = transcript_bm25_resolver
         self.cross_encoder_reranker = cross_encoder_reranker
         self.graph = self._build_graph()
 
@@ -194,8 +197,9 @@ class QueryPipeline:
         # no BM25 encoder is configured (e.g. corpus not yet indexed).
         sparse_vector: dict[str, Any] | None = None
         query_vector = vector
-        if self.config.enable_hybrid_transcript and self.transcript_bm25 is not None:
-            sparse = self.transcript_bm25.encode_query(query)
+        bm25_encoder = self._transcript_bm25_for(state.get("video_id"))
+        if self.config.enable_hybrid_transcript and bm25_encoder is not None:
+            sparse = bm25_encoder.encode_query(query)
             if sparse["indices"]:
                 query_vector, sparse_vector = hybrid_blend(
                     vector, sparse, alpha=self.config.hybrid_alpha
@@ -345,6 +349,11 @@ class QueryPipeline:
                 for rank, candidate in enumerate(candidates, start=1)
             ],
         )
+
+    def _transcript_bm25_for(self, video_id: str | None) -> BM25Encoder | None:
+        if self.transcript_bm25_resolver is not None:
+            return self.transcript_bm25_resolver(video_id)
+        return self.transcript_bm25
 
 
 def _candidate(data: dict[str, Any]) -> RetrievalCandidate:

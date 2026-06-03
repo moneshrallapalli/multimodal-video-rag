@@ -56,6 +56,16 @@ def test_cache_key_normalizes_query_whitespace_and_case():
     assert cache_key_for(first) == cache_key_for(second)
 
 
+def test_cache_key_changes_with_search_config(monkeypatch):
+    req = SearchRequest(query="self sabotage", top_k=8)
+    monkeypatch.setattr(settings, "search_config_version", "dense-v1")
+    dense_key = cache_key_for(req)
+
+    monkeypatch.setattr(settings, "search_config_version", "hybrid-rerank-rewrite-v1")
+
+    assert cache_key_for(req) != dense_key
+
+
 def test_cache_round_trip(monkeypatch):
     monkeypatch.setattr(settings, "query_cache_ttl_seconds", 60)
     cache_table = FakeCacheTable()

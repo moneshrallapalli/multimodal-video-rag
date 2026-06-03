@@ -61,6 +61,13 @@ class Settings(BaseSettings):
     transcript_chunk_seconds: int = 30
     transcript_chunk_overlap_seconds: int = 6
 
+    # Query pipeline feature flags
+    enable_hybrid_transcript: bool = True
+    enable_cross_encoder_rerank: bool = True
+    enable_query_rewrite: bool = True
+    hybrid_alpha: float = 0.7
+    search_config_version: str = "hybrid-rerank-rewrite-v1"
+
     # Admin auth
     admin_password_hash: str = ""
     session_secret: str = ""

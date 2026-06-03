@@ -201,6 +201,14 @@ class CoreStack(Stack):
             "DYNAMODB_RATE_LIMIT_TABLE": rate_limits.table_name,
             "SECRETS_MANAGER_SECRET_NAME": runtime_secret_name,
             "CORS_ALLOW_ORIGINS": ",".join(cors_allow_origins),
+            "ENABLE_HYBRID_TRANSCRIPT": os.environ.get("ENABLE_HYBRID_TRANSCRIPT", "true"),
+            "ENABLE_CROSS_ENCODER_RERANK": os.environ.get("ENABLE_CROSS_ENCODER_RERANK", "true"),
+            "ENABLE_QUERY_REWRITE": os.environ.get("ENABLE_QUERY_REWRITE", "true"),
+            "HYBRID_ALPHA": os.environ.get("HYBRID_ALPHA", "0.7"),
+            "SEARCH_CONFIG_VERSION": os.environ.get(
+                "SEARCH_CONFIG_VERSION",
+                "hybrid-rerank-rewrite-v1",
+            ),
             "SESSION_COOKIE_SECURE": "true",
             # Production browser path is Vercel → Next rewrites → API Gateway, which
             # the browser sees as same-origin. `lax` is sufficient there and avoids
@@ -301,7 +309,7 @@ class CoreStack(Stack):
             ),
             role=api_role,
             timeout=Duration.seconds(60),
-            memory_size=1024,
+            memory_size=2048,
             architecture=lambda_.Architecture.ARM_64,
             environment=api_environment,
             log_group=api_logs,

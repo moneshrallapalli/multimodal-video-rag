@@ -11,7 +11,9 @@ import logging
 from functools import lru_cache
 
 from graph import QueryPipeline
+from graph.models import GraphConfig
 from shared import settings
+from shared.bm25 import BM25Encoder
 from shared.schemas import SearchRequest, SearchResponse
 
 from .mock_data import NO_ANSWER_MESSAGE, mock_search
@@ -55,4 +57,26 @@ def real_search_enabled() -> bool:
 
 @lru_cache
 def _pipeline() -> QueryPipeline:
-    return QueryPipeline()
+    return QueryPipeline(config=_graph_config(), transcript_bm25_resolver=_bm25_encoder)
+
+
+def _graph_config() -> GraphConfig:
+    return GraphConfig(
+        enable_hybrid_transcript=settings.enable_hybrid_transcript,
+        enable_cross_encoder_rerank=settings.enable_cross_encoder_rerank,
+        enable_query_rewrite=settings.enable_query_rewrite,
+        hybrid_alpha=settings.hybrid_alpha,
+    )
+
+
+@lru_cache(maxsize=128)
+def _bm25_encoder(video_id: str | None) -> BM25Encoder | None:
+    if not video_id:
+        return None
+    if not settings.s3_bucket:
+        logger.warning("bm25_disabled_no_s3_bucket video_id=%s", video_id)
+        return None
+    encoder = BM25Encoder.load_from_s3(bucket=settings.s3_bucket, video_id=video_id)
+    if encoder is None:
+        logger.warning("bm25_stats_missing video_id=%s", video_id)
+    return encoder

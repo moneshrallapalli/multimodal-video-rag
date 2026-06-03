@@ -33,9 +33,20 @@ def cache_key_for(req: SearchRequest) -> str:
         "query": " ".join(req.query.lower().split()),
         "video_id": req.video_id or "",
         "top_k": req.top_k,
+        "search_config": _search_config_fingerprint(),
     }
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
+
+
+def _search_config_fingerprint() -> dict[str, Any]:
+    return {
+        "version": settings.search_config_version,
+        "hybrid": settings.enable_hybrid_transcript,
+        "rerank": settings.enable_cross_encoder_rerank,
+        "rewrite": settings.enable_query_rewrite,
+        "hybrid_alpha": settings.hybrid_alpha,
+    }
 
 
 @dataclass
