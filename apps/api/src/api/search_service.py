@@ -17,7 +17,7 @@ from shared.bm25 import BM25Encoder
 from shared.schemas import SearchRequest, SearchResponse
 
 from .mock_data import NO_ANSWER_MESSAGE, mock_search
-from .reranking import LambdaCrossEncoderReranker
+from .reranking import LambdaCrossEncoderReranker, LocalCrossEncoderReranker
 
 logger = logging.getLogger("video_rag.api.search")
 
@@ -66,13 +66,9 @@ def _pipeline() -> QueryPipeline:
 
 
 def _graph_config() -> GraphConfig:
-    enable_cross_encoder_rerank = settings.enable_cross_encoder_rerank
-    if enable_cross_encoder_rerank and not settings.cross_encoder_reranker_function_name:
-        logger.warning("cross_encoder_rerank_disabled_no_remote")
-        enable_cross_encoder_rerank = False
     return GraphConfig(
         enable_hybrid_transcript=settings.enable_hybrid_transcript,
-        enable_cross_encoder_rerank=enable_cross_encoder_rerank,
+        enable_cross_encoder_rerank=settings.enable_cross_encoder_rerank,
         enable_query_rewrite=settings.enable_query_rewrite,
         hybrid_alpha=settings.hybrid_alpha,
     )
@@ -95,9 +91,12 @@ def _bm25_encoder(video_id: str | None) -> BM25Encoder | None:
 
 
 @lru_cache
-def _cross_encoder_reranker() -> LambdaCrossEncoderReranker | None:
-    if not settings.cross_encoder_reranker_function_name:
+def _cross_encoder_reranker() -> LambdaCrossEncoderReranker | LocalCrossEncoderReranker | None:
+    if not settings.enable_cross_encoder_rerank:
         return None
-    return LambdaCrossEncoderReranker(
-        function_name=settings.cross_encoder_reranker_function_name,
-    )
+    if settings.cross_encoder_reranker_function_name:
+        return LambdaCrossEncoderReranker(
+            function_name=settings.cross_encoder_reranker_function_name,
+        )
+    # No remote Lambda configured — load the model baked into this container image.
+    return LocalCrossEncoderReranker()

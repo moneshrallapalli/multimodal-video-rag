@@ -94,30 +94,32 @@ def test_pipeline_uses_runtime_graph_feature_flags(monkeypatch):
     assert captured["cross_encoder_reranker"] is fake_reranker
 
 
-def test_pipeline_disables_rerank_when_remote_function_missing(monkeypatch, caplog):
+def test_pipeline_uses_local_reranker_when_no_function_name(monkeypatch):
+    """When cross-encoder reranking is enabled but no remote Lambda function name
+    is configured, the pipeline should use a LocalCrossEncoderReranker (model
+    baked into the container image) rather than disabling reranking entirely."""
+    from api.reranking import LocalCrossEncoderReranker
+
     captured = {}
 
     class CapturingPipeline:
         def __init__(self, **kwargs) -> None:
             captured.update(kwargs)
 
-    import logging
-
     monkeypatch.setattr(settings, "enable_cross_encoder_rerank", True)
     monkeypatch.setattr(settings, "cross_encoder_reranker_function_name", "")
     monkeypatch.setattr(search_service, "QueryPipeline", CapturingPipeline)
     search_service._pipeline.cache_clear()
+    search_service._cross_encoder_reranker.cache_clear()
 
     try:
-        with caplog.at_level(logging.WARNING, logger="video_rag.api.search"):
-            search_service._pipeline()
+        search_service._pipeline()
     finally:
         search_service._pipeline.cache_clear()
+        search_service._cross_encoder_reranker.cache_clear()
 
-    assert captured["config"].enable_cross_encoder_rerank is False
-    assert any(
-        "cross_encoder_rerank_disabled_no_remote" in record.message for record in caplog.records
-    )
+    assert captured["config"].enable_cross_encoder_rerank is True
+    assert isinstance(captured["cross_encoder_reranker"], LocalCrossEncoderReranker)
 
 
 def test_bm25_encoder_loads_from_s3_by_video_id(monkeypatch):

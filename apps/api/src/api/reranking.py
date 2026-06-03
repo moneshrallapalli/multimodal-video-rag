@@ -3,10 +3,31 @@
 from __future__ import annotations
 
 import json
+import logging
 from collections.abc import Sequence
 from typing import Any
 
 import boto3
+
+logger = logging.getLogger("video_rag.api.reranking")
+
+_DEFAULT_MODEL_ID = "BAAI/bge-reranker-base"
+
+
+class LocalCrossEncoderReranker:
+    """Load the cross-encoder model that is baked into this Lambda image and
+    run inference in-process. No network call; model loads once per container
+    from /var/task/.cache/sentence-transformers."""
+
+    def __init__(self, model_id: str = _DEFAULT_MODEL_ID) -> None:
+        from sentence_transformers import CrossEncoder
+
+        logger.info("cross_encoder_local_load model=%s", model_id)
+        self._model = CrossEncoder(model_id)
+        logger.info("cross_encoder_local_ready model=%s", model_id)
+
+    def predict(self, sentences: Sequence[tuple[str, str]]) -> Sequence[float]:
+        return [float(s) for s in self._model.predict(list(sentences))]
 
 
 class LambdaCrossEncoderReranker:
