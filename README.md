@@ -1,54 +1,29 @@
 # Multimodal Video RAG
 
-Ask questions about a video and get timestamped answers grounded in what was actually said and shown. Searches over both visual frames and spoken transcript, refuses to answer when the evidence is weak, and cites the exact moment.
+VideoRAG is a deployed search app for long-form video. Ask a question, and it returns the transcript chunks or visual frames that support the answer, with timestamps back to the source moment.
 
-Built end-to-end on AWS. Ingestion is async (SQS + Fargate), retrieval is a LangGraph pipeline with hybrid dense/sparse search and cross-encoder reranking, answers come from Bedrock Claude Haiku with grounded citations. 87 tests, 6 ablation configs, deployed to production.
+The frontend runs on Vercel, and the backend is AWS-native: FastAPI in a Lambda container, SQS/Fargate ingestion, S3 artifacts, Pinecone indexes, LangGraph retrieval, and Bedrock Claude Haiku for answer generation and query rewrite. If retrieval is weak, the app refuses instead of guessing.
 
 ## How it works
 
 1. Admin submits a YouTube URL through the web console.
-2. A Fargate worker pulls the video, extracts keyframes every 30s, transcribes the audio, then embeds both modalities (Titan Text v2 for transcript chunks, Titan Multimodal G1 for frames) into separate Pinecone indexes.
-3. When a user asks a question, a LangGraph pipeline classifies intent, retrieves from the relevant index(es), fuses results with Reciprocal Rank Fusion, reranks, gates on evidence strength, and generates a grounded answer via Bedrock.
+2. A Fargate worker downloads the video, extracts keyframes every 30 seconds, transcribes the audio with faster-whisper, and embeds both modalities into separate Pinecone indexes.
+3. When a user asks a question, a LangGraph pipeline classifies intent, retrieves from one or both indexes, fuses results with Reciprocal Rank Fusion, reranks, gates on evidence strength, and generates a grounded answer via Bedrock.
 4. The response includes the answer, confidence score, and clickable timestamped citations.
 
-The system knows the difference between "what did she say about planning?" (transcript) and "show me the whiteboard" (visual). It also knows when to say "I don't have evidence for that."
+Transcript questions and visual questions follow different retrieval paths. For example, "what did she say about planning?" leans on transcript chunks, while "show me the whiteboard" leans on frame search.
 
 ## Architecture
 
 ![VideoRAG architecture](docs/assets/video-rag-architecture.png)
 
-```
-Browser (Next.js on Vercel)
-    |
-    | same-origin proxy
-    v
-FastAPI (Lambda container, ARM64)
-    |
-    |--- /api/search ---> LangGraph pipeline
-    |                         |
-    |                         |--> Pinecone transcript index (dotproduct, 1024-dim)
-    |                         |--> Pinecone visual index (cosine, 1024-dim)
-    |                         |--> BM25 sparse vectors (hybrid blend)
-    |                         |--> bge-reranker-base (cross-encoder)
-    |                         |--> Bedrock Claude Haiku 4.5 (answer generation)
-    |                         |--> LangSmith (tracing)
-    |
-    |--- /api/admin ---> DynamoDB + SQS
-                              |
-                              v
-                     Fargate worker (ingestion)
-                         |--> ffmpeg (frames)
-                         |--> Whisper via Bedrock (transcription)
-                         |--> Titan embeddings (dense + sparse)
-                         |--> S3 (artifacts)
-                         |--> Pinecone (vectors)
-```
+The web app calls the API through same-origin rewrites. Search requests run through FastAPI and a 9-node LangGraph pipeline. Ingestion runs asynchronously through DynamoDB, SQS, EventBridge, and Fargate. Transcript vectors and visual vectors stay in separate Pinecone indexes because they use different models and scoring behavior. S3 keeps the derived artifacts, LangSmith traces the query pipeline, and CloudWatch tracks operational health.
 
-Infrastructure is all CDK (Python). VPC with gateway endpoints, least-privilege IAM scoped to specific model ARNs, Secrets Manager for runtime config, CloudWatch dashboard with alarms.
+Infrastructure is CDK in Python, with least-privilege IAM, Secrets Manager runtime config, VPC endpoints where they matter, and alarms for the paths that should wake someone up.
 
 ## Eval results
 
-Real evaluation over indexed content. 15 hand-labeled queries across transcript, visual, timestamp, hybrid, and no-answer types. Honest numbers from a deterministic harness (no cherry-picking, no LLM judge yet).
+This is a seed evaluation over one indexed video and 15 hand-labeled queries across transcript, visual, timestamp, hybrid, and no-answer cases. It is useful for regression checks and ablation sanity, not a final benchmark.
 
 | Config | Recall@5 | MRR | Timestamp@5s | No-answer F1 |
 |---|---:|---:|---:|---:|
@@ -57,7 +32,7 @@ Real evaluation over indexed content. 15 hand-labeled queries across transcript,
 | **Hybrid + cross-encoder rerank** | **1.00** | **0.96** | **0.92** | **0.80** |
 | Hybrid + query rewrite | 1.00 | 0.90 | 0.83 | 0.50 |
 
-The cross-encoder rerank config is the winner. MRR jumped from 0.90 to 0.96 and timestamp accuracy went from 83% to 92%. Query rewrite actually hurt no-answer F1 on this seed (it rewrites away from the original phrasing, making the refusal gate less precise). I kept it in the ablation table because that's a real finding, not a reason to hide it.
+Cross-encoder reranking is the strongest config on the seed set: MRR moves from 0.90 to 0.96, and timestamp accuracy moves from 83% to 92%. Query rewrite is kept as a negative result because it hurt no-answer F1 on these 15 queries.
 
 ## Interesting engineering decisions
 
@@ -71,17 +46,12 @@ The cross-encoder rerank config is the winner. MRR jumped from 0.90 to 0.96 and 
 
 **Cross-encoder baked into the Docker image.** `sentence-transformers` + `BAAI/bge-reranker-base` is ~500MB. It's pre-downloaded into the Lambda container image at build time so cold starts don't hit Hugging Face.
 
-## Project layout
+## Current limits
 
-```
-apps/web/          Next.js frontend (search UI, admin console, eval dashboard)
-apps/api/          FastAPI backend (Lambda container)
-workers/ingest/    Fargate ingestion worker
-packages/graph/    LangGraph query pipeline
-packages/shared/   Config, models, Pinecone/Bedrock/S3 clients, BM25 encoder
-eval/              Golden dataset + deterministic evaluation harness
-infra/             AWS CDK (VPC, Lambda, Fargate, SQS, DynamoDB, IAM, CloudWatch)
-```
+- The deployed demo library is still small.
+- The committed eval is still a real seed run: 1 video, 15 queries.
+- No RAGAS or LLM-judge scores are reported yet.
+- Admin ingestion is password-gated, not a multi-user product flow.
 
 ## Run locally
 
@@ -95,7 +65,13 @@ pnpm install
 pnpm --filter web dev                       # Frontend at localhost:3000
 ```
 
-The frontend proxies `/api/*` to the backend via Next.js rewrites, so everything works same-origin with no CORS setup.
+For local admin login, generate `ADMIN_PASSWORD_HASH` and `SESSION_SECRET` with:
+
+```bash
+uv run --with argon2-cffi python scripts/init_secrets.py
+```
+
+The frontend proxies `/api/*` to the backend via Next.js rewrites, so the browser talks to one origin in local and production.
 
 ```bash
 uv run pytest -q                            # 87 tests
@@ -107,6 +83,7 @@ pnpm --filter web lint && pnpm --filter web build
 
 - **LLM:** AWS Bedrock, Claude Haiku 4.5 (answer generation + query rewrite)
 - **Embeddings:** Titan Text Embedding v2 (transcript), Titan Multimodal G1 (visual frames)
+- **Transcription:** faster-whisper in the ingestion worker
 - **Reranking:** bge-reranker-base (cross-encoder, CPU inference in Lambda)
 - **Vector DB:** Pinecone serverless (2 indexes: transcript dotproduct, visual cosine)
 - **Orchestration:** LangGraph (stateful query pipeline with 9 nodes)
