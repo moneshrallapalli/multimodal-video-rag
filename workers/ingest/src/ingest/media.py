@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -13,6 +14,8 @@ from shared.schemas import (
     TranscriptSegment,
     VideoMetadataArtifact,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -178,5 +181,6 @@ def _run(args: list[str], *, capture_stdout: bool = False) -> subprocess.Complet
     )
     if proc.returncode != 0:
         tail = (proc.stderr or "")[-_STDERR_TAIL_BYTES:]
-        raise subprocess.CalledProcessError(proc.returncode, args, output=proc.stdout, stderr=tail)
+        logger.error("subprocess_failed cmd=%s rc=%d stderr=%s", args[0], proc.returncode, tail)
+        raise RuntimeError(f"{args[0]} exited {proc.returncode}: {tail}")
     return proc
