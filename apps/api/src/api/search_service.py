@@ -100,3 +100,15 @@ def _cross_encoder_reranker() -> LambdaCrossEncoderReranker | LocalCrossEncoderR
         )
     # No remote Lambda configured — load the model baked into this container image.
     return LocalCrossEncoderReranker()
+
+
+# Pre-warm the local cross-encoder during Lambda container initialization, not
+# on the first request.  Model loading (~500 MB from the baked-in image cache)
+# takes 20-40 s; doing it here puts that work in the cold-start init phase
+# (outside the function timeout window) so the first real query isn't slow.
+# The @lru_cache means every subsequent call returns the already-loaded object.
+if (
+    settings.enable_cross_encoder_rerank
+    and not settings.cross_encoder_reranker_function_name
+):
+    _cross_encoder_reranker()

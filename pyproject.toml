@@ -15,6 +15,7 @@ members = ["packages/*", "apps/api", "workers/ingest"]
 
 [tool.pytest.ini_options]
 testpaths = ["apps/api/tests", "eval/tests", "packages/graph/tests", "workers/ingest/tests"]
+norecursedirs = ["cdk.out", ".venv", "node_modules", "__pycache__", ".git"]
 
 [tool.ruff]
 line-length = 100
