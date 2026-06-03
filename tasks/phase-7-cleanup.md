@@ -350,12 +350,16 @@ Add entries for:
 - ✅ Done: T1–T20  (20 / 20) — 100% complete
 - ✅ Deployed: `cd infra && cdk deploy --require-approval never` completed successfully
 - ✅ Live smoke: Vercel proxy `/health`, `/api/admin/session`, and hybrid `/api/search` returned 200
+- ✅ Production runtime: hybrid transcript retrieval and query rewrite are enabled by default;
+  cross-encoder rerank remains opt-in after live smoke showed the request Lambda can hit the
+  60s timeout on the rerank-on cold path.
 
 Last task commit pushed: `59a4120` (T20)
 Last 20/20 status snapshot pushed: `50600ed`
+Last production runtime overlay pushed: `637fd4a`
 
 **Quick stats (Phase 7 so far):**
-- **87 tests passing** (was 51 before this phase) — +36 new tests
+- **94 tests passing** (was 51 before this phase) — +43 new tests
 - Python lint+format clean repo-wide
 - Web lint+typecheck+build clean
 - All P0 (security), P1 (correctness), and P2 (ops/hardening) items shipped
@@ -363,8 +367,9 @@ Last 20/20 status snapshot pushed: `50600ed`
 
 **Phase 7 cleanup is complete.** T17's API Docker image build passed with
 `sentence-transformers` and the `BAAI/bge-reranker-base` model baked into the
-image; T18's rewrite node is off by default behind `enable_query_rewrite`.
-T19's real-seed eval now reports six configs (`dense`, gate sweeps, `hybrid`,
-`hybrid_rerank`, `hybrid_rewrite`) over the same 1 video / 15 queries. T20's
-audit lessons are captured in `tasks/lessons.md`. CDK deploy completed and prod
-smoke passed through the Vercel proxy.
+image; the rerank stage is implemented but not production-default until it has a
+warmed or separate serving path. T18's rewrite node is live in production through
+the runtime setting. T19's real-seed eval now reports six configs (`dense`, gate
+sweeps, `hybrid`, `hybrid_rerank`, `hybrid_rewrite`) over the same 1 video / 15
+queries. T20's audit lessons are captured in `tasks/lessons.md`. CDK deploy
+completed and prod smoke passed through the Vercel proxy.

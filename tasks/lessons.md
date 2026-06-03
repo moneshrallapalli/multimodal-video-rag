@@ -40,6 +40,9 @@ Engineering gotchas hit while building this repo, with the rule to avoid repeati
   through same-origin Vercel rewrites, use `lax`; only use `none` for real cross-site browser calls.
 - **SQS delivery is at-least-once.** Rule: every worker handler starts with an idempotency
   short-circuit before doing downloads, embeds, writes, or other expensive side effects.
+- **A model fitting in a Lambda image is not the same as being request-safe.** Rule: keep CPU
+  cross-encoders opt-in until cold-start and p95 search latency are proven live, or serve them from
+  a warmed, async, or separate compute path.
 
 ## Framework
 
