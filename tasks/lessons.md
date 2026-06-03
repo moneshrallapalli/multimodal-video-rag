@@ -22,6 +22,8 @@ Engineering gotchas hit while building this repo, with the rule to avoid repeati
 - **Query cache can preserve stale proof ordering after retrieval changes.** Rule: after changing
   ranking logic, smoke a cache-busted query and clear only the targeted stale `query_cache` item for
   any user-reported exact prompt before declaring the live UX fixed.
+- **CI runs `ruff format --check`, not just `ruff check`.** Rule: after editing Python files, run
+  both commands locally before pushing, especially after CDK/deploy config changes.
 
 ## Framework
 
