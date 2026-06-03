@@ -14,13 +14,7 @@ class FakeBedrockRuntime:
 
     def converse(self, **kwargs):
         self.calls.append(kwargs)
-        return {
-            "output": {
-                "message": {
-                    "content": [{"text": self.text}]
-                }
-            }
-        }
+        return {"output": {"message": {"content": [{"text": self.text}]}}}
 
 
 def test_caption_returns_generated_text(tmp_path: Path):
@@ -50,13 +44,7 @@ def test_caption_frames_handles_errors_gracefully(tmp_path: Path):
             self.count += 1
             if self.count == 2:
                 raise RuntimeError("throttled")
-            return {
-                "output": {
-                    "message": {
-                        "content": [{"text": "Good caption."}]
-                    }
-                }
-            }
+            return {"output": {"message": {"content": [{"text": "Good caption."}]}}}
 
     captioner = FrameCaptioner(client=FailOnSecond(), model_id="test-model")
     results = captioner.caption_frames([good, bad])

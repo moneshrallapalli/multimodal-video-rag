@@ -251,9 +251,7 @@ class QueryPipeline:
         modalities = {c.modality for c in reranked}
         has_mixed = len(modalities) > 1
         intent_eligible = state.get("intent") in {"transcript", "summary"}
-        if self.config.enable_cross_encoder_rerank and (
-            intent_eligible or has_mixed
-        ):
+        if self.config.enable_cross_encoder_rerank and (intent_eligible or has_mixed):
             reranked = cross_encoder_rerank(
                 reranked,
                 query=query,

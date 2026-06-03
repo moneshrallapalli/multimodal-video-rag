@@ -94,9 +94,7 @@ class IngestionWorker:
 
                 captions: list[str] | None = None
                 if self.captioner and frames:
-                    captions = self.captioner.caption_frames(
-                        [f.path for f in frames]
-                    )
+                    captions = self.captioner.caption_frames([f.path for f in frames])
                     self._upload_json(
                         f"videos/{message.video_id}/frames/captions.json",
                         json.dumps(captions, indent=2),

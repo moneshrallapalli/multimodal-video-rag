@@ -80,9 +80,7 @@ class VideoIndexer:
             metadata=metadata, frames=frames, frame_keys=frame_keys
         )
 
-        transcript_count = self.transcript_index.upsert(
-            transcript_records + caption_records
-        )
+        transcript_count = self.transcript_index.upsert(transcript_records + caption_records)
         visual_count = self.visual_index.upsert(visual_records)
         return IndexingSummary(
             video_id=metadata.video_id,
@@ -139,24 +137,24 @@ class VideoIndexer:
         captions: list[str],
     ) -> list[VectorRecord]:
         records: list[VectorRecord] = []
-        for index, (frame, caption) in enumerate(
-            zip(frames, captions, strict=True), start=1
-        ):
+        for index, (frame, caption) in enumerate(zip(frames, captions, strict=True), start=1):
             vec_id = f"{metadata.video_id}:caption:{index:06d}"
             vector = self.embedder.embed_text(caption)
             records.append(
                 VectorRecord(
                     id=vec_id,
                     values=vector,
-                    metadata=_compact_metadata({
-                        "video_id": metadata.video_id,
-                        "chunk_id": vec_id,
-                        "start_seconds": frame.timestamp_seconds,
-                        "end_seconds": frame.timestamp_seconds,
-                        "title": metadata.title,
-                        "text": caption,
-                        "modality": "visual_caption",
-                    }),
+                    metadata=_compact_metadata(
+                        {
+                            "video_id": metadata.video_id,
+                            "chunk_id": vec_id,
+                            "start_seconds": frame.timestamp_seconds,
+                            "end_seconds": frame.timestamp_seconds,
+                            "title": metadata.title,
+                            "text": caption,
+                            "modality": "visual_caption",
+                        }
+                    ),
                 )
             )
         return records
