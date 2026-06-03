@@ -10,7 +10,7 @@ from shared.schemas import IngestJobMessage
 
 from .captioning import FrameCaptioner
 from .indexing import VideoIndexer
-from .media import MediaProcessor
+from .media import MediaProcessor, fetch_cookies_from_s3
 from .pipeline import IngestionWorker
 
 logger = logging.getLogger(__name__)
@@ -78,6 +78,8 @@ def build_poller() -> SqsWorkerPoller:
 
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    if settings.s3_bucket:
+        fetch_cookies_from_s3(bucket=settings.s3_bucket, region=settings.aws_region)
     poller = build_poller()
     processed = 0
     logger.info("worker_start queue_url=%s", poller.queue_url)

@@ -17,11 +17,33 @@ from shared.schemas import (
 
 logger = logging.getLogger(__name__)
 
+_COOKIES_PATH = Path("/tmp/yt-cookies.txt")
+
 
 @dataclass(frozen=True)
 class FrameFile:
     path: Path
     timestamp_seconds: float
+
+
+def _ytdlp_base_args() -> list[str]:
+    args = ["yt-dlp", "--remote-components", "ejs:github"]
+    if _COOKIES_PATH.exists():
+        args.extend(["--cookies", str(_COOKIES_PATH)])
+    return args
+
+
+def fetch_cookies_from_s3(*, bucket: str, region: str) -> None:
+    """Download YouTube cookies from S3 if available."""
+    import boto3
+
+    key = "config/youtube-cookies.txt"
+    try:
+        s3 = boto3.client("s3", region_name=region)
+        s3.download_file(bucket, key, str(_COOKIES_PATH))
+        logger.info("youtube_cookies_loaded bucket=%s key=%s", bucket, key)
+    except Exception:
+        logger.info("youtube_cookies_not_found bucket=%s key=%s", bucket, key)
 
 
 class MediaProcessor:
@@ -39,11 +61,9 @@ class MediaProcessor:
         self.whisper_model_size = whisper_model_size
 
     def fetch_metadata(self, youtube_url: str) -> VideoMetadataArtifact:
-        # This command's stdout is a JSON blob we need; everywhere else we
-        # discard stdout to avoid buffering hundreds of MB of ffmpeg progress.
         result = _run(
             [
-                "yt-dlp",
+                *_ytdlp_base_args(),
                 "--dump-single-json",
                 "--skip-download",
                 "--no-playlist",
@@ -66,7 +86,7 @@ class MediaProcessor:
         output_template = str(work_dir / "source.%(ext)s")
         _run(
             [
-                "yt-dlp",
+                *_ytdlp_base_args(),
                 "--no-playlist",
                 "-f",
                 "bv*[height<=480][ext=mp4]+ba[ext=m4a]/b[height<=480][ext=mp4]/best[height<=480]",
@@ -117,10 +137,6 @@ class MediaProcessor:
                 output_template,
             ]
         )
-        # `ffmpeg -vf fps=1/N` picks the frame from inside the [0,N) window — closer
-        # to the window midpoint than to its leading edge. Labeling frame 1 as t=0
-        # is systematically ~N/2 seconds early. Centering on the midpoint makes
-        # Timestamp@5s/@10s metrics accurate without per-frame ffprobe.
         half_interval = self.frame_interval_seconds / 2.0
         return [
             FrameFile(
@@ -165,13 +181,7 @@ _STDERR_TAIL_BYTES = 4096
 
 
 def _run(args: list[str], *, capture_stdout: bool = False) -> subprocess.CompletedProcess[str]:
-    """Run a subprocess without buffering its stdout in memory by default.
-
-    ffmpeg progress output on a long video can be hundreds of MB; keeping it in
-    RAM risks OOM on the Fargate worker. Callers that actually need stdout (e.g.
-    `yt-dlp --dump-single-json`) opt in with `capture_stdout=True`. Stderr is
-    always captured but truncated to the last 4 KB before being re-raised.
-    """
+    """Run a subprocess without buffering its stdout in memory by default."""
     proc = subprocess.run(
         args,
         check=False,
