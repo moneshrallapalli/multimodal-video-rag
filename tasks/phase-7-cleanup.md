@@ -348,10 +348,11 @@ Add entries for:
 ## Status snapshot (updated as items complete)
 
 - ✅ Done: T1–T20  (20 / 20) — 100% complete
-- 🚧 In progress: deploy and live smoke
-- ⏳ Remaining: deploy CDK, then smoke `/health`, `/api/search`, and `/api/admin/session`
+- ✅ Deployed: `cd infra && cdk deploy --require-approval never` completed successfully
+- ✅ Live smoke: Vercel proxy `/health`, `/api/admin/session`, and hybrid `/api/search` returned 200
 
-Last commit pushed: `59a4120` (T20)
+Last task commit pushed: `59a4120` (T20)
+Last 20/20 status snapshot pushed: `50600ed`
 
 **Quick stats (Phase 7 so far):**
 - **87 tests passing** (was 51 before this phase) — +36 new tests
@@ -360,9 +361,10 @@ Last commit pushed: `59a4120` (T20)
 - All P0 (security), P1 (correctness), and P2 (ops/hardening) items shipped
 - T16 (BM25 hybrid retrieval) shipped end-to-end across 4 commits
 
-**Remaining work:** deploy and live smoke. T17's API Docker image build passed with
+**Phase 7 cleanup is complete.** T17's API Docker image build passed with
 `sentence-transformers` and the `BAAI/bge-reranker-base` model baked into the
 image; T18's rewrite node is off by default behind `enable_query_rewrite`.
 T19's real-seed eval now reports six configs (`dense`, gate sweeps, `hybrid`,
 `hybrid_rerank`, `hybrid_rewrite`) over the same 1 video / 15 queries. T20's
-audit lessons are captured in `tasks/lessons.md`.
+audit lessons are captured in `tasks/lessons.md`. CDK deploy completed and prod
+smoke passed through the Vercel proxy.
