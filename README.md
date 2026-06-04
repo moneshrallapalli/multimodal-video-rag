@@ -25,21 +25,20 @@ Infrastructure is CDK in Python, with least-privilege IAM, Secrets Manager runti
 
 ## Eval results
 
-Real evaluation over 3 indexed videos, 60 hand-labeled queries (transcript, visual, timestamp, hybrid, summary, no-answer). Deterministic retrieval metrics plus Haiku LLM judge on answerable queries.
+Real evaluation over 13 indexed videos, 145 hand-labeled queries (transcript, visual, timestamp, hybrid, summary, no-answer). Deterministic retrieval metrics plus Haiku LLM judge on answerable queries.
 
 | Config | MRR | Timestamp@5s | No-answer F1 |
 |---|---:|---:|---:|
-| Dense baseline | 0.929 | 0.889 | 0.500 |
-| Hybrid BM25 | 0.920 | 0.870 | 0.286 |
-| Hybrid + rerank | 0.934 | 0.889 | 0.286 |
-| Hybrid + rewrite | 0.920 | 0.870 | 0.286 |
-| **Production (hybrid + rewrite)** | **0.920** | **0.870** | **0.286** |
+| Dense only | 0.880 | 0.822 | 0.400 |
+| Dense + strict gate | 0.816 | 0.767 | 0.632 |
+| Hybrid BM25 | 0.864 | 0.783 | 0.222 |
+| Hybrid + rerank | 0.888 | 0.806 | 0.222 |
+| Hybrid + rewrite | 0.864 | 0.783 | 0.222 |
+| **Production (hybrid + rewrite + answer gen)** | **0.855** | **0.791** | **0.842** |
 
-LLM judge on 54 answerable queries: quality 0.753, grounded 0.815, correct 0.704, useful 0.741.
+LLM judge on 123 answerable queries: quality 0.854, grounded 0.959, correct 0.805, useful 0.943.
 
-Recall@5 and modality accuracy are near-ceiling on 3 videos (retrieving top-10 from ~130 vectors). MRR and Timestamp@5s are what actually discriminate between configs. The cross-encoder config is eval-only — API Gateway's 30s hard timeout makes cold-start model loading impractical without provisioned concurrency.
-
-No-answer F1 is the main weakness: 5 in-domain content-absent queries score above the 0.2 gate because the video has adjacent content. Fixing this requires semantic "is this topic present?" reasoning beyond a score threshold.
+MRR and Timestamp@5s are the metrics that discriminate between retrieval configs — Recall@5 is near-ceiling. The production config enables answer generation, which lets the LLM refuse when evidence is weak; this drives No-answer F1 from 0.222 (retrieval-only) to 0.842. The cross-encoder rerank config is eval-only — API Gateway's 30s hard timeout makes cold-start model loading impractical without provisioned concurrency.
 
 ## Interesting engineering decisions
 
@@ -55,8 +54,8 @@ No-answer F1 is the main weakness: 5 in-domain content-absent queries score abov
 
 ## Current limits
 
-- No-answer F1 is weak on in-domain content-absent queries (5 misses out of 6 total). Requires semantic topic-detection, not just a score threshold.
 - Cross-encoder reranking is eval-only due to API Gateway timeout constraints.
+- MRR drops ~3 points from dense-only to production because answer generation trades retrieval precision for refusal accuracy (No-answer F1 0.400 → 0.842).
 - Admin ingestion is password-gated, not a multi-user product flow.
 
 ## Run locally
@@ -80,7 +79,7 @@ uv run --with argon2-cffi python scripts/init_secrets.py
 The frontend proxies `/api/*` to the backend via Next.js rewrites, so the browser talks to one origin in local and production.
 
 ```bash
-uv run pytest -q                            # 87 tests
+uv run pytest -q                            # 117 tests
 uvx ruff check . && uvx ruff format --check .
 pnpm --filter web lint && pnpm --filter web build
 ```
@@ -96,7 +95,7 @@ pnpm --filter web lint && pnpm --filter web build
 - **Backend:** FastAPI, Pydantic, deployed as ARM64 Lambda container
 - **Frontend:** Next.js, TypeScript, Tailwind, shadcn/ui
 - **Infra:** CDK (Python), S3, SQS, ECS Fargate, DynamoDB, API Gateway, CloudWatch
-- **Eval:** Custom deterministic harness (Recall@K, MRR, Timestamp@Ns, modality accuracy, no-answer F1)
+- **Eval:** Custom deterministic harness (Recall@K, MRR, Timestamp@Ns, modality accuracy, no-answer F1) + Haiku LLM judge
 - **Observability:** LangSmith tracing, CloudWatch dashboard + alarms, structured logging
 
 ## Live
