@@ -85,12 +85,34 @@ def _dynamo_catalog() -> DynamoVideoCatalog:
 def _merge_with_seed_catalog(dynamic: list[DemoVideo]) -> list[DemoVideo]:
     merged: list[DemoVideo] = []
     seen: set[str] = set()
-    for video in [*dynamic, *DEMO_VIDEOS]:
+    seed_by_id = {video.id: video for video in DEMO_VIDEOS}
+    for video in dynamic:
         if video.id in seen:
             continue
-        merged.append(video)
+        seed = seed_by_id.get(video.id)
+        merged.append(_merge_video(video, seed) if seed else video)
         seen.add(video.id)
+    for video in DEMO_VIDEOS:
+        if video.id not in seen:
+            merged.append(video)
+            seen.add(video.id)
     return merged
+
+
+def _merge_video(dynamic: DemoVideo, seed: DemoVideo | None) -> DemoVideo:
+    if seed is None:
+        return dynamic
+    return DemoVideo(
+        id=dynamic.id,
+        title=dynamic.title or seed.title,
+        author=dynamic.author or seed.author,
+        domain=dynamic.domain or seed.domain,
+        thumbnail_url=dynamic.thumbnail_url or seed.thumbnail_url,
+        youtube_url=dynamic.youtube_url or seed.youtube_url,
+        duration_seconds=dynamic.duration_seconds or seed.duration_seconds,
+        indexed=dynamic.indexed,
+        artifact_stats=dynamic.artifact_stats or seed.artifact_stats,
+    )
 
 
 def _item_to_video(item: dict[str, Any]) -> DemoVideo | None:

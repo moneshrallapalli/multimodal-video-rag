@@ -109,3 +109,11 @@ def test_public_videos_uses_dynamo_record_over_duplicate_seed(monkeypatch):
     matching = [video for video in data if video["id"] == "QkdBXUikRQc"]
     assert len(matching) == 1
     assert matching[0]["title"] == "Updated Title From Ingestion"
+    assert matching[0]["domain"] == "Self-improvement"
+    assert matching[0]["artifact_stats"] == {
+        "transcript_segments": 98,
+        "transcript_chunks": 15,
+        "visual_frames": 13,
+        "indexed_vectors": 28,
+        "frame_interval_seconds": 30,
+    }
