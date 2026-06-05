@@ -21,7 +21,14 @@ from shared.ingestion import (
     transcript_key,
     utc_now_iso,
 )
-from shared.schemas import IngestJobMessage, JobStatus, TranscriptArtifact, VideoMetadataArtifact
+from shared.schemas import (
+    IndexingSummary,
+    IngestJobMessage,
+    JobStatus,
+    TranscriptArtifact,
+    VideoArtifactStats,
+    VideoMetadataArtifact,
+)
 
 from .captioning import FrameCaptioner
 from .indexing import VideoIndexer
@@ -107,6 +114,7 @@ class IngestionWorker:
                     transcript.model_dump_json(indent=2),
                 )
 
+                summary: IndexingSummary | None = None
                 if self.indexer:
                     self._update_job(message.job_id, status="embedding", progress=85)
                     summary = self.indexer.index_video(
@@ -130,7 +138,14 @@ class IngestionWorker:
                         )
                         self._refresh_corpus_bm25_stats()
 
-                self._put_video_record(message, metadata)
+                self._put_video_record(
+                    message,
+                    metadata,
+                    transcript=transcript,
+                    visual_frame_count=len(frames),
+                    frame_interval_seconds=self._frame_interval_seconds(media, message),
+                    indexing_summary=summary,
+                )
                 self._update_job(
                     message.job_id,
                     status="completed",
@@ -151,6 +166,15 @@ class IngestionWorker:
             max_frames=message.max_frames or self.media.max_frames,
             whisper_model_size=self.media.whisper_model_size,
         )
+
+    def _frame_interval_seconds(self, media: MediaProcessor, message: IngestJobMessage) -> int:
+        if message.frame_interval_seconds is not None:
+            return message.frame_interval_seconds
+        value = getattr(media, "frame_interval_seconds", None)
+        if isinstance(value, int):
+            return value
+        value = getattr(self.media, "frame_interval_seconds", None)
+        return value if isinstance(value, int) else 30
 
     def _already_completed(self, job_id: str) -> bool:
         """Cheap pre-check: if SQS redelivered a finished job, skip re-doing the
@@ -227,8 +251,28 @@ class IngestionWorker:
         self,
         message: IngestJobMessage,
         metadata: VideoMetadataArtifact,
+        *,
+        transcript: TranscriptArtifact,
+        visual_frame_count: int,
+        frame_interval_seconds: int,
+        indexing_summary: IndexingSummary | None,
     ) -> None:
         now = utc_now_iso()
+        artifact_stats = VideoArtifactStats(
+            transcript_segments=len(transcript.segments),
+            transcript_chunks=(
+                indexing_summary.transcript_vectors if indexing_summary is not None else None
+            ),
+            visual_frames=visual_frame_count,
+            indexed_vectors=(
+                indexing_summary.transcript_vectors
+                + indexing_summary.visual_vectors
+                + indexing_summary.caption_vectors
+                if indexing_summary is not None
+                else None
+            ),
+            frame_interval_seconds=frame_interval_seconds,
+        )
         self.videos_table.put_item(
             Item={
                 "video_id": message.video_id,
@@ -237,6 +281,7 @@ class IngestionWorker:
                 "author": metadata.author,
                 "duration_seconds": metadata.duration_seconds,
                 "thumbnail_url": metadata.thumbnail_url,
+                "artifact_stats": artifact_stats.model_dump(),
                 "artifact_prefix": f"videos/{message.video_id}",
                 "status": "ingested",
                 "created_at": now,

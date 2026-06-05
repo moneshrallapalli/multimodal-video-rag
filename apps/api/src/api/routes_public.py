@@ -5,16 +5,16 @@ from __future__ import annotations
 from fastapi import APIRouter, Request
 from shared.schemas import DemoVideo, SearchRequest, SearchResponse
 
-from .mock_data import DEMO_VIDEOS
 from .query_controls import query_controls_from_settings
 from .search_service import search_videos
+from .video_catalog import list_public_videos
 
 router = APIRouter(prefix="/api", tags=["public"])
 
 
 @router.get("/videos", response_model=list[DemoVideo])
 def list_videos() -> list[DemoVideo]:
-    return DEMO_VIDEOS
+    return list_public_videos()
 
 
 @router.post("/search", response_model=SearchResponse)

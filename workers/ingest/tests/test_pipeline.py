@@ -177,6 +177,13 @@ def test_worker_process_writes_artifacts_and_completes_job():
     ]
     assert videos.puts[0]["video_id"] == "QkdBXUikRQc"
     assert videos.puts[0]["status"] == "ingested"
+    assert videos.puts[0]["artifact_stats"] == {
+        "transcript_segments": 1,
+        "transcript_chunks": 1,
+        "visual_frames": 2,
+        "indexed_vectors": 3,
+        "frame_interval_seconds": 30,
+    }
     assert [file["key"] for file in s3.files] == [
         "videos/QkdBXUikRQc/audio/audio.m4a",
         "videos/QkdBXUikRQc/frames/frame_000001.jpg",
