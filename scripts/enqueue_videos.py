@@ -83,6 +83,8 @@ def enqueue(video_id: str, label: str, *, force: bool = False) -> str:
         video_id=normalized.video_id,
         youtube_url=normalized.youtube_url,
         requested_at=now,
+        frame_interval_seconds=settings.ingest_frame_interval_seconds,
+        max_frames=settings.ingest_max_frames,
     )
     sqs.send_message(
         QueueUrl=settings.sqs_queue_url,
