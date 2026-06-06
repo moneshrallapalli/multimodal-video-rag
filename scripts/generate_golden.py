@@ -171,19 +171,12 @@ def _format_captions(captions: list, frames: list) -> str:
 
 def _call_bedrock(prompt: str) -> str:
     client = boto3.client("bedrock-runtime", region_name=settings.aws_region)
-    response = client.invoke_model(
+    response = client.converse(
         modelId=settings.bedrock_llm_model_id,
-        contentType="application/json",
-        accept="application/json",
-        body=json.dumps({
-            "anthropic_version": "bedrock-2023-10-08",
-            "max_tokens": 8192,
-            "temperature": 0.3,
-            "messages": [{"role": "user", "content": prompt}],
-        }),
+        messages=[{"role": "user", "content": [{"text": prompt}]}],
+        inferenceConfig={"maxTokens": 8192, "temperature": 0.3},
     )
-    result = json.loads(response["body"].read())
-    text = result["content"][0]["text"]
+    text = response["output"]["message"]["content"][0]["text"]
     start = text.find("[")
     end = text.rfind("]") + 1
     if start >= 0 and end > start:
