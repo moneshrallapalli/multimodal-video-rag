@@ -147,26 +147,22 @@ class QueryPipeline:
                 "should_retrieve_transcript": False,
                 "should_retrieve_visual": False,
             }
+        # Intent drives the *answer style* (visual-first vs transcript-first)
+        # but all intents retrieve from both indexes so RRF fusion always has
+        # the full evidence set. Restricting retrieval by intent caused blind
+        # spots (e.g. "what Sam said about Elon" missed visual captions).
         if tokens & _SUMMARY_KEYWORDS:
             intent: QueryIntent = "summary"
-            retrieve_transcript = True
-            retrieve_visual = False
         elif tokens & _VISUAL_KEYWORDS and not tokens & _TRANSCRIPT_KEYWORDS:
             intent = "visual"
-            retrieve_transcript = True
-            retrieve_visual = True
         elif tokens & _TRANSCRIPT_KEYWORDS and not tokens & _VISUAL_KEYWORDS:
             intent = "transcript"
-            retrieve_transcript = True
-            retrieve_visual = False
         elif tokens & _TIMESTAMP_KEYWORDS:
             intent = "timestamp"
-            retrieve_transcript = True
-            retrieve_visual = True
         else:
             intent = "hybrid"
-            retrieve_transcript = True
-            retrieve_visual = True
+        retrieve_transcript = True
+        retrieve_visual = True
         return {
             "intent": intent,
             "should_retrieve_transcript": retrieve_transcript,

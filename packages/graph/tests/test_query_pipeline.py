@@ -116,7 +116,8 @@ def _visual_hit(score: float = 0.42) -> RetrievalHit:
     )
 
 
-def test_transcript_query_routes_to_transcript_index_only():
+def test_transcript_query_retrieves_from_both_indexes():
+    """All intents now retrieve from both indexes so RRF fusion has full evidence."""
     embedder = FakeEmbedder()
     transcript = FakeIndex([_transcript_hit()])
     visual = FakeIndex([_visual_hit()])
@@ -135,10 +136,8 @@ def test_transcript_query_routes_to_transcript_index_only():
     assert response.intent == "transcript"
     assert response.results[0].modality == "transcript"
     assert response.results[0].start_seconds == 74.72
-    assert embedder.text_queries == ["Where do they explain self sabotage?"]
-    assert embedder.visual_queries == []
     assert len(transcript.calls) == 1
-    assert visual.calls == []
+    assert len(visual.calls) == 1  # also queries visual index now
     assert "self-sabotaging behaviors" in answerer.calls[0]["context"]
 
 
@@ -424,7 +423,9 @@ def test_cross_encoder_rerank_reorders_fused_candidates_when_enabled():
     scores while updating rank order."""
     from graph.models import GraphConfig
 
-    fake_reranker = FakeCrossEncoderReranker(scores=[0.1, 0.9])
+    # After RRF + lexical rerank: [transcript_hit, visual_hit, exact]
+    # Cross-encoder promotes exact (index 2) to first place.
+    fake_reranker = FakeCrossEncoderReranker(scores=[0.1, 0.05, 0.9])
     exact = _transcript_hit(score=0.4).model_copy(
         update={
             "id": "QkdBXUikRQc:transcript:exact",
@@ -447,7 +448,7 @@ def test_cross_encoder_rerank_reorders_fused_candidates_when_enabled():
     response = pipeline.run(SearchRequest(query="Where do they explain self sabotage?", top_k=2))
 
     assert len(fake_reranker.calls) == 1
-    assert len(fake_reranker.calls[0]) == 2
+    assert len(fake_reranker.calls[0]) == 3  # all 3 candidates reranked
     assert response.results[0].snippet == "The speaker explains self sabotage and fear of failure."
     assert response.results[0].rank == 1
 
