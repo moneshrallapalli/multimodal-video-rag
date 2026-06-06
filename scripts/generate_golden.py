@@ -226,7 +226,7 @@ def _generate_cross_corpus(all_artifacts: list[dict], start_id: int) -> list[dic
     for a in all_artifacts:
         segs = a["transcript"].get("segments", [])
         preview = " ".join(s["text"] for s in segs[:10])
-        summaries.append(f"- {a['video_id']}: \"{a['title']}\" — {preview[:200]}...")
+        summaries.append(f'- {a["video_id"]}: "{a["title"]}" — {preview[:200]}...')
 
     prompt = CROSS_CORPUS_PROMPT.format(
         n=5,
@@ -238,17 +238,19 @@ def _generate_cross_corpus(all_artifacts: list[dict], start_id: int) -> list[dic
 
     result = []
     for i, q in enumerate(queries):
-        result.append({
-            "id": f"e{start_id + i:03d}",
-            "query": q["query"],
-            "type": q.get("type", "transcript"),
-            "video_id": None,
-            "expected_video_id": q.get("expected_video_id"),
-            "relevant_timestamps": q.get("relevant_timestamps", []),
-            "expected_modality": q.get("expected_modality", "transcript"),
-            "reference_answer": q.get("reference_answer"),
-            "notes": q.get("notes", "Cross-corpus query"),
-        })
+        result.append(
+            {
+                "id": f"e{start_id + i:03d}",
+                "query": q["query"],
+                "type": q.get("type", "transcript"),
+                "video_id": None,
+                "expected_video_id": q.get("expected_video_id"),
+                "relevant_timestamps": q.get("relevant_timestamps", []),
+                "expected_modality": q.get("expected_modality", "transcript"),
+                "reference_answer": q.get("reference_answer"),
+                "notes": q.get("notes", "Cross-corpus query"),
+            }
+        )
     return result
 
 
