@@ -701,6 +701,7 @@ def test_visual_intent_passes_intent_to_answer_generator():
 # Citation-order proof reranking tests
 # ---------------------------------------------------------------------------
 
+
 def _make_candidate(start: float, end: float, snippet: str = "") -> RetrievalCandidate:
     return RetrievalCandidate(
         id=f"vec-{int(start)}",
@@ -719,10 +720,10 @@ def _make_candidate(start: float, end: float, snippet: str = "") -> RetrievalCan
 
 def test_reorder_by_citations_promotes_cited_proofs():
     """Proofs matching cited timestamps should be moved to the front."""
-    c1 = _make_candidate(0, 30)      # 0:00
-    c2 = _make_candidate(120, 150)   # 2:00
-    c3 = _make_candidate(377, 407)   # 6:17
-    c4 = _make_candidate(540, 570)   # 9:00
+    c1 = _make_candidate(0, 30)  # 0:00
+    c2 = _make_candidate(120, 150)  # 2:00
+    c3 = _make_candidate(377, 407)  # 6:17
+    c4 = _make_candidate(540, 570)  # 9:00
 
     answer = (
         'Around 6:17, Altman states that Elon is "one of the great builders." '
