@@ -52,8 +52,8 @@ class MediaProcessor:
     def __init__(
         self,
         *,
-        frame_interval_seconds: int = 30,
-        max_frames: int = 20,
+        frame_interval_seconds: int = 10,
+        max_frames: int = 200,
         whisper_model_size: str = "tiny.en",
     ) -> None:
         self.frame_interval_seconds = frame_interval_seconds

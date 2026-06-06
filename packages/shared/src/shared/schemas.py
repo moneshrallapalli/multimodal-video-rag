@@ -83,7 +83,7 @@ class SessionStatus(BaseModel):
 class IngestRequest(BaseModel):
     youtube_url: str = Field(min_length=1)
     frame_interval_seconds: int | None = Field(default=None, ge=5, le=300)
-    max_frames: int | None = Field(default=None, ge=1, le=100)
+    max_frames: int | None = Field(default=None, ge=1, le=200)
 
 
 class Job(BaseModel):

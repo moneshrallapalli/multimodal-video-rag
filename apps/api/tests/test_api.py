@@ -59,7 +59,7 @@ def test_videos(client):
         "transcript_chunks": 80,
         "visual_frames": 20,
         "indexed_vectors": 100,
-        "frame_interval_seconds": 30,
+        "frame_interval_seconds": 10,
     }
 
 

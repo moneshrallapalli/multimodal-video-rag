@@ -41,7 +41,7 @@ def _stats(segments: int, chunks: int, frames: int) -> VideoArtifactStats:
         transcript_chunks=chunks,
         visual_frames=frames,
         indexed_vectors=chunks + frames,
-        frame_interval_seconds=30,
+        frame_interval_seconds=10,
     )
 
 

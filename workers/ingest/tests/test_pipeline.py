@@ -128,8 +128,8 @@ class FakeIndexer:
     def __init__(self, *, bm25_stats: dict | None = None) -> None:
         self.calls = []
         self._bm25_stats = bm25_stats
-        self.transcript_chunk_seconds = 30
-        self.transcript_chunk_overlap_seconds = 6
+        self.transcript_chunk_seconds = 15
+        self.transcript_chunk_overlap_seconds = 3
 
     def index_video(self, **kwargs) -> IndexingSummary:
         self.calls.append(kwargs)
@@ -182,7 +182,7 @@ def test_worker_process_writes_artifacts_and_completes_job():
         "transcript_chunks": 1,
         "visual_frames": 2,
         "indexed_vectors": 3,
-        "frame_interval_seconds": 30,
+        "frame_interval_seconds": 10,
     }
     assert [file["key"] for file in s3.files] == [
         "videos/QkdBXUikRQc/audio/audio.m4a",

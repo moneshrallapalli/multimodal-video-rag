@@ -174,7 +174,7 @@ class IngestionWorker:
         if isinstance(value, int):
             return value
         value = getattr(self.media, "frame_interval_seconds", None)
-        return value if isinstance(value, int) else 30
+        return value if isinstance(value, int) else 10
 
     def _already_completed(self, job_id: str) -> bool:
         """Cheap pre-check: if SQS redelivered a finished job, skip re-doing the

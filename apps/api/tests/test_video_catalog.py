@@ -46,7 +46,7 @@ def test_public_videos_includes_ingested_dynamo_records(monkeypatch):
                     "transcript_chunks": Decimal("4"),
                     "visual_frames": Decimal("3"),
                     "indexed_vectors": Decimal("7"),
-                    "frame_interval_seconds": Decimal("30"),
+                    "frame_interval_seconds": Decimal("10"),
                 },
             }
         ]
@@ -77,7 +77,7 @@ def test_public_videos_includes_ingested_dynamo_records(monkeypatch):
             "transcript_chunks": 4,
             "visual_frames": 3,
             "indexed_vectors": 7,
-            "frame_interval_seconds": 30,
+            "frame_interval_seconds": 10,
         },
     }
     assert any(video["id"] == "QkdBXUikRQc" for video in data)
@@ -115,5 +115,5 @@ def test_public_videos_uses_dynamo_record_over_duplicate_seed(monkeypatch):
         "transcript_chunks": 15,
         "visual_frames": 13,
         "indexed_vectors": 28,
-        "frame_interval_seconds": 30,
+        "frame_interval_seconds": 10,
     }

@@ -64,7 +64,7 @@ export function IngestForm({ onSubmit }: { onSubmit: (req: IngestRequest) => Pro
                 max={300}
                 value={frameInterval}
                 onChange={(e) => setFrameInterval(e.target.value)}
-                placeholder="30"
+                placeholder="10"
                 aria-label="Frame interval in seconds"
                 className="w-28"
               />
@@ -74,10 +74,10 @@ export function IngestForm({ onSubmit }: { onSubmit: (req: IngestRequest) => Pro
               <Input
                 type="number"
                 min={1}
-                max={100}
+                max={200}
                 value={maxFrames}
                 onChange={(e) => setMaxFrames(e.target.value)}
-                placeholder="20"
+                placeholder="200"
                 aria-label="Maximum frames"
                 className="w-28"
               />
@@ -85,7 +85,7 @@ export function IngestForm({ onSubmit }: { onSubmit: (req: IngestRequest) => Pro
           </div>
           <p className="text-xs text-muted-foreground">
             Queues a YouTube job for download, frame extraction, transcription, artifact storage,
-            embeddings, and Pinecone indexing. Frame controls override the global defaults (30s / 20
+            embeddings, and Pinecone indexing. Frame controls override the global defaults (10s / 200
             frames).
           </p>
         </form>

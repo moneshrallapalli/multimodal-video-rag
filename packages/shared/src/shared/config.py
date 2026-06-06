@@ -55,11 +55,11 @@ class Settings(BaseSettings):
     secrets_manager_secret_name: str = ""
 
     # Ingestion worker tuning
-    ingest_frame_interval_seconds: int = 30
-    ingest_max_frames: int = 20
+    ingest_frame_interval_seconds: int = 10
+    ingest_max_frames: int = 200
     whisper_model_size: str = "tiny.en"
-    transcript_chunk_seconds: int = 30
-    transcript_chunk_overlap_seconds: int = 6
+    transcript_chunk_seconds: int = 15
+    transcript_chunk_overlap_seconds: int = 3
 
     # Query pipeline feature flags
     enable_hybrid_transcript: bool = True

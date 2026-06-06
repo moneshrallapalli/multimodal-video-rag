@@ -445,14 +445,14 @@ class CoreStack(Stack):
                 **runtime_environment,
                 "INGEST_FRAME_INTERVAL_SECONDS": os.environ.get(
                     "INGEST_FRAME_INTERVAL_SECONDS",
-                    "30",
+                    "10",
                 ),
-                "INGEST_MAX_FRAMES": os.environ.get("INGEST_MAX_FRAMES", "20"),
+                "INGEST_MAX_FRAMES": os.environ.get("INGEST_MAX_FRAMES", "200"),
                 "WHISPER_MODEL_SIZE": os.environ.get("WHISPER_MODEL_SIZE", "tiny.en"),
-                "TRANSCRIPT_CHUNK_SECONDS": os.environ.get("TRANSCRIPT_CHUNK_SECONDS", "30"),
+                "TRANSCRIPT_CHUNK_SECONDS": os.environ.get("TRANSCRIPT_CHUNK_SECONDS", "15"),
                 "TRANSCRIPT_CHUNK_OVERLAP_SECONDS": os.environ.get(
                     "TRANSCRIPT_CHUNK_OVERLAP_SECONDS",
-                    "6",
+                    "3",
                 ),
             },
             logging=ecs.LogDrivers.aws_logs(
