@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from collections.abc import Callable
 from typing import Any
 
@@ -345,11 +346,17 @@ class QueryPipeline:
 
     def _to_search_response(self, state: GraphState) -> SearchResponse:
         candidates = [_candidate(data) for data in state.get("fused", [])]
+        answer = state.get("answer") or self.config.no_answer_message
+
+        # Re-order proofs so that timestamps cited in the answer appear first.
+        # Zero-cost (regex + list reorder) — no extra LLM / network call.
+        candidates = _reorder_by_citations(answer, candidates)
+
         return SearchResponse(
             query=state.get("query", ""),
             rewritten_query=state.get("rewritten_query"),
             intent=state.get("intent", "no_answer"),
-            answer=state.get("answer") or self.config.no_answer_message,
+            answer=answer,
             refused=bool(state.get("refused", False)),
             confidence=float(state.get("confidence", 0.0)),
             results=[
@@ -447,3 +454,59 @@ def _llm_refused(answer: str) -> bool:
     """Return True if the LLM answer signals it found no usable evidence."""
     lower = answer.lower()
     return any(phrase in lower for phrase in _LLM_REFUSAL_PHRASES)
+
+
+# ---------------------------------------------------------------------------
+# Citation-order proof reranking
+# ---------------------------------------------------------------------------
+# Match timestamps the LLM writes in the answer — e.g. "around 6:17",
+# "at 2:07", "6:17–6:30".  We only need the first M:SS occurrence per
+# citation to anchor the ordering.
+_TIMESTAMP_RE = re.compile(r"(\d{1,3}):(\d{2})")
+
+
+def _reorder_by_citations(
+    answer: str,
+    candidates: list[RetrievalCandidate],
+) -> list[RetrievalCandidate]:
+    """Re-order *candidates* so that proofs cited in *answer* appear first,
+    in the order they are mentioned.  Un-cited proofs keep their original
+    relative order and follow the cited ones.
+
+    Zero-cost (regex + list reorder) — no extra LLM / network call.
+    """
+    if not answer or not candidates:
+        return candidates
+
+    cited_seconds: list[float] = []
+    for m in _TIMESTAMP_RE.finditer(answer):
+        ts = int(m.group(1)) * 60 + int(m.group(2))
+        if ts not in cited_seconds:
+            cited_seconds.append(ts)
+
+    if not cited_seconds:
+        return candidates
+
+    # For each cited timestamp, find the closest candidate (within a
+    # tolerance window — chunks span a range of seconds).
+    _TOLERANCE = 30  # seconds; generous enough to cover chunk boundaries
+    cited: list[RetrievalCandidate] = []
+    cited_ids: set[int] = set()
+
+    for ts in cited_seconds:
+        best: RetrievalCandidate | None = None
+        best_dist = float("inf")
+        for c in candidates:
+            if id(c) in cited_ids:
+                continue
+            dist = min(abs(c.start_seconds - ts), abs(c.end_seconds - ts))
+            if dist < best_dist:
+                best_dist = dist
+                best = c
+        if best is not None and best_dist <= _TOLERANCE:
+            cited.append(best)
+            cited_ids.add(id(best))
+
+    # Un-cited proofs keep their original order.
+    uncited = [c for c in candidates if id(c) not in cited_ids]
+    return cited + uncited

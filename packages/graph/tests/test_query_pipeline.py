@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from graph.models import GraphConfig
-from graph.pipeline import QueryPipeline
+from graph.models import GraphConfig, RetrievalCandidate
+from graph.pipeline import QueryPipeline, _reorder_by_citations
 from shared.schemas import RetrievalHit, SearchRequest
 
 
@@ -230,7 +230,9 @@ def test_exact_transcript_terms_rerank_above_semantic_neighbors():
             "modality": "transcript",
         },
     )
-    answerer = FakeAnswerer()
+    answerer = FakeAnswerer(
+        answer="Around 3:41, she says the issue is lacking proper planning.",
+    )
     pipeline = QueryPipeline(
         embedder=FakeEmbedder(),
         transcript_index=FakeIndex([nearby, exact]),
@@ -693,3 +695,77 @@ def test_visual_intent_passes_intent_to_answer_generator():
 
     assert answerer.calls
     assert answerer.calls[0]["intent"] == "visual"
+
+
+# ---------------------------------------------------------------------------
+# Citation-order proof reranking tests
+# ---------------------------------------------------------------------------
+
+def _make_candidate(start: float, end: float, snippet: str = "") -> RetrievalCandidate:
+    return RetrievalCandidate(
+        id=f"vec-{int(start)}",
+        rank=0,
+        video_id="v1",
+        title="Test Video",
+        start_seconds=start,
+        end_seconds=end,
+        modality="transcript",
+        score=0.5,
+        snippet=snippet or f"Segment at {start}",
+        thumbnail_url="https://example.com/thumb.jpg",
+        seek_url=f"https://youtu.be/v1?t={int(start)}",
+    )
+
+
+def test_reorder_by_citations_promotes_cited_proofs():
+    """Proofs matching cited timestamps should be moved to the front."""
+    c1 = _make_candidate(0, 30)      # 0:00
+    c2 = _make_candidate(120, 150)   # 2:00
+    c3 = _make_candidate(377, 407)   # 6:17
+    c4 = _make_candidate(540, 570)   # 9:00
+
+    answer = (
+        'Around 6:17, Altman states that Elon is "one of the great builders." '
+        "At 2:00, he admires Elon's willingness."
+    )
+
+    result = _reorder_by_citations(answer, [c1, c2, c3, c4])
+    assert result[0] is c3, "6:17 proof should be first (cited first)"
+    assert result[1] is c2, "2:00 proof should be second (cited second)"
+    assert result[2] is c1, "un-cited proofs keep original order"
+    assert result[3] is c4
+
+
+def test_reorder_by_citations_no_timestamps():
+    """When the answer has no timestamps, order is unchanged."""
+    c1 = _make_candidate(0, 30)
+    c2 = _make_candidate(60, 90)
+    answer = "The speaker discusses leadership extensively."
+    result = _reorder_by_citations(answer, [c1, c2])
+    assert result == [c1, c2]
+
+
+def test_reorder_by_citations_empty_answer():
+    """Empty answer leaves order unchanged."""
+    c1 = _make_candidate(0, 30)
+    assert _reorder_by_citations("", [c1]) == [c1]
+    assert _reorder_by_citations("some answer", []) == []
+
+
+def test_reorder_by_citations_tolerates_near_timestamps():
+    """Citation at 6:17 (377s) should match a chunk starting at 370s."""
+    c1 = _make_candidate(0, 30)
+    c2 = _make_candidate(370, 400)  # close to 6:17 = 377s
+    answer = "At 6:17, the speaker says..."
+    result = _reorder_by_citations(answer, [c1, c2])
+    assert result[0] is c2
+
+
+def test_reorder_by_citations_deduplicates_same_timestamp():
+    """Same timestamp cited twice doesn't double-pull the same candidate."""
+    c1 = _make_candidate(377, 407)
+    c2 = _make_candidate(0, 30)
+    answer = "At 6:17 he says X. Later, revisiting 6:17, he adds Y."
+    result = _reorder_by_citations(answer, [c1, c2])
+    assert len(result) == 2
+    assert result[0] is c1
