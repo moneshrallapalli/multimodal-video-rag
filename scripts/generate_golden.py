@@ -60,12 +60,15 @@ Generate exactly {n_queries} queries as a JSON array. Each query must be one of:
 - "visual": questions about what was SHOWN on screen (use frame timestamps)
 - "hybrid": questions requiring both visual and spoken content
 - "timestamp": questions asking WHEN something happened (use transcript timestamps)
-- "no_answer": questions about topics NOT in the video (relevant_timestamps=[], reference_answer=null)
+- "no_answer": questions about topics NOT in the video \
+(relevant_timestamps=[], reference_answer=null)
 
-Distribution: ~50% transcript, ~15% visual, ~10% hybrid, ~10% timestamp, ~15% no_answer.
+Distribution: ~50% transcript, ~15% visual, ~10% hybrid, \
+~10% timestamp, ~15% no_answer.
 
 CRITICAL RULES:
-1. relevant_timestamps MUST be exact [start_seconds, end_seconds] from the transcript segments or frame captions provided above. Do NOT estimate or round.
+1. relevant_timestamps MUST be exact [start_seconds, end_seconds] \
+from the transcript segments or frame captions above. Do NOT estimate.
 2. reference_answer must accurately describe what is actually said/shown at those timestamps.
 3. For visual queries, use the frame timestamp as both start and end: [timestamp, timestamp].
 4. For no_answer queries: relevant_timestamps=[], expected_modality="none", reference_answer=null.
@@ -303,7 +306,9 @@ def main() -> None:
         artifacts = _load_video_artifacts(s3, bucket, video_id)
         if artifacts:
             all_artifacts.append(artifacts)
-            print(f"  Loaded {video_id}: {len(artifacts['transcript'].get('segments', []))} segments, {len(artifacts['captions'])} captions")
+            n_seg = len(artifacts["transcript"].get("segments", []))
+            n_cap = len(artifacts["captions"])
+            print(f"  Loaded {video_id}: {n_seg} segments, {n_cap} captions")
 
     if not all_artifacts:
         print("ERROR: no video artifacts found in S3. Ingest videos first.", file=sys.stderr)
