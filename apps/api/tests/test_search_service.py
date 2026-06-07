@@ -98,6 +98,8 @@ def test_pipeline_uses_local_reranker_when_no_function_name(monkeypatch):
     """When cross-encoder reranking is enabled but no remote Lambda function name
     is configured, the pipeline should use a LocalCrossEncoderReranker (model
     baked into the container image) rather than disabling reranking entirely."""
+    from unittest.mock import MagicMock
+
     from api.reranking import LocalCrossEncoderReranker
 
     captured = {}
@@ -105,6 +107,9 @@ def test_pipeline_uses_local_reranker_when_no_function_name(monkeypatch):
     class CapturingPipeline:
         def __init__(self, **kwargs) -> None:
             captured.update(kwargs)
+
+    # Mock CrossEncoder so CI doesn't download from HuggingFace
+    monkeypatch.setattr("sentence_transformers.CrossEncoder", MagicMock)
 
     monkeypatch.setattr(settings, "enable_cross_encoder_rerank", True)
     monkeypatch.setattr(settings, "cross_encoder_reranker_function_name", "")
