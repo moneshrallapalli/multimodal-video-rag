@@ -7,8 +7,8 @@ The frontend runs on Vercel, and the backend is AWS-native: FastAPI in a Lambda 
 ## How it works
 
 1. Admin submits a YouTube URL through the web console.
-2. A Fargate worker downloads the video, extracts keyframes every 30 seconds, transcribes the audio with faster-whisper, and embeds both modalities into separate Pinecone indexes.
-3. When a user asks a question, a LangGraph pipeline classifies intent, retrieves from one or both indexes, fuses results with Reciprocal Rank Fusion, reranks, gates on evidence strength, and generates a grounded answer via Bedrock.
+2. A Fargate worker downloads the video, extracts keyframes every 10 seconds, splits the transcript into 15-second chunks with faster-whisper, and embeds both modalities into separate Pinecone indexes.
+3. When a user asks a question, a LangGraph pipeline classifies intent, retrieves from both indexes, fuses results with Reciprocal Rank Fusion, reranks, gates on evidence strength, and generates a grounded answer via Bedrock.
 4. The response includes the answer, confidence score, and clickable timestamped citations.
 
 Transcript questions and visual questions follow different retrieval paths. For example, "what did she say about planning?" leans on transcript chunks, while "show me the whiteboard" leans on frame search.
@@ -25,7 +25,7 @@ Infrastructure is CDK in Python, with least-privilege IAM, Secrets Manager runti
 
 ## Eval results
 
-Real evaluation over 13 indexed videos, 145 hand-labeled queries (transcript, visual, timestamp, hybrid, summary, no-answer). Deterministic retrieval metrics plus Haiku LLM judge on answerable queries.
+Real evaluation over 14 indexed videos, 150 hand-labeled queries (transcript, visual, timestamp, hybrid, summary, no-answer). Deterministic retrieval metrics plus Haiku LLM judge on answerable queries.
 
 | Config | MRR | Timestamp@5s | No-answer F1 |
 |---|---:|---:|---:|
@@ -79,7 +79,7 @@ uv run --with argon2-cffi python scripts/init_secrets.py
 The frontend proxies `/api/*` to the backend via Next.js rewrites, so the browser talks to one origin in local and production.
 
 ```bash
-uv run pytest -q                            # 117 tests
+uv run pytest -q                            # 124 tests
 uvx ruff check . && uvx ruff format --check .
 pnpm --filter web lint && pnpm --filter web build
 ```

@@ -1,3 +1,6 @@
+# Claude Code
+CLAUDE.md
+
 # Environment / secrets
 .env
 .env.*
@@ -43,5 +46,6 @@ Thumbs.db
 .vscode/
 *.log
 
-# Claude Code local preview config
-.claude/launch.json
+# Claude Code
+.claude/
+.vercel
