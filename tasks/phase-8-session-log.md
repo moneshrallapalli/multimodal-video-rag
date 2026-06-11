@@ -210,7 +210,12 @@ post). ACCEPTED as known borderline: its answer is real cited video content;
 more rules risk truncating legit lists. F1 0.625 (= e010's single-query
 weight vs 0.647).
 
-### In flight
-Full 7-config regen with calibrated judge → artifact. Then: commit artifact,
-README sync (correct_rate, F1, MRR), `cdk deploy` (prompt changes must ship),
-cache-busted smoke.
+### Items 3+4 final (artifact `3e822bb`, full regen, calibrated judge)
+Production: judge **correct 0.814** (was 0.759), grounded 0.929, quality
+0.838, useful 0.929 (n=113). No-answer F1 0.625 / P 0.476 / R 0.909 — e010
+the lone borderline miss (accepted, see above); 11 over-refusals (e018
+answered this run — borderline pool breathes). MRR 0.779 / ts@5s 0.718
+(citation-reorder noise band 0.78–0.81 / 0.72–0.76). README synced; added
+rewrite-on-miss engineering paragraph.
+
+### Remaining: deploy + smoke (items 3+4 prompt/graph changes NOT yet live)

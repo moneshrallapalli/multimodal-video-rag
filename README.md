@@ -29,16 +29,16 @@ Real evaluation over 13 indexed videos, 135 hand-labeled queries (transcript, vi
 
 | Config | MRR | Timestamp@5s | No-answer F1 |
 |---|---:|---:|---:|
-| Dense only | 0.805 | 0.758 | 0.625 |
+| Dense only | 0.784 | 0.734 | 0.645 |
 | Dense + strict gate | 0.674 | 0.605 | 0.353 |
 | Hybrid BM25 | 0.707 | 0.597 | 0.000 |
 | Hybrid + rerank | 0.742 | 0.621 | 0.000 |
 | Hybrid + rewrite | 0.707 | 0.597 | 0.000 |
-| **Production (hybrid + rerank + rewrite + answer gen)** | **0.790** | **0.734** | **0.647** |
+| **Production (hybrid + rerank + rewrite + answer gen)** | **0.779** | **0.718** | **0.625** |
 
-LLM judge on 112 answerable queries: quality 0.849, grounded 0.920, correct 0.759, useful 0.946.
+LLM judge on 113 answerable queries: quality 0.838, grounded 0.929, correct 0.814, useful 0.929.
 
-MRR and Timestamp@5s are the metrics that discriminate between retrieval configs — Recall@5 is near-ceiling. Weak-evidence refusal is owned by the LLM's structured `grounded` flag during answer generation, so retrieval-only configs sit at No-answer F1 0.000 and the production config carries it to 0.647 with no-answer recall 1.0 (every refusal is attributable via a per-query `refusal_reason`).
+MRR and Timestamp@5s are the metrics that discriminate between retrieval configs — Recall@5 is near-ceiling. Weak-evidence refusal is owned by the LLM's structured `grounded` flag during answer generation, so retrieval-only configs sit at No-answer F1 0.000 and the production config carries it to 0.625 (every refusal is attributable via a per-query `refusal_reason`).
 
 ## Interesting engineering decisions
 
@@ -48,13 +48,15 @@ MRR and Timestamp@5s are the metrics that discriminate between retrieval configs
 
 **BM25 sparse vectors alongside dense.** The hybrid path alpha-blends dense Titan vectors with sparse BM25 term frequencies on the same Pinecone query. This helps with exact-match queries ("what does she say about proper planning?") where dense embeddings alone rank a semantically-similar but wrong chunk higher.
 
+**Query rewrite is on-miss, not always-on.** The raw query retrieves first (transcript and visual fan out in parallel inside the LangGraph superstep); only a retrieval-gate refusal triggers one HyDE-style rewritten retry. Queries that succeed raw — the common case — never pay the rewrite LLM call, so the rewrite's latency and cost apply exactly where they can help.
+
 **Idempotent ingestion.** SQS delivers at-least-once. The worker checks job status in DynamoDB before doing any expensive work (downloads, transcription, embedding). A redelivered message for a completed job gets a log line and a delete, not a duplicate $2 Bedrock bill.
 
 **Cross-encoder reranking runs in its own Lambda.** `BAAI/bge-reranker-base` (~500MB) can't load inside the API request path — API Gateway HTTP has a fixed 30-second integration timeout, and cold-start model loading would blow it. So the API calls a dedicated `video-rag-reranker` Lambda (warm model, invoked per query) instead of baking inference into the request. On the current golden set rerank moves hybrid MRR from 0.707 to 0.742.
 
 ## Current limits
 
-- MRR drops ~2 points from dense-only to production (0.805 → 0.790) because the hybrid + rewrite path trades a little semantic ranking for exact-match wins and refusal accuracy.
+- MRR dips slightly from dense-only to production (0.784 → 0.779) because the hybrid path trades a little semantic ranking for exact-match wins and refusal accuracy.
 - Remaining no-answer over-refusals are retrieval/caption-bound (the labeled evidence doesn't reach the answer context), not prompt-bound — the next lever is frame caption coverage, not grounding criteria.
 - Admin ingestion is password-gated, not a multi-user product flow.
 
