@@ -13,6 +13,9 @@ The day-to-day plan lives in per-phase files. Use this as a jumping-off point.
   session (UI motion + gate collapse). Records the stale-eval-baseline
   incident, current real metrics, and the prioritized plan to improve
   no-answer precision, judge correct_rate, and per-query cost.
+- `phase-8-session-log.md` — running log of Phase 8 sessions: what each session
+  actually did, verified repo/deploy state, and the exact next action. Read
+  this right after the handoff if a session was cut off.
 
 ## Engineering rules of the road
 - `lessons.md` — gotchas hit during the build, with the rule to avoid repeating
