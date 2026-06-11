@@ -56,7 +56,6 @@ _TRANSCRIPT_KEYWORDS = {
 }
 _SUMMARY_KEYWORDS = {"summary", "summarize", "summarise", "takeaway", "takeaways", "lessons"}
 _TIMESTAMP_KEYWORDS = {"when", "timestamp", "minute", "second"}
-_OFF_DOMAIN = {"weather", "recipe", "stock", "stocks", "bitcoin", "football", "lottery", "pizza"}
 
 logger = logging.getLogger("video_rag.graph")
 
@@ -136,21 +135,16 @@ class QueryPipeline:
         return {"query": query}
 
     def _classify_intent(self, state: GraphState) -> GraphState:
-        query = state["query"].lower()
-        tokens = set(query.replace("?", " ").replace(",", " ").split())
-        if tokens & _OFF_DOMAIN:
-            return {
-                "intent": "no_answer",
-                "refused": True,
-                "answer": self.config.no_answer_message,
-                "confidence": 0.0,
-                "should_retrieve_transcript": False,
-                "should_retrieve_visual": False,
-            }
         # Intent drives the *answer style* (visual-first vs transcript-first)
         # but all intents retrieve from both indexes so RRF fusion always has
         # the full evidence set. Restricting retrieval by intent caused blind
         # spots (e.g. "what Sam said about Elon" missed visual captions).
+        # Off-domain queries are NOT keyword-gated here: a blocklist refuses
+        # legitimate queries about indexed content (e.g. "what did she say
+        # about bitcoin" when a video covers bitcoin). Weak-evidence refusal
+        # is owned by the retrieval gate and the LLM's grounded flag.
+        query = state["query"].lower()
+        tokens = set(query.replace("?", " ").replace(",", " ").split())
         if tokens & _SUMMARY_KEYWORDS:
             intent: QueryIntent = "summary"
         elif tokens & _VISUAL_KEYWORDS and not tokens & _TRANSCRIPT_KEYWORDS:
@@ -317,7 +311,7 @@ class QueryPipeline:
                 "refused": False,
             }
         try:
-            answer = self.answer_generator.generate(
+            generated = self.answer_generator.generate(
                 query=state["query"],
                 context=state.get("context", ""),
                 intent=state.get("intent"),
@@ -332,13 +326,14 @@ class QueryPipeline:
                 len(state.get("query", "")),
                 len(candidates),
             )
-            answer = _extractive_answer(candidates[0])
-        # Honor the LLM's own weak-evidence signal. When the grounding prompt
-        # instructs Claude to say "I could not find strong evidence" and it does,
-        # propagate that as a refusal so the gate and UX stay consistent.
-        if _llm_refused(answer):
+            return {"answer": _extractive_answer(candidates[0]), "refused": False}
+        # Honor the LLM's own weak-evidence signal: the structured `grounded`
+        # flag replaces the old refusal-phrase substring matching, which broke
+        # on any paraphrase of the canned sentence.
+        if not generated.grounded:
+            answer = generated.text or self.config.no_answer_message
             return {"refused": True, "answer": answer, "confidence": 0.0, "fused": []}
-        return {"answer": answer, "refused": False}
+        return {"answer": generated.text, "refused": False}
 
     def _to_search_response(self, state: GraphState) -> SearchResponse:
         candidates = [_candidate(data) for data in state.get("fused", [])]
@@ -433,23 +428,6 @@ def _extractive_answer(top: RetrievalCandidate) -> str:
 
 def _visual_answer(top: RetrievalCandidate) -> str:
     return f'The strongest visual match is around {_mmss(top.start_seconds)} in "{top.title}".'
-
-
-# Phrases that indicate the LLM found no usable evidence despite passing the
-# retrieval gate. Matching them in the generated answer lets the pipeline honor
-# the model's own weak-evidence signal and propagate a refusal.
-_LLM_REFUSAL_PHRASES = (
-    "could not find strong evidence",
-    "i could not find",
-    "no strong evidence",
-    "not covered in the indexed",
-)
-
-
-def _llm_refused(answer: str) -> bool:
-    """Return True if the LLM answer signals it found no usable evidence."""
-    lower = answer.lower()
-    return any(phrase in lower for phrase in _LLM_REFUSAL_PHRASES)
 
 
 # ---------------------------------------------------------------------------

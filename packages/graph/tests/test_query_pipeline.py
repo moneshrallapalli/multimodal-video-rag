@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from graph.answering import GeneratedAnswer
 from graph.models import GraphConfig, RetrievalCandidate
 from graph.pipeline import QueryPipeline, _reorder_by_citations
 from shared.schemas import RetrievalHit, SearchRequest
@@ -44,15 +45,17 @@ class FakeAnswerer:
         self,
         answer: str = "Grounded answer with a timestamp around 1:15.",
         rewrite: str | None = None,
+        grounded: bool = True,
     ) -> None:
         self.answer = answer
         self.rewrite = rewrite
+        self.grounded = grounded
         self.calls = []
         self.rewrite_calls = []
 
-    def generate(self, *, query: str, context: str, intent: str | None = None) -> str:
+    def generate(self, *, query: str, context: str, intent: str | None = None) -> GeneratedAnswer:
         self.calls.append({"query": query, "context": context, "intent": intent})
-        return self.answer
+        return GeneratedAnswer(text=self.answer, grounded=self.grounded)
 
     def rewrite_query(self, *, query: str) -> str:
         self.rewrite_calls.append(query)
@@ -294,9 +297,11 @@ def test_lexical_transcript_evidence_can_pass_low_dense_gate():
     assert "proper planning" in answerer.calls[0]["context"]
 
 
-def test_off_domain_query_refuses_without_retrieval():
-    transcript = FakeIndex([_transcript_hit()])
-    visual = FakeIndex([_visual_hit()])
+def test_off_domain_query_refuses_via_evidence_gate_not_keywords():
+    """Off-domain queries retrieve normally and refuse on weak evidence —
+    there is no keyword blocklist short-circuiting the pipeline."""
+    transcript = FakeIndex([])
+    visual = FakeIndex([])
     answerer = FakeAnswerer()
     pipeline = QueryPipeline(
         embedder=FakeEmbedder(),
@@ -308,11 +313,41 @@ def test_off_domain_query_refuses_without_retrieval():
     response = pipeline.run(SearchRequest(query="what is today's weather"))
 
     assert response.refused is True
-    assert response.intent == "no_answer"
     assert response.results == []
-    assert transcript.calls == []
-    assert visual.calls == []
-    assert answerer.calls == []
+    assert len(transcript.calls) == 1  # retrieval ran; the gate refused
+    assert len(visual.calls) == 1
+    assert answerer.calls == []  # no LLM spend on empty evidence
+
+
+def test_query_with_former_blocklist_keyword_answers_when_evidence_exists():
+    """'bitcoin' was on the old off-domain blocklist; a query about indexed
+    bitcoin content must answer, not be keyword-refused."""
+    bitcoin_hit = RetrievalHit(
+        id="QkdBXUikRQc:transcript:000009",
+        score=0.7,
+        metadata={
+            "video_id": "QkdBXUikRQc",
+            "chunk_id": "QkdBXUikRQc:transcript:000009",
+            "start_seconds": 120.0,
+            "end_seconds": 150.0,
+            "title": "Markets Explained",
+            "text": "She argues bitcoin volatility comes from thin liquidity.",
+            "modality": "transcript",
+        },
+    )
+    answerer = FakeAnswerer(answer="Around 2:00 she links bitcoin volatility to liquidity.")
+    pipeline = QueryPipeline(
+        embedder=FakeEmbedder(),
+        transcript_index=FakeIndex([bitcoin_hit]),
+        visual_index=FakeIndex([]),
+        answer_generator=answerer,
+    )
+
+    response = pipeline.run(SearchRequest(query="what does she say about bitcoin?"))
+
+    assert response.refused is False
+    assert "bitcoin" in response.answer
+    assert response.results[0].start_seconds == 120.0
 
 
 def test_low_score_retrieval_refuses():
@@ -610,7 +645,9 @@ def test_bedrock_answer_failure_logs_and_falls_back_to_extractive(caplog):
     import logging
 
     class BrokenAnswerer:
-        def generate(self, *, query: str, context: str, intent: str | None = None) -> str:
+        def generate(
+            self, *, query: str, context: str, intent: str | None = None
+        ) -> GeneratedAnswer:
             raise RuntimeError("bedrock throttled")
 
     pipeline = QueryPipeline(
@@ -648,25 +685,21 @@ def test_confidence_scale_tracks_rrf_k_via_config():
     assert response.confidence == 0.387
 
 
-def test_llm_refusal_answer_propagates_as_refused():
-    """When the LLM generates 'I could not find strong evidence', the pipeline
-    must propagate refused=True rather than silently returning a bad answer."""
+def test_ungrounded_answer_propagates_as_refused():
+    """When the LLM sets grounded=false, the pipeline must propagate
+    refused=True rather than silently returning a bad answer. The structured
+    flag replaces the old refusal-phrase substring matching, so any wording
+    works."""
 
-    class RefusingAnswerer:
-        def generate(self, *, query: str, context: str, intent: str | None = None) -> str:
-            return (
-                "I could not find strong evidence for that in the indexed videos. "
-                "The video focuses on different topics."
-            )
-
-        def rewrite_query(self, *, query: str) -> str:
-            return query
-
+    answerer = FakeAnswerer(
+        answer="The indexed videos focus on self-sabotage, not salary negotiation.",
+        grounded=False,
+    )
     pipeline = QueryPipeline(
         embedder=FakeEmbedder(),
         transcript_index=FakeIndex([_transcript_hit()]),
         visual_index=FakeIndex([]),
-        answer_generator=RefusingAnswerer(),
+        answer_generator=answerer,
     )
 
     response = pipeline.run(
@@ -674,7 +707,7 @@ def test_llm_refusal_answer_propagates_as_refused():
     )
 
     assert response.refused is True
-    assert "could not find strong evidence" in response.answer.lower()
+    assert "salary negotiation" in response.answer
     assert response.confidence == 0.0
     assert response.results == []
 
