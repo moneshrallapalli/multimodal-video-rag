@@ -51,3 +51,53 @@ the 13 over-refusals is attributed to either the retrieval gate
 (`packages/graph/src/graph/answering.py::_prompt`), then tune the dominant
 layer. Remember the scoped-baseline trick from `lessons.md` (monkeypatch
 `run_eval.CONFIGS` to one config, ~5 min) before any A/B.
+
+---
+
+## Session 2026-06-11 (b) continued — plan item 1: over-refusal tuning
+
+### Attribution (offline, zero cost — from the committed artifact)
+Gate refusals carry the canned `no_answer_message`; `grounded=false` refusals
+carry the LLM's own text. Result: **all 13 over-refusals AND all 11 correct
+refusals are LLM `grounded=false`; the retrieval gate fires on zero golden
+queries under production config.** Thresholds are the wrong lever entirely.
+Two failure patterns in the 13:
+1. **Answers-then-refuses** (e008, e104, e116): substantive cited answer text
+   with `grounded=false` — partial (visual-half) evidence treated as ungrounded.
+2. **Exact-timestamp pedantry** (e016, e024, e044): refuses "at the 2:05 mark"
+   because no frame sits at exactly 2:05 (frames sample every ~10s).
+Also: 9/13 already had `intent=visual` → the old visual-only leniency rules
+were present and insufficient.
+
+### Changes landed (pushed after verification)
+- `6fe9405` — refusal provenance: `refusal_reason`
+  (empty_query / retrieval_gate / no_candidates / llm_ungrounded /
+  pipeline_error) stamped at each refusal site, surfaced on `SearchResponse`,
+  recorded in eval per-query records. Tests assert reasons.
+- `881c61b` — prompt rewrite in `answering.py::_prompt`: grounded ⇔ "answer
+  states context info addressing the question, even partially/approximately";
+  ±15s timestamp tolerance; caption tolerance now unconditional (all intents);
+  refusal retained for topic-adjacent context lacking the asked-for info
+  (protects the 11 true refusals, which are all absent-topic questions).
+- ruff + 130 tests green before commit.
+
+### Missed-refusal finding (plan item 2 — needs a user decision, do NOT
+"fix" via prompt)
+e100 ("Does this video include instruction on advanced yoga poses…") — golden
+labels it no_answer, but the model gives a grounded, correct "No, this is a
+beginner workout" citing real evidence at 16:46; the golden row's own notes
+describe exactly that answer. Recommendation: relabel e100 as answerable
+(negative-existence answer) rather than nudging the prompt to refuse — a
+prompt that refuses evidenced "No" answers makes the product worse to game a
+label. Golden edits change denominators → regen baseline after.
+
+### A/B in flight
+Scoped production-only eval (no judge) running against
+`eval/golden/expanded.jsonl` → `/tmp/eval-prod-grounded-v2.json`.
+Baseline = committed artifact (same golden set, generated 2026-06-11 13:28):
+no-answer F1 0.611 / precision 0.458 / recall 0.917, MRR 0.791, ts@5s 0.740.
+Targets: precision ≥0.6 (≥6 of 13 over-refusals converted), recall ≥0.917
+(no new missed refusals beyond e100), MRR/ts@5s unchanged (retrieval untouched).
+If targets met: re-run full eval with judge to regenerate the committed
+artifact, then `cdk deploy` (still outstanding) ships provenance + prompt
+together.
