@@ -131,7 +131,12 @@ class QueryPipeline:
     def _validate_query(self, state: GraphState) -> GraphState:
         query = state.get("query", "").strip()
         if not query:
-            return {"refused": True, "answer": self.config.no_answer_message, "confidence": 0.0}
+            return {
+                "refused": True,
+                "refusal_reason": "empty_query",
+                "answer": self.config.no_answer_message,
+                "confidence": 0.0,
+            }
         return {"query": query}
 
     def _classify_intent(self, state: GraphState) -> GraphState:
@@ -275,6 +280,7 @@ class QueryPipeline:
         if not fused_candidates or not (has_dense_evidence or has_text_evidence):
             return {
                 "refused": True,
+                "refusal_reason": "retrieval_gate",
                 "answer": self.config.no_answer_message,
                 "confidence": 0.0,
                 "fused": [],
@@ -298,7 +304,12 @@ class QueryPipeline:
             return {}
         candidates = [_candidate(data) for data in state.get("fused", [])]
         if not candidates:
-            return {"refused": True, "answer": self.config.no_answer_message, "confidence": 0.0}
+            return {
+                "refused": True,
+                "refusal_reason": "no_candidates",
+                "answer": self.config.no_answer_message,
+                "confidence": 0.0,
+            }
         if all(candidate.modality == "visual" for candidate in candidates):
             return {"answer": _visual_answer(candidates[0]), "refused": False}
         if not self.config.enable_answer_generation:
@@ -332,7 +343,13 @@ class QueryPipeline:
         # on any paraphrase of the canned sentence.
         if not generated.grounded:
             answer = generated.text or self.config.no_answer_message
-            return {"refused": True, "answer": answer, "confidence": 0.0, "fused": []}
+            return {
+                "refused": True,
+                "refusal_reason": "llm_ungrounded",
+                "answer": answer,
+                "confidence": 0.0,
+                "fused": [],
+            }
         return {"answer": generated.text, "refused": False}
 
     def _to_search_response(self, state: GraphState) -> SearchResponse:
@@ -343,12 +360,14 @@ class QueryPipeline:
         # Zero-cost (regex + list reorder) — no extra LLM / network call.
         candidates = _reorder_by_citations(answer, candidates)
 
+        refused = bool(state.get("refused", False))
         return SearchResponse(
             query=state.get("query", ""),
             rewritten_query=state.get("rewritten_query"),
             intent=state.get("intent", "no_answer"),
             answer=answer,
-            refused=bool(state.get("refused", False)),
+            refused=refused,
+            refusal_reason=state.get("refusal_reason") if refused else None,
             confidence=float(state.get("confidence", 0.0)),
             results=[
                 SearchResult(

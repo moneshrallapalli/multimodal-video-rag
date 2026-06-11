@@ -42,6 +42,7 @@ def search_videos(req: SearchRequest) -> SearchResponse:
             intent="no_answer",
             answer=NO_ANSWER_MESSAGE,
             refused=True,
+            refusal_reason="pipeline_error",
             confidence=0.0,
             results=[],
         )

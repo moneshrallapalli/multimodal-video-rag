@@ -313,6 +313,7 @@ def test_off_domain_query_refuses_via_evidence_gate_not_keywords():
     response = pipeline.run(SearchRequest(query="what is today's weather"))
 
     assert response.refused is True
+    assert response.refusal_reason == "retrieval_gate"
     assert response.results == []
     assert len(transcript.calls) == 1  # retrieval ran; the gate refused
     assert len(visual.calls) == 1
@@ -346,6 +347,7 @@ def test_query_with_former_blocklist_keyword_answers_when_evidence_exists():
     response = pipeline.run(SearchRequest(query="what does she say about bitcoin?"))
 
     assert response.refused is False
+    assert response.refusal_reason is None
     assert "bitcoin" in response.answer
     assert response.results[0].start_seconds == 120.0
 
@@ -636,6 +638,7 @@ def test_per_modality_gate_refuses_when_both_below_threshold():
     response = pipeline.run(SearchRequest(query="show me an unrelated thing entirely"))
 
     assert response.refused is True
+    assert response.refusal_reason == "retrieval_gate"
     assert response.results == []
 
 
@@ -707,6 +710,7 @@ def test_ungrounded_answer_propagates_as_refused():
     )
 
     assert response.refused is True
+    assert response.refusal_reason == "llm_ungrounded"
     assert "salary negotiation" in response.answer
     assert response.confidence == 0.0
     assert response.results == []

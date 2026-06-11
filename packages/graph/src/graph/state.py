@@ -11,6 +11,10 @@ from typing import Literal, TypedDict
 
 QueryIntent = Literal["visual", "transcript", "hybrid", "timestamp", "summary", "no_answer"]
 
+# Which layer refused a query. Eval uses this to attribute over-refusals to the
+# retrieval gate vs the LLM's grounded flag without sniffing answer text.
+RefusalReason = Literal["empty_query", "retrieval_gate", "no_candidates", "llm_ungrounded"]
+
 
 class Citation(TypedDict):
     video_id: str
@@ -42,3 +46,4 @@ class GraphState(TypedDict, total=False):
     grounding_score: float
     confidence: float
     refused: bool
+    refusal_reason: RefusalReason

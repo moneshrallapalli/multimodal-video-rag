@@ -335,6 +335,7 @@ def _query_output(
             "intent": response.intent,
             "rewritten_query": response.rewritten_query,
             "refused": response.refused,
+            "refusal_reason": response.refusal_reason,
             "confidence": response.confidence,
             "answer": response.answer,
             "results": [

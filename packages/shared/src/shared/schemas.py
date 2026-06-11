@@ -65,6 +65,10 @@ class SearchResponse(BaseModel):
     intent: QueryIntent
     answer: str | None = None
     refused: bool = False
+    # Which layer refused: "retrieval_gate" (weak dense/lexical evidence),
+    # "llm_ungrounded" (the model judged the context insufficient),
+    # "empty_query", "no_candidates", or "pipeline_error". None when answered.
+    refusal_reason: str | None = None
     confidence: float = Field(ge=0.0, le=1.0)
     results: list[SearchResult] = Field(default_factory=list)
 
