@@ -1,7 +1,9 @@
 "use client";
 
+import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 
+import { AnimatedNumber } from "@/components/eval/animated-number";
 import {
   Table,
   TableBody,
@@ -12,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import data from "@/data/eval-results.json";
 import { pct } from "@/lib/format";
+import { EASE_OUT_QUINT, expandPanel } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 type Config = (typeof data.configs)[number];
@@ -102,13 +105,22 @@ export function EvalDashboard() {
             type="button"
             onClick={() => setSelectedId(c.id)}
             className={cn(
-              "rounded-full border px-3 py-1 text-xs transition-colors",
+              "relative rounded-full border px-3 py-1 text-xs transition-colors",
               selectedId === c.id
-                ? "border-primary bg-primary/10 font-medium text-primary"
+                ? "border-transparent font-medium text-primary"
                 : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground",
             )}
           >
-            {c.label}
+            {/* The pill glides to the selected config (shared layout id). */}
+            {selectedId === c.id && (
+              <motion.span
+                layoutId="config-pill"
+                transition={{ duration: 0.3, ease: EASE_OUT_QUINT }}
+                className="absolute inset-0 rounded-full border border-primary bg-primary/10"
+                aria-hidden
+              />
+            )}
+            <span className="relative">{c.label}</span>
           </button>
         ))}
       </div>
@@ -162,7 +174,10 @@ export function EvalDashboard() {
                 <TableRow
                   key={c.id}
                   onClick={() => setSelectedId(c.id)}
-                  className={cn("cursor-pointer", selectedId === c.id && "bg-primary/5")}
+                  className={cn(
+                    "cursor-pointer transition-colors duration-200",
+                    selectedId === c.id && "bg-primary/5",
+                  )}
                 >
                   <TableCell className="font-medium">{c.label}</TableCell>
                   {CORE_METRICS.map((m) => (
@@ -236,7 +251,9 @@ function Metric({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex items-center justify-between gap-2">
       <dt className="text-muted-foreground capitalize">{label}</dt>
-      <dd className="font-medium tabular-nums">{pct(value)}</dd>
+      <dd className="font-medium tabular-nums">
+        <AnimatedNumber value={value} format={pct} />
+      </dd>
     </div>
   );
 }
@@ -266,7 +283,9 @@ function MatrixCell({
         good ? "border-primary/30 bg-primary/5" : "border-border bg-muted/40",
       )}
     >
-      <div className="text-lg font-semibold tabular-nums">{value}</div>
+      <div className="text-lg font-semibold tabular-nums">
+        <AnimatedNumber value={value} />
+      </div>
       <div className="text-xs text-muted-foreground">{label}</div>
     </div>
   );
@@ -300,8 +319,10 @@ function MetricMethodology({
           ▼
         </span>
       </button>
-      {open && (
-        <div className="grid gap-4 border-t border-border px-4 py-4 text-sm md:grid-cols-2">
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div {...expandPanel} className="overflow-hidden">
+            <div className="grid gap-4 border-t border-border px-4 py-4 text-sm md:grid-cols-2">
           <FormulaCard
             title="MRR (Mean Reciprocal Rank)"
             formula="MRR = (1/N) × Σ (1 / rank_i)"
@@ -332,14 +353,16 @@ function MetricMethodology({
             description="Fraction of answerable queries where the top result modality (transcript vs. visual) matches the expected modality from the golden set."
             value={selected.modality_acc}
           />
-          <FormulaCard
-            title="Config features"
-            formula=""
-            description={`Hybrid BM25: ${selected.enable_hybrid_transcript ? "on" : "off"} · Cross-encoder rerank: ${selected.enable_cross_encoder_rerank ? "on" : "off"} · Query rewrite: ${selected.enable_query_rewrite ? "on" : "off"} · Answer generation: ${selected.enable_answer_generation ? "on" : "off"}`}
-            value={null}
-          />
-        </div>
-      )}
+              <FormulaCard
+                title="Config features"
+                formula=""
+                description={`Hybrid BM25: ${selected.enable_hybrid_transcript ? "on" : "off"} · Cross-encoder rerank: ${selected.enable_cross_encoder_rerank ? "on" : "off"} · Query rewrite: ${selected.enable_query_rewrite ? "on" : "off"} · Answer generation: ${selected.enable_answer_generation ? "on" : "off"}`}
+                value={null}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
