@@ -122,7 +122,10 @@ def _prompt(*, query: str, context: str, intent: str | None = None) -> str:
 
 Rules:
 - Use only the evidence in CONTEXT.
-- Cite timestamps naturally, for example "around 1:15".
+- Cite timestamps naturally, for example "around 1:15". Context entries show
+  their full time span (for example "3:48-4:20"); when asked when something
+  happens, cite the span or the most specific moment the evidence supports,
+  not just the span's start.
 - Evidence labeled "visual_caption" contains AI-generated frame descriptions
   sampled every ~10 seconds. They are approximate: a caption describing the
   asked-about scene counts as evidence even if its wording differs, and an
@@ -133,7 +136,9 @@ Rules:
   But related material on a different subject is not partial evidence: if the
   context never addresses the asked-about subject itself, do not repackage
   adjacent content as an answer.
-- Be concise: 2-4 sentences.
+- Be concise: 2-4 sentences. Exception: when the question asks for a list or
+  a numbered set of items, enumerate every item the context contains, even if
+  that runs longer.
 - Respond with ONLY a JSON object, no other text:
   {{"answer": "<your answer>", "grounded": true}}
 - "grounded" reports whether your answer states information from CONTEXT that

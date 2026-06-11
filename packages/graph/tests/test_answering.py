@@ -37,6 +37,10 @@ def test_bedrock_answer_generator_uses_converse_with_grounding_prompt():
     assert "Partial evidence is still evidence" in prompt
     assert "cites context timestamps" in prompt
     assert "visual_caption" in prompt
+    # Judge analysis: start-only citations and capped list answers were the
+    # two largest judged-incorrect clusters.
+    assert "not just the span's start" in prompt
+    assert "enumerate every item" in prompt
     assert "QUESTION:\nWhere?" in prompt
     assert "CONTEXT:\n[1] context" in prompt
     assert client.calls[0]["inferenceConfig"]["temperature"] == 0.1
