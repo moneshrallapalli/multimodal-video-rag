@@ -142,10 +142,16 @@ correct **0.766** (was 0.75), useful 0.937.
   judge n=111, and corrected the stale "cross-encoder is eval-only" claim
   (it ships in the `video-rag-reranker` Lambda since Phase 6).
 
+### e100 relabel: APPROVED by user and done (`95ab8c7`)
+Relabeled no_answer → transcript with relevant span 1006.48–1038.4 (the 16:46
+"crazy pretzel shapes" segment) and a reference negative answer. Rationale in
+the row notes and commit message: grounded negative-existence answers beat
+refusals when direct evidence exists. No-answer denominator 12 → 11; full
+artifact regen launched right after (background) — expect recall 1.0 if the
+11 true refusals hold, precision ~0.478, F1 ~0.647, small MRR lift from
+e100's rank-1 evidence. Commit the regenerated artifact when it lands.
+
 ### Open items going into the next session
-- **e100 relabel decision (user)**: golden labels it no_answer; the model
-  gives a grounded, correct "No (beginner workout)" with evidence. Recommend
-  relabeling as answerable; changes no-answer denominators → regen after.
 - Plan items 3–6 from `phase-8-quality.md` (judge correct_rate, rewrite-on-
   miss + parallel retrieval, scene-detection sampling, BM25 refit). Items 4/5
   now have a sharper target: the 12 residual over-refusals are retrieval
