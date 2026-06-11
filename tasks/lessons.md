@@ -24,6 +24,9 @@ Engineering gotchas hit while building this repo, with the rule to avoid repeati
   any user-reported exact prompt before declaring the live UX fixed.
 - **CI runs `ruff format --check`, not just `ruff check`.** Rule: after editing Python files, run
   both commands locally before pushing, especially after CDK/deploy config changes.
+- **Piping a long-running command through `tail` masks failures.** A 15-min eval run died on a
+  Pinecone SSL timeout but reported exit 0 because the pipeline's status came from `tail`. Rule:
+  run background commands bare (the output file captures everything anyway), or `set -o pipefail`.
 
 ## Audit / production hardening
 
@@ -84,3 +87,7 @@ Engineering gotchas hit while building this repo, with the rule to avoid repeati
   the retrieved context for each refusal (refused responses clear `results`, so re-run with
   `enable_answer_generation=False`) and confirm the evidence actually arrives. Prompt-fix only the
   refusals whose context contains the answer.
+- **One transient Pinecone error kills a whole eval run.** ~1900 sequential queries with no retry:
+  a single SSL handshake timeout aborted a 15-minute 7-config run. Rule: until
+  `shared/pinecone_client.py` gets bounded retries on transient network errors, expect to re-run;
+  check the task output for a traceback before trusting any background eval "completed" status.
