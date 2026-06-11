@@ -46,6 +46,10 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  /* Motion: exponential ease-out curves; no bounce, no elastic. */
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 :root {
@@ -127,5 +131,65 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+/* Skeleton shimmer while the pipeline is retrieving + grounding. */
+@keyframes skeleton-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton {
+  border-radius: var(--radius-md);
+  background-color: var(--muted);
+  background-image: linear-gradient(
+    100deg,
+    transparent 35%,
+    oklch(1 0 0 / 55%) 50%,
+    transparent 65%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.6s linear infinite;
+}
+
+.dark .skeleton {
+  background-image: linear-gradient(
+    100deg,
+    transparent 35%,
+    oklch(1 0 0 / 7%) 50%,
+    transparent 65%
+  );
+}
+
+/* Idle empty-state drift (player placeholder icon). */
+@keyframes float-gentle {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-float-gentle {
+  animation: float-gentle 4s ease-in-out infinite;
+}
+
+/* Reduced motion: collapse CSS animations/transitions to near-instant.
+   JS-driven motion is handled separately via MotionConfig reducedMotion="user". */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
