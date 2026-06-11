@@ -118,10 +118,20 @@ Expected final: ~P 0.524 / R 0.917 / F1 0.667 vs baseline F1 0.611. Precision
 target 0.6 NOT met — remaining gap is retrieval/caption-bound (items 4/5),
 which is the honest stopping point for item 1.
 
-### Full artifact regen in flight
-`uv run python eval/run_eval.py --golden eval/golden/expanded.jsonl --judge
-haiku` running in background → overwrites `apps/web/src/data/eval-results.json`
-(all 7 configs + judge, ~15-20 min). After completion: verify summary, commit
-artifact, then `cdk deploy` (STILL OUTSTANDING) to ship provenance + prompt to
-the live API; smoke with a cache-busting query (1h query-cache TTL).
-e100 relabel recommendation still awaiting user decision.
+### Final numbers (full 7-config run + judge, artifact committed `6cf4dc9`)
+Production vs baseline: no-answer F1 0.611→**0.629**, precision 0.458→0.478,
+recall held 0.917 (e100 only miss). MRR 0.794 (~unchanged), ts@5s 0.740
+(unchanged). Judge (n=111): quality 0.845, grounded 0.928,
+correct **0.766** (was 0.75), useful 0.937.
+- All 12 remaining over-refusals are `llm_ungrounded` (provable from the new
+  per-query `refusal_reason`); the gate fires on zero golden queries.
+- Two borderline queries (e018, e099 — asked-for specifics absent from
+  retrieved context) flip run-to-run at the grounded borderline; e008/e104/
+  e116 (answers-then-refuses) stayed converted.
+- Precision target 0.6 not reached — the residual is retrieval/caption-bound
+  (see diagnostic above), so further gains belong to items 4/5, not the prompt.
+
+### Item 1 status: DONE (prompt-side ceiling reached)
+Remaining for this session: `cdk deploy` to ship prompt + provenance live,
+cache-busted smoke, then update README stale copy (135 queries / 13 videos /
+new judge numbers). e100 relabel recommendation still awaiting user decision.
