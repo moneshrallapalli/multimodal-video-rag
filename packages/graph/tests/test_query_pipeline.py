@@ -528,56 +528,133 @@ def test_cross_encoder_rerank_fires_on_mixed_modality_hybrid_intent():
     assert len(fake_reranker.calls) == 1
 
 
-def test_hyde_uses_passage_for_embedding_but_original_query_for_answer():
-    from graph.models import GraphConfig
-
-    embedder = FakeEmbedder()
-    hyde_passage = "self sabotage fear of failure planning"
-    answerer = FakeAnswerer(rewrite=hyde_passage)
+def test_context_lines_show_chunk_time_spans():
+    """The answer model can only cite timestamps it sees: context must carry
+    the chunk's full span, not just its start."""
+    answerer = FakeAnswerer()
     pipeline = QueryPipeline(
-        embedder=embedder,
+        embedder=FakeEmbedder(),
         transcript_index=FakeIndex([_transcript_hit()]),
         visual_index=FakeIndex([]),
         answer_generator=answerer,
-        config=GraphConfig(enable_query_rewrite=True, query_rewrite_max_terms=10),
     )
 
-    response = pipeline.run(SearchRequest(query="why does she get stuck?", top_k=2))
+    pipeline.run(SearchRequest(query="self sabotage", top_k=2))
 
+    assert "@ 1:14-1:45 " in answerer.calls[0]["context"]
+
+
+class SequencedIndex:
+    """Returns the next configured hit list per call — lets the rewrite-on-miss
+    retry round see different results than the raw round."""
+
+    def __init__(self, rounds: list[list[RetrievalHit]]) -> None:
+        self.rounds = rounds
+        self.calls = []
+
+    def query(self, vector, *, top_k, metadata_filter=None, namespace=None, sparse_vector=None):
+        self.calls.append({"vector": vector, "sparse_vector": sparse_vector})
+        index = min(len(self.calls) - 1, len(self.rounds) - 1)
+        return self.rounds[index]
+
+
+def test_rewrite_on_miss_retries_with_passage_embedding():
+    """A gate refusal on the raw query gets one rewritten retry: the passage
+    drives the retry embedding, the original query still drives the answer."""
+    embedder = FakeEmbedder()
+    hyde_passage = "self sabotage fear of failure planning"
+    answerer = FakeAnswerer(rewrite=hyde_passage)
+    transcript = SequencedIndex([[], [_transcript_hit()]])
+    pipeline = QueryPipeline(
+        embedder=embedder,
+        transcript_index=transcript,
+        visual_index=FakeIndex([]),
+        answer_generator=answerer,
+        config=GraphConfig(enable_query_rewrite=True),
+    )
+
+    response = pipeline.run(SearchRequest(query="why stuck?", top_k=2))
+
+    assert response.refused is False
     assert response.rewritten_query == hyde_passage
-    assert answerer.rewrite_calls == ["why does she get stuck?"]
-    assert embedder.text_queries == [hyde_passage]
-    assert answerer.calls[0]["query"] == "why does she get stuck?"
+    assert answerer.rewrite_calls == ["why stuck?"]
+    assert embedder.text_queries == ["why stuck?", hyde_passage]
+    assert len(transcript.calls) == 2
+    assert answerer.calls[0]["query"] == "why stuck?"
+
+
+def test_rewrite_skipped_when_raw_retrieval_succeeds():
+    """Queries that pass the gate raw never pay the rewrite LLM call."""
+    answerer = FakeAnswerer(rewrite="should never be used")
+    transcript = FakeIndex([_transcript_hit()])
+    pipeline = QueryPipeline(
+        embedder=FakeEmbedder(),
+        transcript_index=transcript,
+        visual_index=FakeIndex([]),
+        answer_generator=answerer,
+        config=GraphConfig(enable_query_rewrite=True),
+    )
+
+    response = pipeline.run(SearchRequest(query="self sabotage", top_k=2))
+
+    assert response.refused is False
+    assert response.rewritten_query is None
+    assert answerer.rewrite_calls == []
+    assert len(transcript.calls) == 1
+
+
+def test_rewrite_failure_on_miss_preserves_gate_refusal():
+    """If the rewrite call errors, the gate refusal stands and no second
+    retrieval round is paid."""
+
+    class BrokenRewriteAnswerer(FakeAnswerer):
+        def rewrite_query(self, *, query: str) -> str:
+            raise RuntimeError("bedrock throttled")
+
+    transcript = FakeIndex([])
+    pipeline = QueryPipeline(
+        embedder=FakeEmbedder(),
+        transcript_index=transcript,
+        visual_index=FakeIndex([]),
+        answer_generator=BrokenRewriteAnswerer(),
+        config=GraphConfig(enable_query_rewrite=True),
+    )
+
+    response = pipeline.run(SearchRequest(query="why stuck?", top_k=2))
+
+    assert response.refused is True
+    assert response.refusal_reason == "retrieval_gate"
+    assert len(transcript.calls) == 1
 
 
 def test_query_rewrite_skips_visual_intent():
-    from graph.models import GraphConfig
-
+    """Visual-intent misses refuse without a rewrite retry — rewriting toward
+    transcript-style passages does not help visual evidence."""
     embedder = FakeEmbedder()
     answerer = FakeAnswerer(rewrite="rewritten visual query")
     pipeline = QueryPipeline(
         embedder=embedder,
         transcript_index=FakeIndex([]),
-        visual_index=FakeIndex([_visual_hit()]),
+        visual_index=FakeIndex([]),
         answer_generator=answerer,
         config=GraphConfig(enable_query_rewrite=True),
     )
 
-    response = pipeline.run(SearchRequest(query="Show me the speaker at a desk"))
+    response = pipeline.run(SearchRequest(query="Show me a desk"))
 
+    assert response.refused is True
     assert response.rewritten_query is None
     assert answerer.rewrite_calls == []
-    assert embedder.visual_queries == ["Show me the speaker at a desk"]
 
 
 def test_query_rewrite_skips_already_specific_queries():
-    from graph.models import GraphConfig
-
-    embedder = FakeEmbedder()
+    """Long, specific queries are not rewritten even on a miss — they lose
+    exact lexical anchors when paraphrased."""
     answerer = FakeAnswerer(rewrite="rewritten query")
+    transcript = FakeIndex([])
     pipeline = QueryPipeline(
-        embedder=embedder,
-        transcript_index=FakeIndex([_transcript_hit()]),
+        embedder=FakeEmbedder(),
+        transcript_index=transcript,
         visual_index=FakeIndex([]),
         answer_generator=answerer,
         config=GraphConfig(enable_query_rewrite=True, query_rewrite_max_terms=3),
@@ -586,9 +663,10 @@ def test_query_rewrite_skips_already_specific_queries():
     query = "Where does she explain fear as the reason we stop chasing dreams?"
     response = pipeline.run(SearchRequest(query=query))
 
+    assert response.refused is True
     assert response.rewritten_query is None
     assert answerer.rewrite_calls == []
-    assert embedder.text_queries == [query]
+    assert len(transcript.calls) == 1
 
 
 def test_per_modality_gate_lets_transcript_pass_when_visual_below_threshold():

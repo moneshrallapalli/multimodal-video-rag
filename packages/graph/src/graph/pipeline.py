@@ -118,12 +118,22 @@ class QueryPipeline:
         graph.add_node("generate_answer", self._generate_answer)
         graph.set_entry_point("validate_query")
         graph.add_edge("validate_query", "classify_intent")
-        graph.add_edge("classify_intent", "rewrite_query")
-        graph.add_edge("rewrite_query", "retrieve_transcript")
-        graph.add_edge("retrieve_transcript", "retrieve_visual")
-        graph.add_edge("retrieve_visual", "fuse_results")
+        # Fan out: both retrievals run in the same superstep (parallel I/O —
+        # each is an embed call plus a Pinecone query, all network-bound).
+        graph.add_edge("classify_intent", "retrieve_transcript")
+        graph.add_edge("classify_intent", "retrieve_visual")
+        graph.add_edge(["retrieve_transcript", "retrieve_visual"], "fuse_results")
         graph.add_edge("fuse_results", "apply_retrieval_gate")
-        graph.add_edge("apply_retrieval_gate", "build_context")
+        # Rewrite-on-miss: the raw query retrieves first; a gate refusal gets
+        # one rewritten retry. Queries that succeed raw never pay the rewrite
+        # LLM call (the common case).
+        graph.add_conditional_edges(
+            "apply_retrieval_gate",
+            self._after_gate,
+            {"rewrite_query": "rewrite_query", "build_context": "build_context"},
+        )
+        graph.add_edge("rewrite_query", "retrieve_transcript")
+        graph.add_edge("rewrite_query", "retrieve_visual")
         graph.add_edge("build_context", "generate_answer")
         graph.add_edge("generate_answer", END)
         return graph.compile()
@@ -168,24 +178,34 @@ class QueryPipeline:
             "should_retrieve_visual": retrieve_visual,
         }
 
-    def _rewrite_query(self, state: GraphState) -> GraphState:
-        if state.get("refused") or not self.config.enable_query_rewrite:
-            return {}
+    def _after_gate(self, state: GraphState) -> str:
+        """Route a gate refusal into one rewritten retry when eligible."""
+        if not state.get("refused"):
+            return "build_context"
+        if state.get("refusal_reason") != "retrieval_gate":
+            return "build_context"
+        if state.get("rewrite_attempted") or not self.config.enable_query_rewrite:
+            return "build_context"
         if state.get("intent") == "visual":
-            return {}
+            return "build_context"
+        if len(_rewrite_terms(state["query"])) > self.config.query_rewrite_max_terms:
+            return "build_context"
+        return "rewrite_query"
 
+    def _rewrite_query(self, state: GraphState) -> GraphState:
+        # Only reached via _after_gate on a retrieval-gate miss. If the rewrite
+        # fails or comes back empty, the refusal stands: the retrieval nodes
+        # short-circuit on `refused` and the second gate pass preserves it.
         query = state["query"]
-        if len(_rewrite_terms(query)) > self.config.query_rewrite_max_terms:
-            return {}
         try:
             rewritten = self.answer_generator.rewrite_query(query=query).strip()
         except Exception:
             logger.exception("query_rewrite_error query_len=%s", len(query))
-            return {}
+            return {"rewrite_attempted": True}
 
         if not rewritten:
-            return {}
-        return {"rewritten_query": rewritten}
+            return {"rewrite_attempted": True}
+        return {"rewrite_attempted": True, "rewritten_query": rewritten, "refused": False}
 
     def _retrieve_transcript(self, state: GraphState) -> GraphState:
         if state.get("refused") or not state.get("should_retrieve_transcript"):
@@ -293,8 +313,12 @@ class QueryPipeline:
             return {"context": ""}
         lines = []
         for candidate in [_candidate(data) for data in state.get("fused", [])]:
+            # Show the chunk's full span, not just its start: the answer model
+            # can only cite timestamps it sees, and judging showed start-only
+            # context produces citations off by the gap between chunk start and
+            # the actual moment inside the chunk.
             lines.append(
-                f"[{candidate.rank}] {candidate.title} @ {_mmss(candidate.start_seconds)} "
+                f"[{candidate.rank}] {candidate.title} @ {_span(candidate)} "
                 f"({candidate.modality}, score={candidate.score:.4f}): {candidate.snippet}"
             )
         return {"context": "\n".join(lines)}
@@ -434,6 +458,13 @@ def _rewrite_terms(query: str) -> list[str]:
 def _mmss(seconds: float) -> str:
     minutes, secs = divmod(int(seconds), 60)
     return f"{minutes}:{secs:02d}"
+
+
+def _span(candidate: RetrievalCandidate) -> str:
+    """Format a chunk's time span; point-in-time frames collapse to one stamp."""
+    if candidate.end_seconds <= candidate.start_seconds:
+        return _mmss(candidate.start_seconds)
+    return f"{_mmss(candidate.start_seconds)}-{_mmss(candidate.end_seconds)}"
 
 
 def _scale_to_unit(value: float, scale: float) -> float:

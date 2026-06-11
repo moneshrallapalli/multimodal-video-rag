@@ -53,7 +53,9 @@ class GraphConfig(BaseModel):
     # Cross-encoder reranking is CPU-heavy and requires sentence-transformers, so
     # keep it opt-in and bake the model into the API container image.
     enable_cross_encoder_rerank: bool = False
-    # Optional Haiku query rewrite used by the ablation harness. Off by default
+    # Optional Haiku query rewrite, applied on-miss only: the raw query
+    # retrieves first, and a retrieval-gate refusal gets one rewritten retry.
+    # Queries that succeed raw never pay the rewrite LLM call. Off by default
     # so the dense baseline keeps the original query path.
     enable_query_rewrite: bool = False
     # Rewrite is most useful for terse queries. Already-specific queries often
