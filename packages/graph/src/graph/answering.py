@@ -137,8 +137,9 @@ Rules:
   context never addresses the asked-about subject itself, do not repackage
   adjacent content as an answer.
 - Be concise: 2-4 sentences. Exception: when the question asks for a list or
-  a numbered set of items, enumerate every item the context contains, even if
-  that runs longer.
+  a numbered set of items, enumerate every item the context contains on the
+  asked-about subject, even if that runs longer. The different-subject rule
+  still applies — never pad a list with adjacent material.
 - Respond with ONLY a JSON object, no other text:
   {{"answer": "<your answer>", "grounded": true}}
 - "grounded" reports whether your answer states information from CONTEXT that

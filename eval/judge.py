@@ -95,7 +95,11 @@ def _judge_prompt(*, question: str, reference: str, answer: str, evidence: str) 
 Return JSON only with:
 - score: number from 0 to 1
 - grounded: boolean, true if the answer is supported by the evidence
-- correct: boolean, true if it matches the reference answer
+- correct: boolean, true if it matches the reference answer. Timestamp
+  citations: evidence chunks span tens of seconds, so a cited time or span
+  matches when it contains or falls within about 15 seconds of the reference
+  moment. Never mark an answer incorrect solely because its citation is a
+  wider span that brackets the reference timestamp.
 - useful: boolean, true if it would help the user
 - rationale: one short sentence
 
