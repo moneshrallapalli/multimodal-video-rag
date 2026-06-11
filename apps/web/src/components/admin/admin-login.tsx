@@ -1,6 +1,6 @@
 "use client";
 
-import { Lock } from "lucide-react";
+import { LoaderCircle, Lock } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,7 @@ export function AdminLogin({ onLogin }: { onLogin: (password: string) => Promise
   }
 
   return (
-    <Card className="max-w-sm">
+    <Card className="animate-in fade-in slide-in-from-bottom-2 max-w-sm duration-300 ease-out">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Lock className="size-4 text-primary" /> Admin sign in
@@ -56,6 +56,7 @@ export function AdminLogin({ onLogin }: { onLogin: (password: string) => Promise
             />
           </div>
           <Button type="submit" disabled={busy || !password}>
+            {busy && <LoaderCircle className="size-4 animate-spin" aria-hidden />}
             {busy ? "Signing in…" : "Sign in"}
           </Button>
         </form>

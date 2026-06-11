@@ -83,7 +83,7 @@ export function AdminConsole() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="animate-in fade-in flex flex-col gap-6 duration-300 ease-out">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">Signed in as admin.</p>
         <Button variant="outline" size="sm" onClick={handleLogout}>

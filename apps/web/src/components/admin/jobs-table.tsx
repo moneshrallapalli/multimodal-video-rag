@@ -20,7 +20,11 @@ function fmtTime(iso: string): string {
 function ProgressBar({ value }: { value: number }) {
   return (
     <div className="h-1.5 w-full rounded-full bg-muted">
-      <div className="h-full rounded-full bg-primary" style={{ width: `${value}%` }} />
+      {/* Width transition smooths the jumps between polled progress values. */}
+      <div
+        className="ease-out-quint h-full rounded-full bg-primary transition-[width] duration-700"
+        style={{ width: `${value}%` }}
+      />
     </div>
   );
 }
@@ -48,7 +52,10 @@ export function JobsTable({ jobs }: { jobs: Job[] }) {
               </TableRow>
             ) : (
               jobs.map((j) => (
-                <TableRow key={j.id}>
+                <TableRow
+                  key={j.id}
+                  className="animate-in fade-in slide-in-from-top-1 duration-300 ease-out"
+                >
                   <TableCell className="max-w-[260px]">
                     <div className="truncate font-medium">{j.title ?? j.youtube_url}</div>
                     {j.error && <div className="truncate text-xs text-red-600">{j.error}</div>}

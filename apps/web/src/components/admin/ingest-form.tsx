@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { LoaderCircle, Plus } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -52,7 +52,12 @@ export function IngestForm({ onSubmit }: { onSubmit: (req: IngestRequest) => Pro
               className="flex-1"
             />
             <Button type="submit" disabled={busy || !url.trim()} className="gap-1">
-              <Plus className="size-4" /> {busy ? "Queuing…" : "Queue ingestion"}
+              {busy ? (
+                <LoaderCircle className="size-4 animate-spin" aria-hidden />
+              ) : (
+                <Plus className="size-4" />
+              )}
+              {busy ? "Queuing…" : "Queue ingestion"}
             </Button>
           </div>
           <div className="flex gap-3">
