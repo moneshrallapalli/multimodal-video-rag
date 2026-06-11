@@ -218,4 +218,23 @@ answered this run — borderline pool breathes). MRR 0.779 / ts@5s 0.718
 (citation-reorder noise band 0.78–0.81 / 0.72–0.76). README synced; added
 rewrite-on-miss engineering paragraph.
 
-### Remaining: deploy + smoke (items 3+4 prompt/graph changes NOT yet live)
+### Deploy + smoke: DONE — items 3+4 complete
+`cdk deploy VideoRagCore` succeeded (104.9s). Cache-busted smoke: enumeration
+query answers grounded with citations (and honestly flags partial coverage);
+off-domain refuses with `refusal_reason: "llm_ungrounded"`. Span citations,
+enumeration rule, parallel retrieval, and rewrite-on-miss are all serving.
+
+### Open items going into the next session
+- **Item 5** (do BEFORE library expansion): scene-detection frame sampling in
+  `workers/ingest/src/ingest/media.py::extract_frames` + perceptual-hash
+  dedupe; AND enrich bare image-embedding visual hits with their frame's
+  caption text (the 11 residual over-refusals and most judged-incorrect
+  visual answers trace to evidence not reaching the context).
+- **Item 6**: BM25 O(N²) corpus refit
+  (`workers/ingest/src/ingest/pipeline.py::_refresh_corpus_bm25_stats`) —
+  merge per-video stats; do alongside item 5.
+- Pending chip: bounded retries in `shared/pinecone_client.py` (two eval runs
+  died on transient SSL/DNS errors today).
+- Known borderlines, documented: e010 (enumeration rule tips it to answer),
+  e018/e099 (flip run-to-run at the grounded borderline), e027 (judge
+  occasionally ignores its own bracketing rule).
