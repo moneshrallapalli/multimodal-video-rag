@@ -1,13 +1,16 @@
 "use client";
 
+import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 
 import { api } from "@/lib/api";
+import { revealContainer, revealItem, viewFade } from "@/lib/motion";
 import type { DemoVideo, SearchResponse, SearchResult } from "@/lib/types";
 
 import { AnswerPanel } from "./answer-panel";
 import { ResultList } from "./result-list";
 import { SearchBar } from "./search-bar";
+import { SearchSkeleton } from "./search-skeleton";
 import { VideoLibrary } from "./video-library";
 import { VideoFilter } from "./video-filter";
 import { YouTubePlayer } from "./youtube-player";
@@ -96,7 +99,7 @@ export function SearchView() {
               key={ex}
               type="button"
               onClick={() => runSearch(ex)}
-              className="rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+              className="rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground transition-[color,border-color,transform] duration-150 hover:border-primary/50 hover:text-foreground active:scale-[0.97]"
             >
               {ex}
             </button>
@@ -110,32 +113,41 @@ export function SearchView() {
         </div>
       )}
 
-      {response ? (
-        <div className="grid gap-5 lg:grid-cols-3">
-          <div className="order-last flex flex-col gap-4 lg:order-first lg:col-span-2">
-            <AnswerPanel response={response} />
-            {response.results.length > 0 && (
-              <ResultList results={response.results} activeKey={activeKey} onSeek={onSeek} />
-            )}
-          </div>
-          <div className="lg:col-span-1">
-            <div className="lg:sticky lg:top-20">
-              <YouTubePlayer
-                videoId={seek?.videoId ?? null}
-                startSeconds={seek?.seconds ?? 0}
-                title={seek?.title}
-              />
-              {seek && (
-                <p className="mt-2 line-clamp-1 text-xs text-muted-foreground">
-                  Now playing: {seek.title}
-                </p>
+      <AnimatePresence mode="wait" initial={false}>
+        {loading ? (
+          <SearchSkeleton key="loading" />
+        ) : response ? (
+          <motion.div
+            key="results"
+            variants={revealContainer}
+            initial="hidden"
+            animate="show"
+            exit={{ opacity: 0, transition: { duration: 0.15 } }}
+            className="grid gap-5 lg:grid-cols-3"
+          >
+            <div className="order-last flex flex-col gap-4 lg:order-first lg:col-span-2">
+              <AnswerPanel response={response} />
+              {response.results.length > 0 && (
+                <ResultList results={response.results} activeKey={activeKey} onSeek={onSeek} />
               )}
             </div>
-          </div>
-        </div>
-      ) : (
-        !error && (
-          <div className="flex flex-col gap-5">
+            <motion.div variants={revealItem} className="lg:col-span-1">
+              <div className="lg:sticky lg:top-20">
+                <YouTubePlayer
+                  videoId={seek?.videoId ?? null}
+                  startSeconds={seek?.seconds ?? 0}
+                  title={seek?.title}
+                />
+                {seek && (
+                  <p className="mt-2 line-clamp-1 text-xs text-muted-foreground">
+                    Now playing: {seek.title}
+                  </p>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        ) : !error ? (
+          <motion.div key="empty" {...viewFade} className="flex flex-col gap-5">
             <p className="text-sm text-muted-foreground">
               Search the {indexedCount || "seed"} indexed video
               {indexedCount === 1 ? "" : "s"} by what was{" "}
@@ -144,9 +156,9 @@ export function SearchView() {
               exact moment.
             </p>
             <VideoLibrary videos={videos} />
-          </div>
-        )
-      )}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }

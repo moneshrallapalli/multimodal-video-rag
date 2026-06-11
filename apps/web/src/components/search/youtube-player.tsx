@@ -1,6 +1,7 @@
 "use client";
 
 import { PlayCircle } from "lucide-react";
+import { motion } from "motion/react";
 
 /**
  * Seeks by remounting the embed iframe whenever the video or start time changes
@@ -19,7 +20,7 @@ export function YouTubePlayer({
   if (!videoId) {
     return (
       <div className="flex aspect-video w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/40 px-4 text-center text-sm text-muted-foreground">
-        <PlayCircle className="size-8 opacity-50" />
+        <PlayCircle className="animate-float-gentle size-8 opacity-50" />
         <p>Run a search and pick a result to play that moment here.</p>
       </div>
     );
@@ -28,14 +29,22 @@ export function YouTubePlayer({
   const src = `https://www.youtube.com/embed/${videoId}?start=${start}&autoplay=1&rel=0`;
   return (
     <div className="aspect-video w-full overflow-hidden rounded-xl border border-border bg-black shadow-sm">
-      <iframe
+      {/* Soften the black flash of the iframe remount on every seek. */}
+      <motion.div
         key={`${videoId}-${start}`}
-        src={src}
-        title={title ?? "YouTube player"}
+        initial={{ opacity: 0.3 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
         className="h-full w-full"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        allowFullScreen
-      />
+      >
+        <iframe
+          src={src}
+          title={title ?? "YouTube player"}
+          className="h-full w-full"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+        />
+      </motion.div>
     </div>
   );
 }

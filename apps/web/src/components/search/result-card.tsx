@@ -1,11 +1,13 @@
 "use client";
 
 import { Clock, ExternalLink, Play } from "lucide-react";
+import { motion } from "motion/react";
 import Image from "next/image";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { mmss } from "@/lib/format";
+import { EASE_OUT_QUINT, revealItem } from "@/lib/motion";
 import type { SearchResult } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -21,7 +23,8 @@ export function ResultCard({
   onSeek: (r: SearchResult) => void;
 }) {
   return (
-    <div
+    <motion.div
+      variants={revealItem}
       role="button"
       tabIndex={0}
       onClick={() => onSeek(result)}
@@ -32,17 +35,25 @@ export function ResultCard({
         }
       }}
       className={cn(
-        "group flex cursor-pointer gap-4 rounded-xl border bg-card p-3 transition-colors hover:border-primary/50 hover:bg-accent/40",
-        active ? "border-primary ring-1 ring-primary/30" : "border-border",
+        "group relative flex cursor-pointer gap-4 rounded-xl border border-border bg-card p-3 transition-colors duration-200 hover:border-primary/50 hover:bg-accent/40",
+        active && "bg-accent/30",
       )}
     >
+      {/* The ring glides to whichever proof is playing (shared layout id). */}
+      {active && (
+        <motion.div
+          layoutId="active-proof-ring"
+          transition={{ duration: 0.3, ease: EASE_OUT_QUINT }}
+          className="pointer-events-none absolute -inset-px rounded-xl border-2 border-primary"
+        />
+      )}
       <div className="relative hidden h-[72px] w-32 shrink-0 overflow-hidden rounded-lg bg-muted sm:block">
         <Image
           src={result.thumbnail_url}
           alt=""
           fill
           sizes="128px"
-          className="object-cover"
+          className="object-cover transition-transform duration-300 ease-out group-hover:scale-[1.04]"
         />
         <span className="absolute right-1 bottom-1 rounded bg-black/75 px-1 text-[10px] font-medium text-white">
           {mmss(result.start_seconds)}
@@ -74,12 +85,12 @@ export function ResultCard({
             target="_blank"
             rel="noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-xs text-muted-foreground hover:text-foreground"
+            className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
           >
             YouTube <ExternalLink className="size-3" />
           </a>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -1,21 +1,31 @@
+"use client";
+
 import { Sparkles, TriangleAlert } from "lucide-react";
+import { motion } from "motion/react";
 
 import { Badge } from "@/components/ui/badge";
+import { revealItem } from "@/lib/motion";
 import type { SearchResponse } from "@/lib/types";
 
 export function AnswerPanel({ response }: { response: SearchResponse }) {
   if (response.refused) {
     return (
-      <div className="rounded-xl border border-amber-300/60 bg-amber-50 p-4">
+      <motion.div
+        variants={revealItem}
+        className="rounded-xl border border-amber-300/60 bg-amber-50 p-4"
+      >
         <div className="flex items-center gap-2 text-sm font-medium text-amber-800">
           <TriangleAlert className="size-4" /> No strong evidence found
         </div>
         <p className="mt-1.5 text-sm text-amber-900/80">{response.answer}</p>
-      </div>
+      </motion.div>
     );
   }
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
+    <motion.div
+      variants={revealItem}
+      className="rounded-xl border border-border bg-card p-4"
+    >
       <div className="flex items-center gap-2">
         <Sparkles className="size-4 text-primary" />
         <span className="text-sm font-semibold">Answer</span>
@@ -28,6 +38,6 @@ export function AnswerPanel({ response }: { response: SearchResponse }) {
         Grounded in {response.results.length} moment
         {response.results.length === 1 ? "" : "s"} · intent: {response.intent}
       </p>
-    </div>
+    </motion.div>
   );
 }

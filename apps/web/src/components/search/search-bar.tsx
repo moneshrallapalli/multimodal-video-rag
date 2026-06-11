@@ -1,6 +1,6 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { LoaderCircle, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,11 +31,17 @@ export function SearchBar({
           onChange={(e) => onChange(e.target.value)}
           placeholder="Ask about a moment… e.g. where do they explain salary negotiation?"
           aria-label="Search query"
-          className="h-11 pl-9 text-base"
+          className="h-11 pl-9 text-base transition-shadow duration-200"
         />
       </div>
       <Button type="submit" size="lg" className="h-11" disabled={loading || !value.trim()}>
-        {loading ? "Searching…" : "Search"}
+        {loading ? (
+          <>
+            <LoaderCircle className="size-4 animate-spin" aria-hidden /> Searching…
+          </>
+        ) : (
+          "Search"
+        )}
       </Button>
     </form>
   );

@@ -9,11 +9,13 @@ import {
   Plus,
   type LucideIcon,
 } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { durationLabel } from "@/lib/format";
+import { expandPanel } from "@/lib/motion";
 import type { DemoVideo } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -54,7 +56,7 @@ export function VideoLibrary({ videos }: { videos: DemoVideo[] }) {
             <article
               key={video.id}
               className={cn(
-                "overflow-hidden rounded-lg border bg-card text-sm shadow-xs",
+                "overflow-hidden rounded-lg border bg-card text-sm shadow-xs transition-colors duration-200",
                 isExpanded ? "border-primary/35" : "border-border",
               )}
             >
@@ -90,8 +92,10 @@ export function VideoLibrary({ videos }: { videos: DemoVideo[] }) {
                 </Button>
               </div>
 
-              {isExpanded && (
-                <div id={panelId} className="border-t border-border px-3 py-3">
+              <AnimatePresence initial={false}>
+                {isExpanded && (
+                  <motion.div {...expandPanel} id={panelId} className="overflow-hidden">
+                    <div className="border-t border-border px-3 py-3">
                   {video.artifact_stats ? (
                     <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                       <LibraryStat
@@ -123,11 +127,15 @@ export function VideoLibrary({ videos }: { videos: DemoVideo[] }) {
                         segments · transcript and visual indexes populated
                       </div>
                     </dl>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">Artifact stats unavailable.</p>
-                  )}
-                </div>
-              )}
+                      ) : (
+                        <p className="text-xs text-muted-foreground">
+                          Artifact stats unavailable.
+                        </p>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </article>
           );
         })}
