@@ -91,13 +91,37 @@ describe exactly that answer. Recommendation: relabel e100 as answerable
 prompt that refuses evidenced "No" answers makes the product worse to game a
 label. Golden edits change denominators → regen baseline after.
 
-### A/B in flight
-Scoped production-only eval (no judge) running against
-`eval/golden/expanded.jsonl` → `/tmp/eval-prod-grounded-v2.json`.
-Baseline = committed artifact (same golden set, generated 2026-06-11 13:28):
-no-answer F1 0.611 / precision 0.458 / recall 0.917, MRR 0.791, ts@5s 0.740.
-Targets: precision ≥0.6 (≥6 of 13 over-refusals converted), recall ≥0.917
-(no new missed refusals beyond e100), MRR/ts@5s unchanged (retrieval untouched).
-If targets met: re-run full eval with judge to regenerate the committed
-artifact, then `cdk deploy` (still outstanding) ships provenance + prompt
-together.
+### A/B round 1 (scoped, /tmp/eval-prod-grounded-v2.json)
+F1 0.611→0.625, precision 0.458→0.500 (13→10 over-refusals), MRR 0.791→0.810,
+ts@5s 0.740→0.756 (converted refusals recover retrieval credit). BUT recall
+0.917→0.833: new missed refusal e010 — the model restitched comfort-zone
+advice as the asked-for "procrastination techniques".
+
+### Key diagnostic: the remaining 10 over-refusals are NOT prompt-fixable
+Retrieval-only dump of their contexts showed the LLM refuses honestly:
+- **Retrieval misses** (golden chunk absent from top-10 context): e024, e044,
+  e052, e077, e084, e097, partially e086. E.g. e024 asks about the 1:25 frame;
+  the 1:25 caption is simply not retrieved.
+- **Bare visual hits**: image-embedding `visual` entries carry snippet
+  "Visual frame from <title> at <ts>." with NO descriptive text (e074's 10:05
+  hit, e084's 2:35 hit). The evidence pointer arrives; the content doesn't.
+  → Concrete fix for plan item 5: enrich bare visual hits with their frame's
+  caption text (the caption exists as a sibling index entry) at index or
+  query time. Also feeds item 4 (rewrite-on-miss may pull the right chunk).
+Pushing the prompt harder would force hallucination — stopped there.
+
+### Round 2: subject guard (`80811b0`)
+Added to the partial-evidence rule: related material on a different subject is
+not partial evidence. Spot-check (7 sensitive queries): e010/e020/e050 refuse,
+e008/e104/e116 still answer, e077 still refuses (known retrieval miss).
+Expected final: ~P 0.524 / R 0.917 / F1 0.667 vs baseline F1 0.611. Precision
+target 0.6 NOT met — remaining gap is retrieval/caption-bound (items 4/5),
+which is the honest stopping point for item 1.
+
+### Full artifact regen in flight
+`uv run python eval/run_eval.py --golden eval/golden/expanded.jsonl --judge
+haiku` running in background → overwrites `apps/web/src/data/eval-results.json`
+(all 7 configs + judge, ~15-20 min). After completion: verify summary, commit
+artifact, then `cdk deploy` (STILL OUTSTANDING) to ship provenance + prompt to
+the live API; smoke with a cache-busting query (1h query-cache TTL).
+e100 relabel recommendation still awaiting user decision.
