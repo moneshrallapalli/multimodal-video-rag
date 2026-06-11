@@ -146,10 +146,17 @@ correct **0.766** (was 0.75), useful 0.937.
 Relabeled no_answer → transcript with relevant span 1006.48–1038.4 (the 16:46
 "crazy pretzel shapes" segment) and a reference negative answer. Rationale in
 the row notes and commit message: grounded negative-existence answers beat
-refusals when direct evidence exists. No-answer denominator 12 → 11; full
-artifact regen launched right after (background) — expect recall 1.0 if the
-11 true refusals hold, precision ~0.478, F1 ~0.647, small MRR lift from
-e100's rank-1 evidence. Commit the regenerated artifact when it lands.
+refusals when direct evidence exists. No-answer denominator 12 → 11.
+
+**Regen verified and committed (`421afb2`)** — third attempt; the first two
+died on transient Pinecone SSL/DNS errors (lessons added `24f0bfd`: don't
+pipe background runs through `tail`; check output for tracebacks; chip filed
+for bounded retries in `pinecone_client.py`). Post-relabel production:
+no-answer recall **1.0** (0 missed), precision 0.478, F1 **0.647**; MRR 0.790,
+ts@5s 0.734 (run-variance wiggle); judge n=112 quality 0.849, grounded 0.920,
+correct 0.759, useful 0.946. e100 itself: MRR 1.0, ts@5s 1.0, judge
+grounded/correct/useful at 0.92. Same 12 retrieval-bound over-refusals
+persist. README synced to these numbers.
 
 ### Open items going into the next session
 - Plan items 3–6 from `phase-8-quality.md` (judge correct_rate, rewrite-on-
