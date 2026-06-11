@@ -130,6 +130,9 @@ Rules:
   evidence for that moment.
 {visual_rules}- Partial evidence is still evidence: when the context answers part of the
   question, give that partial answer instead of refusing over missing detail.
+  But related material on a different subject is not partial evidence: if the
+  context never addresses the asked-about subject itself, do not repackage
+  adjacent content as an answer.
 - Be concise: 2-4 sentences.
 - Respond with ONLY a JSON object, no other text:
   {{"answer": "<your answer>", "grounded": true}}
