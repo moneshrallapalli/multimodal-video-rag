@@ -132,6 +132,22 @@ correct **0.766** (was 0.75), useful 0.937.
   (see diagnostic above), so further gains belong to items 4/5, not the prompt.
 
 ### Item 1 status: DONE (prompt-side ceiling reached)
-Remaining for this session: `cdk deploy` to ship prompt + provenance live,
-cache-busted smoke, then update README stale copy (135 queries / 13 videos /
-new judge numbers). e100 relabel recommendation still awaiting user decision.
+
+### Deploy + smoke: DONE
+- `cdk deploy VideoRagCore` succeeded (110s, cached layers). Live smoke with
+  cache-busting queries: answerable query → grounded cited answer,
+  `refusal_reason: null`; off-domain query → refused with
+  `refusal_reason: "llm_ungrounded"`. Prompt + provenance are serving.
+- README refreshed (`ccc96c7`): 135/13 counts, current per-config table,
+  judge n=111, and corrected the stale "cross-encoder is eval-only" claim
+  (it ships in the `video-rag-reranker` Lambda since Phase 6).
+
+### Open items going into the next session
+- **e100 relabel decision (user)**: golden labels it no_answer; the model
+  gives a grounded, correct "No (beginner workout)" with evidence. Recommend
+  relabeling as answerable; changes no-answer denominators → regen after.
+- Plan items 3–6 from `phase-8-quality.md` (judge correct_rate, rewrite-on-
+  miss + parallel retrieval, scene-detection sampling, BM25 refit). Items 4/5
+  now have a sharper target: the 12 residual over-refusals are retrieval
+  misses + bare visual hits (see diagnostic) — enriching bare visual hits
+  with their frame-caption text is the concrete first move.

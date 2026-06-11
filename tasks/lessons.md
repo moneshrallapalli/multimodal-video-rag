@@ -77,3 +77,10 @@ Engineering gotchas hit while building this repo, with the rule to avoid repeati
   monkeypatch `run_eval.CONFIGS` to one config and call `run_eval.run_eval(...)` (~5 min, no
   artifact overwrite). Impossible metric moves in untouched configs ⇒ suspect the test set, not the
   code.
+- **Over-refusals can be retrieval-bound, not prompt-bound.** Most "wrongly refused" eval queries
+  turned out to have their labeled evidence missing from the answer context (chunk not retrieved,
+  or retrieved as a bare image-embedding hit with no caption text) — the LLM refusal was honest,
+  and harder prompts would only force hallucination. Rule: before tuning grounding criteria, dump
+  the retrieved context for each refusal (refused responses clear `results`, so re-run with
+  `enable_answer_generation=False`) and confirm the evidence actually arrives. Prompt-fix only the
+  refusals whose context contains the answer.
