@@ -164,3 +164,37 @@ persist. README synced to these numbers.
   now have a sharper target: the 12 residual over-refusals are retrieval
   misses + bare visual hits (see diagnostic) — enriching bare visual hits
   with their frame-caption text is the concrete first move.
+
+---
+
+## Session 2026-06-11 (c) — plan items 3 + 4
+
+### Item 3 analysis (offline, from artifact judge rationales)
+27 judged-incorrect production answers cluster as: (1) ~6 timestamp citations
+off by chunk-start-vs-moment gap — root cause: `_build_context` only showed
+chunk start times; (2) ~9 truncated enumerations ("the 10 ways") — root
+cause: the prompt's "2-4 sentences" cap; (3) ~7 visual-content gaps (same
+retrieval/caption-bound cluster as the over-refusals → item 5); (4) ~4 wrong
+content (mixed retrieval misses / one hallucinated detail). Judge prompt left
+untouched on purpose — the fixes are upstream, not in the grader.
+
+### Changes landed (pushed, tests 133 green)
+- `385e483` — answer prompt cites time spans (not span starts) and exempts
+  enumeration questions from the 2-4 sentence cap.
+- `007545e` — item 4: transcript+visual retrieval fan out in one LangGraph
+  superstep (parallel network I/O); query rewrite moved to on-miss only (raw
+  query retrieves first; one rewritten retry on a `retrieval_gate` refusal,
+  guarded by `rewrite_attempted`); `_build_context` lines now show
+  `start-end` spans. `enable_query_rewrite` semantics changed — the
+  `hybrid_rewrite` ablation row now measures rewrite-on-miss.
+
+### In flight
+Scoped production-only eval WITH judge → `/tmp/eval-prod-item34.json`
+(+ log `/tmp/eval-prod-item34.log`). Baselines (artifact `421afb2`):
+no-answer P 0.478 / R 1.0 / F1 0.647, MRR 0.790, ts@5s 0.734, judge n=112
+quality 0.849 / grounded 0.920 / correct 0.759 / useful 0.946.
+Watch: correct_rate (target ↑ from span+enumeration fixes), no-answer
+metrics stable, MRR not degraded by raw-first retrieval (rewrite now fires
+only on miss — rewritten-query retrieval no longer applies to queries that
+succeed raw). If good → full 7-config regen, README/log sync, `cdk deploy`
++ cache-busted smoke.
