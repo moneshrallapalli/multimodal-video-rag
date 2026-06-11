@@ -32,6 +32,11 @@ def test_bedrock_answer_generator_uses_converse_with_grounding_prompt():
     prompt = client.calls[0]["messages"][0]["content"][0]["text"]
     assert "Use only the evidence" in prompt
     assert '"grounded"' in prompt
+    # Anti-over-refusal rules must reach every intent, not just visual: eval
+    # showed hybrid/timestamp questions about visual content refuse too.
+    assert "Partial evidence is still evidence" in prompt
+    assert "cites context timestamps" in prompt
+    assert "visual_caption" in prompt
     assert "QUESTION:\nWhere?" in prompt
     assert "CONTEXT:\n[1] context" in prompt
     assert client.calls[0]["inferenceConfig"]["temperature"] == 0.1

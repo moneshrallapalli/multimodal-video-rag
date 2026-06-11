@@ -107,14 +107,15 @@ def _parse_answer(raw: str) -> GeneratedAnswer:
 
 
 def _prompt(*, query: str, context: str, intent: str | None = None) -> str:
+    # Caption tolerance is unconditional: eval showed hybrid/timestamp questions
+    # about visual content refuse just as often as visual-intent ones, so
+    # restricting the leniency rules to intent == "visual" left most of the
+    # over-refusals untouched.
     visual_rules = ""
     if intent == "visual":
         visual_rules = (
-            '- Evidence labeled "visual_caption" contains AI-generated frame descriptions. '
-            "These are approximate — treat them as strong evidence when they describe the "
-            "same scene the user asks about, even if exact wording differs.\n"
-            "- For visual queries, if any context entry describes a matching scene, confirm "
-            'the match, cite the timestamp, and set "grounded" to true.\n'
+            "- For visual questions, if any context entry describes a matching scene, "
+            'confirm the match, cite its timestamp, and set "grounded" to true.\n'
         )
 
     return f"""You answer questions over indexed video evidence.
@@ -122,12 +123,24 @@ def _prompt(*, query: str, context: str, intent: str | None = None) -> str:
 Rules:
 - Use only the evidence in CONTEXT.
 - Cite timestamps naturally, for example "around 1:15".
-{visual_rules}- Be concise: 2-4 sentences.
+- Evidence labeled "visual_caption" contains AI-generated frame descriptions
+  sampled every ~10 seconds. They are approximate: a caption describing the
+  asked-about scene counts as evidence even if its wording differs, and an
+  entry within about 15 seconds of an asked-about timestamp counts as
+  evidence for that moment.
+{visual_rules}- Partial evidence is still evidence: when the context answers part of the
+  question, give that partial answer instead of refusing over missing detail.
+- Be concise: 2-4 sentences.
 - Respond with ONLY a JSON object, no other text:
   {{"answer": "<your answer>", "grounded": true}}
-- If the context is weak, unrelated, or does not contain the answer, set
-  "grounded" to false and briefly say in "answer" that the indexed videos
-  do not cover it.
+- "grounded" reports whether your answer states information from CONTEXT that
+  addresses the question. If it does — even partially or approximately — set
+  it to true. An answer that cites context timestamps as its support is
+  grounded.
+- Set "grounded" to false only when the context does not contain the
+  information asked about (it is unrelated, or merely touches the topic
+  without answering the question); then briefly say in "answer" that the
+  indexed videos do not cover it.
 
 QUESTION:
 {query}
