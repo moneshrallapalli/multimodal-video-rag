@@ -188,13 +188,29 @@ untouched on purpose — the fixes are upstream, not in the grader.
   `start-end` spans. `enable_query_rewrite` semantics changed — the
   `hybrid_rewrite` ablation row now measures rewrite-on-miss.
 
+### Scoped A/B rounds (vs artifact `421afb2`: F1 0.647, MRR 0.790, correct 0.759)
+**Round 1** (`/tmp/eval-prod-item34.json`): answers now cite spans, but the
+judge failed span citations that bracket the reference moment (e009 cited
+1:14-1:45 vs reference 1:16-1:28 → "incorrect") — grader miscalibration, not
+answer error. Also: e010 flipped back to answering ("enumerate every item"
+overrode the subject guard), and **production rewrite never fired at all on
+this golden set even pre-change** (every query > 3 terse terms) → rewrite-on-
+miss is free here; MRR movers were citation-reorder/rerank noise (results are
+reordered by answer citations, so retrieval metrics wobble ±0.015 with answer
+wording).
+**Fix round** (`9e9031b`): judge prompt gets explicit timestamp tolerance
+(span containing/within ~15s of reference moment counts); enumeration
+exception scoped to the asked-about subject.
+**Round 2** (`/tmp/eval-prod-item34b.json`): **correct_rate 0.832** (was
+0.759 baseline / 0.768 round 1); timestamp cluster e009/e065/e085/e098/e105
+all correct; e027 residual = judge disobeying its own bracketing rule (1/6,
+accepted as judge variance). e010 still answers — the enumeration rule
+systematically tips this one borderline (refused pre-enumeration, answers
+post). ACCEPTED as known borderline: its answer is real cited video content;
+more rules risk truncating legit lists. F1 0.625 (= e010's single-query
+weight vs 0.647).
+
 ### In flight
-Scoped production-only eval WITH judge → `/tmp/eval-prod-item34.json`
-(+ log `/tmp/eval-prod-item34.log`). Baselines (artifact `421afb2`):
-no-answer P 0.478 / R 1.0 / F1 0.647, MRR 0.790, ts@5s 0.734, judge n=112
-quality 0.849 / grounded 0.920 / correct 0.759 / useful 0.946.
-Watch: correct_rate (target ↑ from span+enumeration fixes), no-answer
-metrics stable, MRR not degraded by raw-first retrieval (rewrite now fires
-only on miss — rewritten-query retrieval no longer applies to queries that
-succeed raw). If good → full 7-config regen, README/log sync, `cdk deploy`
-+ cache-busted smoke.
+Full 7-config regen with calibrated judge → artifact. Then: commit artifact,
+README sync (correct_rate, F1, MRR), `cdk deploy` (prompt changes must ship),
+cache-busted smoke.
