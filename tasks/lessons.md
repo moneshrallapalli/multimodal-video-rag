@@ -66,3 +66,14 @@ Engineering gotchas hit while building this repo, with the rule to avoid repeati
 - **`preview_fill` does not reliably sync a React controlled input before an immediate
   `preview_click`** — the click can land on a still-disabled submit button. Rule: verify form flows
   via a direct `fetch` in `preview_eval`, or trigger via elements that pass explicit args (chips).
+
+## Eval / metrics
+
+- **The committed eval artifact and the golden set drift independently.** The Jun 6 golden rebuild
+  (145 → 135 queries) was never re-evaluated, so `eval-results.json` showed Jun 3 numbers and made a
+  later code change look like a regression across configs whose code hadn't changed. Rule: before
+  any A/B against the committed artifact, compare `meta.generated_at` / `meta.golden_set_size` with
+  `git log -- eval/golden/`; if they disagree, regenerate the baseline first. Cheap scoped baseline:
+  monkeypatch `run_eval.CONFIGS` to one config and call `run_eval.run_eval(...)` (~5 min, no
+  artifact overwrite). Impossible metric moves in untouched configs ⇒ suspect the test set, not the
+  code.

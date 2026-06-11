@@ -9,6 +9,10 @@ The day-to-day plan lives in per-phase files. Use this as a jumping-off point.
 - `phase-5.md` — seed evaluation — DONE
 - `phase-6.md` — deployment + observability — DONE
 - `phase-7-cleanup.md` — pre-reveal cleanup (audit follow-ups) — DONE
+- `phase-8-quality.md` — **NEXT: start here** — handoff from the 2026-06-11
+  session (UI motion + gate collapse). Records the stale-eval-baseline
+  incident, current real metrics, and the prioritized plan to improve
+  no-answer precision, judge correct_rate, and per-query cost.
 
 ## Engineering rules of the road
 - `lessons.md` — gotchas hit during the build, with the rule to avoid repeating
