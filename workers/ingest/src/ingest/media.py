@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -55,10 +56,19 @@ class MediaProcessor:
         frame_interval_seconds: int = 10,
         max_frames: int = 200,
         whisper_model_size: str = "tiny.en",
+        scene_threshold: float = 0.3,
+        dedupe_hash_distance: int = 6,
     ) -> None:
         self.frame_interval_seconds = frame_interval_seconds
         self.max_frames = max_frames
         self.whisper_model_size = whisper_model_size
+        # Scene-change frames (ffmpeg `select=gt(scene,thr)`) capture cuts the
+        # fixed interval misses; <= 0 disables the scene pass.
+        self.scene_threshold = scene_threshold
+        # Frames whose dHash is within this Hamming distance of the previously
+        # kept frame are dropped as near-duplicates (talking-head videos
+        # collapse dramatically, cutting caption/embed spend); < 0 disables.
+        self.dedupe_hash_distance = dedupe_hash_distance
 
     def fetch_metadata(self, youtube_url: str) -> VideoMetadataArtifact:
         result = _run(
@@ -121,6 +131,20 @@ class MediaProcessor:
         return audio_path
 
     def extract_frames(self, source_path: Path, work_dir: Path) -> list[FrameFile]:
+        """Interval coverage + scene-cut frames, deduped by perceptual hash.
+
+        Interval sampling guarantees coverage of static content (talking
+        heads); the scene pass catches cuts between samples. dHash dedupe then
+        collapses near-identical neighbors so caption/embed cost tracks visual
+        variety, not video length.
+        """
+        interval_frames = self._extract_interval_frames(source_path, work_dir)
+        scene_frames = self._extract_scene_frames(source_path, work_dir)
+        merged = sorted(interval_frames + scene_frames, key=lambda f: f.timestamp_seconds)
+        deduped = _dedupe_near_duplicates(merged, max_distance=self.dedupe_hash_distance)
+        return _cap_frames(deduped, self.max_frames)
+
+    def _extract_interval_frames(self, source_path: Path, work_dir: Path) -> list[FrameFile]:
         frames_dir = work_dir / "frames"
         frames_dir.mkdir(parents=True, exist_ok=True)
         output_template = str(frames_dir / "frame_%06d.jpg")
@@ -144,6 +168,35 @@ class MediaProcessor:
                 timestamp_seconds=(index - 1) * self.frame_interval_seconds + half_interval,
             )
             for index, path in enumerate(sorted(frames_dir.glob("frame_*.jpg")), start=1)
+        ]
+
+    def _extract_scene_frames(self, source_path: Path, work_dir: Path) -> list[FrameFile]:
+        if self.scene_threshold <= 0:
+            return []
+        scene_dir = work_dir / "scene_frames"
+        scene_dir.mkdir(parents=True, exist_ok=True)
+        proc = _run(
+            [
+                "ffmpeg",
+                "-y",
+                "-i",
+                str(source_path),
+                "-vf",
+                f"select='gt(scene,{self.scene_threshold})',showinfo",
+                "-fps_mode",
+                "vfr",
+                "-frames:v",
+                str(self.max_frames),
+                str(scene_dir / "scene_%06d.jpg"),
+            ]
+        )
+        # showinfo logs one line per selected frame; pts_time is the frame's
+        # exact presentation timestamp (no midpoint correction needed).
+        times = _parse_showinfo_times(getattr(proc, "stderr", "") or "")
+        paths = sorted(scene_dir.glob("scene_*.jpg"))
+        return [
+            FrameFile(path=path, timestamp_seconds=ts)
+            for path, ts in zip(paths, times, strict=False)
         ]
 
     def transcribe_audio(self, audio_path: Path, video_id: str) -> TranscriptArtifact:
@@ -175,6 +228,67 @@ def frame_artifacts(video_id: str, frames: list[FrameFile], keys: list[str]) -> 
         )
         for index, (frame, key) in enumerate(zip(frames, keys, strict=True), start=1)
     ]
+
+
+_SHOWINFO_PTS_RE = re.compile(r"pts_time:\s*([0-9]+(?:\.[0-9]+)?)")
+
+
+def _parse_showinfo_times(stderr: str) -> list[float]:
+    """Pull per-frame presentation timestamps out of ffmpeg showinfo logging."""
+    return [float(match) for match in _SHOWINFO_PTS_RE.findall(stderr)]
+
+
+def _dhash(path: Path) -> int:
+    """64-bit difference hash: gradient signs of a 9x8 grayscale downscale."""
+    from PIL import Image
+
+    with Image.open(path) as image:
+        pixels = list(image.convert("L").resize((9, 8)).getdata())
+    bits = 0
+    for row in range(8):
+        for col in range(8):
+            left = pixels[row * 9 + col]
+            right = pixels[row * 9 + col + 1]
+            bits = (bits << 1) | (1 if left > right else 0)
+    return bits
+
+
+def _dedupe_near_duplicates(frames: list[FrameFile], *, max_distance: int) -> list[FrameFile]:
+    """Drop frames perceptually close to the previously kept frame.
+
+    Sequential comparison (not all-pairs) is the right shape for video: a
+    static shot collapses to its first frame, while any visual change past the
+    Hamming threshold starts a new run. Unreadable images are kept — better a
+    duplicate caption than a silently dropped frame.
+    """
+    if max_distance < 0:
+        return frames
+    kept: list[FrameFile] = []
+    last_hash: int | None = None
+    for frame in frames:
+        try:
+            digest = _dhash(frame.path)
+        except Exception:
+            logger.warning("frame_dhash_unreadable path=%s", frame.path.name)
+            kept.append(frame)
+            last_hash = None
+            continue
+        if last_hash is not None and (digest ^ last_hash).bit_count() <= max_distance:
+            continue
+        kept.append(frame)
+        last_hash = digest
+    return kept
+
+
+def _cap_frames(frames: list[FrameFile], max_frames: int) -> list[FrameFile]:
+    """Evenly subsample down to the cap so coverage survives, not just the head."""
+    if len(frames) <= max_frames:
+        return frames
+    if max_frames <= 1:
+        return frames[:max_frames]
+    step = (len(frames) - 1) / (max_frames - 1)
+    indices = sorted({round(i * step) for i in range(max_frames)})
+    return [frames[i] for i in indices]
 
 
 _STDERR_TAIL_BYTES = 4096
