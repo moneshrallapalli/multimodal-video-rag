@@ -302,6 +302,21 @@ but reads as broken/gamed. Card now explains the 0/0 denominator and points
 to Production (59%/91%). Verified in preview both ways, deployed to Vercel,
 confirmed in the live bundle.
 
+### LangSmith tracing fix (user report: final node had no outputs)
+Deployed-Lambda traces showed `generate_answer` with inputs but "No outputs"
+and the root run stuck pending. Root cause: the LangSmith SDK uploads runs
+from a background batch thread, and Lambda freezes the instant the handler
+returns — the trace tail (final node end event + root completion) died in
+the queue. Local runs never hit it (Python exit hooks flush). Fix
+(`96acbd8`): the Lambda handler wraps Mangum and drains
+`wait_for_all_tracers()` + the shared client's `flush()` in a finally block
+(no-op when tracing unconfigured). Deployed + verified via the LangSmith
+API: fresh trace fully complete, generate_answer outputs + 2.19s duration,
+and retrieve_transcript/retrieve_visual visibly overlap (parallel fan-out
+confirmed in production). Side finding: the local `.env` LANGSMITH_API_KEY
+is stale/invalid (401) — the runtime secret's key works; refresh `.env` if
+local trace inspection is wanted.
+
 ### Remaining over-refusals (7) and next levers
 - e016/e024/e084: exact-timestamp visual detail still not retrieved into
   top-10 context (retrieval depth / chunk targeting, not prompt).
