@@ -270,3 +270,63 @@ def test_from_index_name_asserts_metric_matches_expectation(monkeypatch):
         "visual", api_key="key", expected_dim=3, expected_metric="cosine"
     )
     assert client.info.metric == "cosine"
+
+
+def test_update_metadata_posts_set_metadata(monkeypatch):
+    calls = []
+
+    def fake_urlopen(req, timeout):
+        calls.append(req)
+        return FakeResponse({})
+
+    monkeypatch.setattr("shared.pinecone_client.urlopen", fake_urlopen)
+    client = PineconeIndexClient(
+        api_key="test-key",
+        info=PineconeIndexInfo(
+            name="visual", host="example.pinecone.io", dimension=3, metric="cosine"
+        ),
+    )
+
+    client.update_metadata("vid:frame:000002", {"text": "A whiteboard with a bell curve."})
+
+    req = calls[0]
+    assert req.full_url == "https://example.pinecone.io/vectors/update"
+    body = json.loads(req.data.decode("utf-8"))
+    assert body == {
+        "id": "vid:frame:000002",
+        "setMetadata": {"text": "A whiteboard with a bell curve."},
+    }
+
+
+def test_lookup_index_retries_transient_url_errors(monkeypatch):
+    """The control-plane lookup runs once per pipeline construction; a single
+    transient DNS/SSL blip must not kill the caller (it has killed eval runs)."""
+    attempts = []
+
+    def flaky_urlopen(req, timeout):
+        attempts.append(req)
+        if len(attempts) < 3:
+            raise URLError("nodename nor servname provided")
+        return FakeResponse(
+            {
+                "indexes": [
+                    {
+                        "name": "transcript",
+                        "host": "example.pinecone.io",
+                        "dimension": 3,
+                        "metric": "dotproduct",
+                    }
+                ]
+            }
+        )
+
+    monkeypatch.setattr("shared.pinecone_client.urlopen", flaky_urlopen)
+    monkeypatch.setattr("shared.pinecone_client.time.sleep", lambda _s: None)
+    monkeypatch.setattr("shared.pinecone_client.settings.pinecone_api_key", "test-key")
+
+    client = PineconeIndexClient.from_index_name(
+        "transcript", expected_dim=3, expected_metric="dotproduct"
+    )
+
+    assert len(attempts) == 3
+    assert client.info.host == "example.pinecone.io"

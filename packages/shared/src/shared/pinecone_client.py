@@ -73,6 +73,14 @@ class PineconeIndexClient:
         self._request("/vectors/upsert", payload)
         return len(records)
 
+    def update_metadata(self, vector_id: str, metadata: dict[str, Any]) -> None:
+        """Merge metadata fields into an existing vector without re-upserting it.
+
+        Pinecone's /vectors/update setMetadata merges keys, so this is safe for
+        backfills (e.g. attaching caption text to already-indexed frame vectors).
+        """
+        self._request("/vectors/update", {"id": vector_id, "setMetadata": metadata})
+
     def query(
         self,
         vector: list[float],
@@ -193,13 +201,31 @@ def hybrid_blend(
 
 
 def _lookup_index(index_name: str, *, api_key: str) -> PineconeIndexInfo:
-    req = Request("https://api.pinecone.io/indexes", headers={"Api-Key": api_key})
-    try:
-        with urlopen(req, timeout=30) as response:
-            data = json.loads(response.read().decode("utf-8"))
-    except HTTPError as exc:
-        detail = exc.read().decode("utf-8")[:500]
-        raise RuntimeError(f"Pinecone index lookup failed: {detail}") from exc
+    # Retried like the data-plane calls: this control-plane lookup runs once per
+    # pipeline construction, and a single transient SSL/DNS blip here has killed
+    # entire eval runs.
+    data: dict[str, Any] = {}
+    last_exc: BaseException | None = None
+    for attempt in range(_MAX_RETRIES + 1):
+        req = Request("https://api.pinecone.io/indexes", headers={"Api-Key": api_key})
+        try:
+            with urlopen(req, timeout=30) as response:
+                data = json.loads(response.read().decode("utf-8"))
+            break
+        except HTTPError as exc:
+            last_exc = exc
+            if exc.code < 500 or attempt == _MAX_RETRIES:
+                detail = exc.read().decode("utf-8")[:500]
+                raise RuntimeError(f"Pinecone index lookup failed: {detail}") from exc
+            logger.warning("pinecone_lookup_retry status=%s attempt=%s", exc.code, attempt + 1)
+        except (URLError, TimeoutError, OSError) as exc:
+            last_exc = exc
+            if attempt == _MAX_RETRIES:
+                raise RuntimeError(f"Pinecone index lookup unreachable: {exc}") from exc
+            logger.warning("pinecone_lookup_retry reason=%s attempt=%s", exc, attempt + 1)
+        time.sleep(_BASE_BACKOFF_SECONDS * (2**attempt) * (0.5 + random.random()))
+    else:  # pragma: no cover - loop always breaks or raises
+        raise RuntimeError("Pinecone index lookup exhausted retries") from last_exc
 
     for index in data.get("indexes", []):
         if index.get("name") == index_name:

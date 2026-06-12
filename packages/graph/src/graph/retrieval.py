@@ -77,6 +77,11 @@ def visual_candidate(hit: RetrievalHit, *, rank: int) -> RetrievalCandidate:
     timestamp = _float(metadata.get("timestamp_seconds"), 0.0)
     s3_uri = str(metadata.get("s3_uri") or "")
     title = str(metadata.get("title") or "Indexed video")
+    # Prefer the frame's caption text: a contentless placeholder gives the
+    # answer model an evidence pointer with nothing to ground on (a major
+    # source of visual-question over-refusals).
+    caption = str(metadata.get("text") or "")
+    snippet = caption or f"Visual frame from {title} at {_mmss(timestamp)}."
     return RetrievalCandidate(
         id=hit.id,
         video_id=video_id,
@@ -85,7 +90,7 @@ def visual_candidate(hit: RetrievalHit, *, rank: int) -> RetrievalCandidate:
         start_seconds=timestamp,
         end_seconds=timestamp,
         score=hit.score,
-        snippet=f"Visual frame from {title} at {_mmss(timestamp)}.",
+        snippet=snippet,
         thumbnail_url=thumbnail_url(video_id),
         seek_url=seek_url(video_id, timestamp),
         s3_uri=s3_uri or None,

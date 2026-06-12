@@ -119,6 +119,37 @@ def _visual_hit(score: float = 0.42) -> RetrievalHit:
     )
 
 
+def test_visual_candidate_prefers_caption_text_snippet():
+    from graph.retrieval import visual_candidate
+
+    enriched = visual_candidate(
+        RetrievalHit(
+            id="vid:frame:000002",
+            score=0.5,
+            metadata={
+                "video_id": "vid",
+                "frame_id": "vid:frame:000002",
+                "timestamp_seconds": 605.0,
+                "title": "Smartphone Awards",
+                "modality": "visual",
+                "text": "A phone on a display stand with a glyph light pattern.",
+            },
+        ),
+        rank=1,
+    )
+    assert enriched.snippet == "A phone on a display stand with a glyph light pattern."
+
+    bare = visual_candidate(
+        RetrievalHit(
+            id="vid:frame:000001",
+            score=0.5,
+            metadata={"video_id": "vid", "timestamp_seconds": 0, "title": "Smartphone Awards"},
+        ),
+        rank=1,
+    )
+    assert bare.snippet == "Visual frame from Smartphone Awards at 0:00."
+
+
 def test_transcript_query_retrieves_from_both_indexes():
     """All intents now retrieve from both indexes so RRF fusion has full evidence."""
     embedder = FakeEmbedder()

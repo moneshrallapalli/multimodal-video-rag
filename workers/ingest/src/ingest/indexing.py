@@ -77,7 +77,7 @@ class VideoIndexer:
                 metadata=metadata, frames=frames, captions=captions
             )
         visual_records = self._visual_records(
-            metadata=metadata, frames=frames, frame_keys=frame_keys
+            metadata=metadata, frames=frames, frame_keys=frame_keys, captions=captions
         )
 
         transcript_count = self.transcript_index.upsert(transcript_records + caption_records)
@@ -165,6 +165,7 @@ class VideoIndexer:
         metadata: VideoMetadataArtifact,
         frames: list[FrameFile],
         frame_keys: list[str],
+        captions: list[str] | None = None,
     ) -> list[VectorRecord]:
         artifacts = [
             FrameArtifact(
@@ -175,13 +176,24 @@ class VideoIndexer:
             )
             for index, (frame, key) in enumerate(zip(frames, frame_keys, strict=True), start=1)
         ]
+        # Image-embedding hits carry their caption text too: without it, a
+        # retrieved frame surfaces as a contentless "Visual frame at 10:05"
+        # snippet and the answer model has nothing to ground on.
+        frame_captions = captions if captions and len(captions) == len(frames) else None
         return [
             VectorRecord(
                 id=artifact.frame_id,
                 values=self.embedder.embed_image(frame.path),
-                metadata=_compact_metadata(_visual_metadata(metadata, artifact, self.bucket)),
+                metadata=_compact_metadata(
+                    _visual_metadata(
+                        metadata,
+                        artifact,
+                        self.bucket,
+                        caption=frame_captions[index] if frame_captions else None,
+                    )
+                ),
             )
-            for frame, artifact in zip(frames, artifacts, strict=True)
+            for index, (frame, artifact) in enumerate(zip(frames, artifacts, strict=True))
         ]
 
 
@@ -204,6 +216,8 @@ def _visual_metadata(
     metadata: VideoMetadataArtifact,
     artifact: FrameArtifact,
     bucket: str,
+    *,
+    caption: str | None = None,
 ) -> dict[str, str | int | float | bool | None]:
     return {
         "video_id": artifact.video_id,
@@ -212,6 +226,7 @@ def _visual_metadata(
         "title": metadata.title,
         "modality": "visual",
         "s3_uri": f"s3://{bucket}/{artifact.s3_key}",
+        "text": caption,
     }
 
 

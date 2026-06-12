@@ -18,6 +18,10 @@ class FakeEmbedder:
         self.texts.extend(texts)
         return [[float(index), 0.0, 0.0] for index, _text in enumerate(texts, start=1)]
 
+    def embed_text(self, text: str) -> list[float]:
+        self.texts.append(text)
+        return [0.5, 0.5, 0.0]
+
     def embed_image(self, path: Path) -> list[float]:
         self.images.append(path)
         return [0.0, float(len(self.images)), 0.0]
@@ -86,6 +90,39 @@ def test_video_indexer_upserts_transcript_and_visual_records(tmp_path):
         visual_record.metadata["s3_uri"]
         == "s3://test-bucket/videos/QkdBXUikRQc/frames/frame_000001.jpg"
     )
+
+
+def test_visual_records_carry_caption_text(tmp_path):
+    """Image-embedding hits must surface their caption text — a contentless
+    'Visual frame at 10:05' snippet gives the answer model an evidence pointer
+    with nothing to ground on."""
+    image = tmp_path / "frame.jpg"
+    image.write_bytes(b"fake")
+    visual_index = FakeIndex()
+    indexer = VideoIndexer(
+        bucket="test-bucket",
+        embedder=FakeEmbedder(),
+        transcript_index=FakeIndex(),
+        visual_index=visual_index,
+    )
+
+    indexer.index_video(
+        metadata=VideoMetadataArtifact(
+            video_id="QkdBXUikRQc",
+            youtube_url="https://youtu.be/QkdBXUikRQc",
+            title="Test Talk",
+        ),
+        transcript=TranscriptArtifact(
+            video_id="QkdBXUikRQc",
+            segments=[TranscriptSegment(start_seconds=0, end_seconds=10, text="hello")],
+        ),
+        frames=[FrameFile(path=image, timestamp_seconds=12)],
+        frame_keys=["videos/QkdBXUikRQc/frames/frame_000001.jpg"],
+        captions=["A whiteboard with a bell curve drawn on it."],
+    )
+
+    visual_record = visual_index.records[0]
+    assert visual_record.metadata["text"] == "A whiteboard with a bell curve drawn on it."
 
 
 def test_video_indexer_handles_empty_transcript_and_frames():
