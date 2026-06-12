@@ -238,9 +238,18 @@ export function EvalDashboard() {
             <MatrixCell label="Over-refuse" value={na.false_positive} />
             <MatrixCell label="True answer" value={na.true_negative} good />
           </div>
-          <p className="mt-3 text-xs text-muted-foreground">
-            Refusal precision {pct(na.precision)} · recall {pct(na.recall)}
-          </p>
+          {na.true_positive + na.false_positive === 0 ? (
+            <p className="mt-3 text-xs text-muted-foreground">
+              This config never refuses: answer generation is off, and weak-evidence
+              refusal lives in the LLM&apos;s grounded flag. All {na.false_negative}{" "}
+              expected-refusal queries get answered, so refusal precision and recall
+              are undefined (0 refusals attempted) — compare the Production config.
+            </p>
+          ) : (
+            <p className="mt-3 text-xs text-muted-foreground">
+              Refusal precision {pct(na.precision)} · recall {pct(na.recall)}
+            </p>
+          )}
         </div>
       </div>
     </div>
