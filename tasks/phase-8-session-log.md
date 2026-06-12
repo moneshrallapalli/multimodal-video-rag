@@ -249,13 +249,27 @@ Verified end-to-end on a synthetic cut video (static tail collapsed, cut
 captured at exact timestamp). Affects FUTURE ingests only — existing 13
 videos keep their 10s-interval frames.
 
+### Scoped A/B after caption backfill: the big win
+Six of the diagnosed bare-visual-hit over-refusals converted (e044, e052,
+e074, e086, e097, e107); two borderlines flipped in (e018 back, e092 new) →
+net over-refusals 11 → 7. **No-answer F1 0.625 → 0.714, precision 0.476 →
+0.588** (biggest single jump this phase), recall held 0.909 (e010), MRR
+0.779 → 0.799 (converted queries recover retrieval credit). Judge correct
+0.803 on n=117 (5 newly-answered hard visual queries joined the judged pool).
+
+### Deploy + live smoke (items 5+6): DONE
+`cdk deploy` UPDATE_COMPLETE (verified via CloudFormation describe-stacks,
+not the piped exit code — the tail-masking trap from lessons.md), worker
+task definition :36. Live smoke: a paraphrase of formerly-refused e074
+answers with caption-level detail ("tall blue vertical design with 'NOTHING
+PHONE 2A' text illuminated... around 10:05") and visual hits carry real
+caption snippets.
+
 ### In flight
-- Scoped production+judge eval against the caption-enriched index →
-  `/tmp/eval-prod-item5.json` (watch: over-refusals e074/e084-class should
-  convert; baseline artifact `3e822bb`: F1 0.625, P 0.476, correct 0.814).
-- `cdk deploy` (worker image picks up scene sampling + BM25 merge + pillow;
-  API image picks up visual snippet enrichment).
-- After both: full regen if numbers move, README/log sync, smoke.
+Full 7-config regen against the enriched index → artifact, then README/log
+sync. Remaining over-refusals (7): e016/e024/e084 (exact-timestamp visual
+detail still missing from retrieved context), e077/e099 (transcript detail
+retrieval misses), e018/e092 (borderline pool).
 
 ### Deploy + smoke: DONE — items 3+4 complete
 `cdk deploy VideoRagCore` succeeded (104.9s). Cache-busted smoke: enumeration
