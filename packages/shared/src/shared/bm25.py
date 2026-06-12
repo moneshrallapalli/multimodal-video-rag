@@ -104,6 +104,36 @@ class BM25Encoder:
     vocab_size: int = field(default=_HASH_VOCAB_SIZE)
 
     @classmethod
+    def merge_stats(cls, stats: list[dict[str, Any]]) -> dict[str, Any]:
+        """Merge per-video fitted stats into corpus-wide stats.
+
+        Document frequencies and doc counts are additive across disjoint
+        document sets, and total token length is `avgdl * n_docs`, so merging
+        per-video fits is exactly equal to fitting on the concatenated corpus —
+        no transcript re-read or re-tokenization needed.
+        """
+        doc_freq: dict[str, int] = {}
+        n_docs = 0
+        total_length = 0.0
+        for item in stats:
+            item_docs = int(item.get("n_docs", 0))
+            if item_docs <= 0:
+                continue
+            n_docs += item_docs
+            total_length += float(item.get("avgdl", 0.0)) * item_docs
+            for term, df in item.get("doc_freq", {}).items():
+                doc_freq[str(term)] = doc_freq.get(str(term), 0) + int(df)
+        first = stats[0] if stats else {}
+        return {
+            "avgdl": (total_length / n_docs) if n_docs else 0.0,
+            "doc_freq": doc_freq,
+            "n_docs": n_docs,
+            "k1": float(first.get("k1", _DEFAULT_K1)),
+            "b": float(first.get("b", _DEFAULT_B)),
+            "vocab_size": int(first.get("vocab_size", _HASH_VOCAB_SIZE)),
+        }
+
+    @classmethod
     def fit(
         cls, documents: list[str], *, k1: float = _DEFAULT_K1, b: float = _DEFAULT_B
     ) -> BM25Encoder:

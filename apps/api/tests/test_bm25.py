@@ -119,3 +119,26 @@ def test_load_corpus_from_s3_uses_corpus_key():
 
     assert loaded is not None
     assert calls == [{"Bucket": "b", "Key": "corpus/vectors/bm25_stats.json"}]
+
+
+def test_merge_stats_equals_fit_on_concatenated_corpus():
+    """Per-video stats must merge exactly into the whole-corpus fit — this is
+    what lets the worker skip re-reading every transcript per ingest."""
+    docs_a = ["alpha beta gamma", "alpha delta epsilon zeta"]
+    docs_b = ["beta beta gamma theta", "iota kappa", "alpha lambda"]
+
+    merged = BM25Encoder.merge_stats(
+        [BM25Encoder.fit(docs_a).to_dict(), BM25Encoder.fit(docs_b).to_dict()]
+    )
+    full = BM25Encoder.fit(docs_a + docs_b).to_dict()
+
+    assert merged == full
+
+
+def test_merge_stats_handles_empty_and_missing_inputs():
+    assert BM25Encoder.merge_stats([])["n_docs"] == 0
+    only = BM25Encoder.fit(["alpha beta"]).to_dict()
+    merged = BM25Encoder.merge_stats([{"avgdl": 0.0, "doc_freq": {}, "n_docs": 0}, only])
+    assert merged["n_docs"] == only["n_docs"]
+    assert merged["doc_freq"] == only["doc_freq"]
+    assert merged["avgdl"] == only["avgdl"]
