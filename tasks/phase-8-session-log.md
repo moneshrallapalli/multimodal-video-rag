@@ -218,6 +218,45 @@ answered this run — borderline pool breathes). MRR 0.779 / ts@5s 0.718
 (citation-reorder noise band 0.78–0.81 / 0.72–0.76). README synced; added
 rewrite-on-miss engineering paragraph.
 
+---
+
+## Session 2026-06-11 (d) — plan items 5 + 6
+
+### Item 6: BM25 corpus refit de-quadratified (`ee14e60`)
+`_refresh_corpus_bm25_stats` now merges the per-video stats files (df/n_docs/
+avgdl are additive across disjoint doc sets — merge == full fit, pinned by
+test) instead of re-downloading and re-tokenizing every transcript per
+ingest. `scripts/rebuild_corpus_bm25.py` kept as the from-transcripts
+recovery tool.
+
+### Item 5b: bare visual hits now carry caption text (`16bbd02`)
+- New ingests write the frame caption into visual vector metadata ("text");
+  `visual_candidate` prefers it for the snippet over the contentless
+  "Visual frame at 10:05" placeholder.
+- `PineconeIndexClient.update_metadata` (setMetadata merge) +
+  `scripts/backfill_visual_caption_text.py`. **Backfill RUN: 1387 visual
+  vectors enriched across all videos, no skips.**
+- Bonus: `_lookup_index` now retries transient SSL/DNS errors (the exact
+  failure that killed two eval runs earlier today — resolves the pending
+  pinecone-retry chip).
+
+### Item 5a: scene-cut frames + dHash dedupe (`ba96bb9`)
+`extract_frames` = interval pass (coverage) + ffmpeg scene-select pass
+(exact pts_time from showinfo) → 64-bit dHash sequential dedupe → even
+subsample to max_frames. New knobs: `scene_threshold=0.3`,
+`dedupe_hash_distance=6` (≤0/<0 disable). Pillow added to worker deps.
+Verified end-to-end on a synthetic cut video (static tail collapsed, cut
+captured at exact timestamp). Affects FUTURE ingests only — existing 13
+videos keep their 10s-interval frames.
+
+### In flight
+- Scoped production+judge eval against the caption-enriched index →
+  `/tmp/eval-prod-item5.json` (watch: over-refusals e074/e084-class should
+  convert; baseline artifact `3e822bb`: F1 0.625, P 0.476, correct 0.814).
+- `cdk deploy` (worker image picks up scene sampling + BM25 merge + pillow;
+  API image picks up visual snippet enrichment).
+- After both: full regen if numbers move, README/log sync, smoke.
+
 ### Deploy + smoke: DONE — items 3+4 complete
 `cdk deploy VideoRagCore` succeeded (104.9s). Cache-busted smoke: enumeration
 query answers grounded with citations (and honestly flags partial coverage);
