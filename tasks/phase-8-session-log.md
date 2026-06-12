@@ -280,6 +280,21 @@ index too (MRR 0.827, F1 0.714). README synced.
 | MRR | 0.791 | 0.795 |
 | over-refusals | 13 | 7 |
 
+### Vercel web deploy: DONE (portfolio fully live)
+Production web was 8 days stale (no GitHub auto-deploy; manual CLI only) —
+it predated the motion pass AND all of today's dashboard data. Deployed via
+`npx vercel deploy --prod --yes` **from the repo root** (project root
+setting is `apps/web`; deploying from inside apps/web fails with
+"apps/web/apps/web"). Gotcha hit: the repo-root `.vercel` link pointed at a
+stale project named `multimodal-video-rag` (no `-web`) — one junk deploy
+went there (harmless, separate URL) before re-linking with
+`vercel link --project multimodal-video-rag-web`. The stale project is worth
+deleting in the Vercel dashboard. Verified live: build green, aliased to
+multimodal-video-rag-web.vercel.app, and the served JS chunk contains the
+final artifact (generated_at 2026-06-12T01:01:55, F1 0.7143).
+**User decision: 13 videos is enough for the portfolio — no library
+expansion.**
+
 ### Remaining over-refusals (7) and next levers
 - e016/e024/e084: exact-timestamp visual detail still not retrieved into
   top-10 context (retrieval depth / chunk targeting, not prompt).
