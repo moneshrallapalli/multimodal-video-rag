@@ -9,13 +9,13 @@ The day-to-day plan lives in per-phase files. Use this as a jumping-off point.
 - `phase-5.md` — seed evaluation — DONE
 - `phase-6.md` — deployment + observability — DONE
 - `phase-7-cleanup.md` — pre-reveal cleanup (audit follow-ups) — DONE
-- `phase-8-quality.md` — **NEXT: start here** — handoff from the 2026-06-11
-  session (UI motion + gate collapse). Records the stale-eval-baseline
-  incident, current real metrics, and the prioritized plan to improve
-  no-answer precision, judge correct_rate, and per-query cost.
-- `phase-8-session-log.md` — running log of Phase 8 sessions: what each session
-  actually did, verified repo/deploy state, and the exact next action. Read
-  this right after the handoff if a session was cut off.
+- `phase-8-quality.md` — quality + cost plan (all 6 items DONE 2026-06-12;
+  see the session log's scoreboard: no-answer F1 0.611→0.714, judge correct
+  0.75→0.803, over-refusals 13→7).
+- `phase-8-session-log.md` — **NEXT: start here** — running log of Phase 8
+  sessions; ends with the scoreboard, the 7 remaining over-refusals with
+  their diagnosed causes, and the next levers (retrieval depth/targeting for
+  timestamp-anchored visual queries, then library expansion).
 
 ## Engineering rules of the road
 - `lessons.md` — gotchas hit during the build, with the rule to avoid repeating
