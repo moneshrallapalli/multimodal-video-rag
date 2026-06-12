@@ -29,16 +29,16 @@ Real evaluation over 13 indexed videos, 135 hand-labeled queries (transcript, vi
 
 | Config | MRR | Timestamp@5s | No-answer F1 |
 |---|---:|---:|---:|
-| Dense only | 0.784 | 0.734 | 0.645 |
-| Dense + strict gate | 0.674 | 0.605 | 0.353 |
-| Hybrid BM25 | 0.707 | 0.597 | 0.000 |
-| Hybrid + rerank | 0.742 | 0.621 | 0.000 |
-| Hybrid + rewrite | 0.707 | 0.597 | 0.000 |
-| **Production (hybrid + rerank + rewrite + answer gen)** | **0.779** | **0.718** | **0.625** |
+| Dense only | 0.827 | 0.766 | 0.714 |
+| Dense + strict gate | 0.667 | 0.605 | 0.343 |
+| Hybrid BM25 | 0.707 | 0.605 | 0.000 |
+| Hybrid + rerank | 0.742 | 0.637 | 0.000 |
+| Hybrid + rewrite | 0.707 | 0.605 | 0.000 |
+| **Production (hybrid + rerank + rewrite + answer gen)** | **0.795** | **0.734** | **0.714** |
 
-LLM judge on 113 answerable queries: quality 0.838, grounded 0.929, correct 0.814, useful 0.929.
+LLM judge on 117 answerable queries: quality 0.836, grounded 0.923, correct 0.803, useful 0.940.
 
-MRR and Timestamp@5s are the metrics that discriminate between retrieval configs — Recall@5 is near-ceiling. Weak-evidence refusal is owned by the LLM's structured `grounded` flag during answer generation, so retrieval-only configs sit at No-answer F1 0.000 and the production config carries it to 0.625 (every refusal is attributable via a per-query `refusal_reason`).
+MRR and Timestamp@5s are the metrics that discriminate between retrieval configs — Recall@5 is near-ceiling. Weak-evidence refusal is owned by the LLM's structured `grounded` flag during answer generation, so retrieval-only configs sit at No-answer F1 0.000 and the production config carries it to 0.714 (every refusal is attributable via a per-query `refusal_reason`). The single largest quality lever was attaching frame-caption text to image-embedding hits: before that, a retrieved frame surfaced as a contentless "Visual frame at 10:05" snippet the answer model could not ground on.
 
 ## Interesting engineering decisions
 
@@ -56,7 +56,7 @@ MRR and Timestamp@5s are the metrics that discriminate between retrieval configs
 
 ## Current limits
 
-- MRR dips slightly from dense-only to production (0.784 → 0.779) because the hybrid path trades a little semantic ranking for exact-match wins and refusal accuracy.
+- MRR drops ~3 points from dense-only to production (0.827 → 0.795) because the hybrid path trades a little semantic ranking for exact-match wins and refusal accuracy.
 - Remaining no-answer over-refusals are retrieval/caption-bound (the labeled evidence doesn't reach the answer context), not prompt-bound — the next lever is frame caption coverage, not grounding criteria.
 - Admin ingestion is password-gated, not a multi-user product flow.
 

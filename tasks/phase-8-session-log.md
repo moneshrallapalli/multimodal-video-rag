@@ -265,11 +265,30 @@ answers with caption-level detail ("tall blue vertical design with 'NOTHING
 PHONE 2A' text illuminated... around 10:05") and visual hits carry real
 caption snippets.
 
-### In flight
-Full 7-config regen against the enriched index → artifact, then README/log
-sync. Remaining over-refusals (7): e016/e024/e084 (exact-timestamp visual
-detail still missing from retrieved context), e077/e099 (transcript detail
-retrieval misses), e018/e092 (borderline pool).
+### Items 5+6 final (artifact `014e515`) — PHASE 8 PLAN COMPLETE
+Full regen confirms the scoped numbers: production no-answer **F1 0.714** /
+**P 0.588** / R 0.909, **MRR 0.795**, ts@5s 0.734; judge n=117 quality 0.836,
+grounded 0.923, **correct 0.803**, useful 0.940. Dense rides the enriched
+index too (MRR 0.827, F1 0.714). README synced.
+
+### Phase 8 scoreboard (session start → end, production config)
+| metric | start | end |
+|---|---|---|
+| no-answer F1 | 0.611 | **0.714** |
+| no-answer precision | 0.458 | **0.588** |
+| judge correct_rate | 0.75 | **0.803** (on a larger answered pool) |
+| MRR | 0.791 | 0.795 |
+| over-refusals | 13 | 7 |
+
+### Remaining over-refusals (7) and next levers
+- e016/e024/e084: exact-timestamp visual detail still not retrieved into
+  top-10 context (retrieval depth / chunk targeting, not prompt).
+- e077/e099: transcript detail retrieval misses.
+- e018/e092: borderline pool, flips run-to-run.
+- e010: known borderline missed refusal (enumeration rule tips it).
+Next-session levers: retrieval depth/targeting for timestamp-anchored visual
+queries; then library expansion (scene sampling + BM25 merge are now in
+place for it).
 
 ### Deploy + smoke: DONE — items 3+4 complete
 `cdk deploy VideoRagCore` succeeded (104.9s). Cache-busted smoke: enumeration
