@@ -154,3 +154,32 @@ def test_serializer_allows_dev_fallback_outside_deployed_mode(monkeypatch):
     # Round-trip a token to confirm a usable serializer was returned.
     token = serializer.dumps({"role": "admin"})
     assert serializer.loads(token) == {"role": "admin"}
+
+
+def test_lambda_handler_flushes_traces_even_on_error(monkeypatch):
+    """Lambda freezes the moment the handler returns — pending LangSmith
+    batches must be drained inside the invocation, success or failure."""
+    from api import main
+
+    flushes: list[bool] = []
+    monkeypatch.setattr(main, "_flush_langsmith_traces", lambda: flushes.append(True))
+
+    monkeypatch.setattr(main, "_mangum", lambda event, context: {"statusCode": 200})
+    assert main.handler({}, None) == {"statusCode": 200}
+    assert flushes == [True]
+
+    def broken(event, context):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(main, "_mangum", broken)
+    with pytest.raises(RuntimeError):
+        main.handler({}, None)
+    assert flushes == [True, True]
+
+
+def test_langsmith_flush_noops_without_tracing_config(monkeypatch):
+    from api import main
+
+    monkeypatch.setattr(settings, "langsmith_tracing", True)
+    monkeypatch.setattr(settings, "langsmith_api_key", "")
+    main._flush_langsmith_traces()  # must not raise or import tracer machinery

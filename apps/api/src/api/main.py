@@ -58,4 +58,32 @@ app.include_router(public_router)
 app.include_router(admin_router)
 
 
-handler = Mangum(app)
+_mangum = Mangum(app)
+
+
+def _flush_langsmith_traces() -> None:
+    """Drain pending LangSmith uploads before Lambda freezes.
+
+    The LangSmith SDK posts runs from a background thread in batches. Lambda
+    freezes the execution environment the moment the handler returns, so
+    without a synchronous flush the tail of every trace — the final node's
+    end event (its outputs/duration) and the root run completion — is lost
+    and traces appear stuck pending. Local processes don't hit this because
+    Python's exit hooks drain the queue.
+    """
+    if not (settings.langsmith_tracing and settings.langsmith_api_key):
+        return
+    try:
+        from langchain_core.tracers.langchain import get_client, wait_for_all_tracers
+
+        wait_for_all_tracers()
+        get_client().flush()
+    except Exception:
+        logger.exception("langsmith_flush_error")
+
+
+def handler(event, context):
+    try:
+        return _mangum(event, context)
+    finally:
+        _flush_langsmith_traces()
