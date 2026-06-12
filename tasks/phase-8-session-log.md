@@ -295,6 +295,13 @@ final artifact (generated_at 2026-06-12T01:01:55, F1 0.7143).
 **User decision: 13 videos is enough for the portfolio — no library
 expansion.**
 
+### Post-launch dashboard fix (user feedback: "feels fake")
+The no-answer card showed bare "Refusal precision 0% · recall 0%" for
+retrieval-only configs — true (they never attempt a refusal; answer gen off)
+but reads as broken/gamed. Card now explains the 0/0 denominator and points
+to Production (59%/91%). Verified in preview both ways, deployed to Vercel,
+confirmed in the live bundle.
+
 ### Remaining over-refusals (7) and next levers
 - e016/e024/e084: exact-timestamp visual detail still not retrieved into
   top-10 context (retrieval depth / chunk targeting, not prompt).
