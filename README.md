@@ -7,7 +7,7 @@ The frontend runs on Vercel, and the backend is AWS-native: FastAPI in a Lambda 
 ## How it works
 
 1. Admin submits a YouTube URL through the web console.
-2. A Fargate worker downloads the video, extracts keyframes every 10 seconds, splits the transcript into 15-second chunks with faster-whisper, and embeds both modalities into separate Pinecone indexes.
+2. A Fargate worker downloads the video, extracts keyframes (10-second interval sampling plus scene-cut detection, deduped by perceptual hash), splits the transcript into 15-second chunks with faster-whisper, and embeds both modalities into separate Pinecone indexes.
 3. When a user asks a question, a LangGraph pipeline classifies intent, retrieves from both indexes, fuses results with Reciprocal Rank Fusion, reranks, gates on evidence strength, and generates a grounded answer via Bedrock.
 4. The response includes the answer, confidence score, and clickable timestamped citations.
 
@@ -54,6 +54,8 @@ MRR and Timestamp@5s are the metrics that discriminate between retrieval configs
 
 **Cross-encoder reranking runs in its own Lambda.** `BAAI/bge-reranker-base` (~500MB) can't load inside the API request path — API Gateway HTTP has a fixed 30-second integration timeout, and cold-start model loading would blow it. So the API calls a dedicated `video-rag-reranker` Lambda (warm model, invoked per query) instead of baking inference into the request. On the current golden set rerank moves hybrid MRR from 0.707 to 0.742.
 
+**LangSmith traces get flushed before Lambda freezes.** The LangSmith SDK uploads runs from a background thread, but Lambda freezes the execution environment the moment the handler returns — so the tail of every trace (the final node's outputs, the root run completion) silently never arrived, and traces sat stuck "pending." Local dev never reproduces this because Python's exit hooks drain the queue. The fix wraps the Mangum handler and synchronously flushes all tracers in a `finally` before returning.
+
 ## Current limits
 
 - MRR drops ~3 points from dense-only to production (0.827 → 0.795) because the hybrid path trades a little semantic ranking for exact-match wins and refusal accuracy.
@@ -81,7 +83,7 @@ uv run --with argon2-cffi python scripts/init_secrets.py
 The frontend proxies `/api/*` to the backend via Next.js rewrites, so the browser talks to one origin in local and production.
 
 ```bash
-uv run pytest -q                            # 124 tests
+uv run pytest -q                            # 147 tests
 uvx ruff check . && uvx ruff format --check .
 pnpm --filter web lint && pnpm --filter web build
 ```
