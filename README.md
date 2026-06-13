@@ -105,7 +105,6 @@ pnpm --filter web lint && pnpm --filter web build
 ## Live
 
 - Web: https://multimodal-video-rag-web.vercel.app
-- API: https://fsd8xleob9.execute-api.us-east-1.amazonaws.com/
 
 ## License
 
