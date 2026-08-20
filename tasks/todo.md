@@ -17,6 +17,12 @@ The day-to-day plan lives in per-phase files. Use this as a jumping-off point.
   their diagnosed causes, and the next levers (retrieval depth/targeting for
   timestamp-anchored visual queries, then library expansion).
 
+## Open GitHub issues
+- [#1](https://github.com/moneshrallapalli/multimodal-video-rag/issues/1) — `eval`: add a
+  `--configs` flag to `run_eval.py` so a single ablation arm can be re-run without
+  sweeping all of `CONFIGS`. Includes deciding what a partial run does to
+  `apps/web/src/data/eval-results.json`.
+
 ## Engineering rules of the road
 - `lessons.md` — gotchas hit during the build, with the rule to avoid repeating
   them. Read this if anything stops working unexpectedly.
