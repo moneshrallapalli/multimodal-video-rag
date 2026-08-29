@@ -1,12 +1,13 @@
 "use client";
 
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { GitBranch, LoaderCircle, RotateCcw, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import { revealContainer, revealItem, viewFade } from "@/lib/motion";
+import { usePipelineEventPlayback } from "@/lib/use-pipeline-playback";
 import type { DemoVideo, PipelineEvent, SearchResponse, SearchResult } from "@/lib/types";
 
 import { AnswerPanel } from "./answer-panel";
@@ -44,6 +45,11 @@ export function SearchView() {
   const [seek, setSeek] = useState<Seek | null>(null);
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const reduceMotion = useReducedMotion() ?? false;
+  const { displayedEvents, playing } = usePipelineEventPlayback(events, {
+    enabled: !reduceMotion,
+  });
+  const pipelineRunning = loading || playing;
 
   useEffect(() => {
     api
@@ -196,8 +202,8 @@ export function SearchView() {
             {surface === "pipeline" ? (
               <PipelinePanel
                 key={events[0]?.run_id ?? "idle"}
-                events={events}
-                running={loading}
+                events={displayedEvents}
+                running={pipelineRunning}
               />
             ) : response ? (
               <div className="grid gap-5 lg:grid-cols-3">
