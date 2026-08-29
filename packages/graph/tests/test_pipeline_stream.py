@@ -5,7 +5,6 @@ from __future__ import annotations
 from graph.models import GraphConfig
 from graph.pipeline import QueryPipeline
 from shared.schemas import PipelineEvent, SearchRequest, SearchResponse
-
 from test_query_pipeline import (
     FakeAnswerer,
     FakeCrossEncoderReranker,
@@ -18,11 +17,7 @@ from test_query_pipeline import (
 
 
 def _completions(items: list[PipelineEvent | SearchResponse]) -> list[PipelineEvent]:
-    return [
-        item
-        for item in items
-        if isinstance(item, PipelineEvent) and item.status != "started"
-    ]
+    return [item for item in items if isinstance(item, PipelineEvent) and item.status != "started"]
 
 
 def test_run_stream_happy_path_matches_run_and_skips_rewrite():
@@ -129,10 +124,6 @@ def test_run_stream_cross_encoder_payload_matches_eligibility():
     )
 
     items = list(pipeline.run_stream(SearchRequest(query="self sabotage", top_k=2)))
-    fuse = next(
-        item
-        for item in _completions(items)
-        if item.node == "fuse_results"
-    )
+    fuse = next(item for item in _completions(items) if item.node == "fuse_results")
     assert fuse.payload["reranked"] is True
     assert fuse.payload["fused_count"] == 2

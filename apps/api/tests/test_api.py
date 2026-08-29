@@ -104,7 +104,9 @@ def _parse_sse(body: str) -> list[tuple[str, dict]]:
 
 
 def test_search_stream_answerable(client):
-    with client.stream("POST", "/api/search/stream", json={"query": "how to negotiate salary"}) as r:
+    with client.stream(
+        "POST", "/api/search/stream", json={"query": "how to negotiate salary"}
+    ) as r:
         assert r.status_code == 200
         assert "text/event-stream" in r.headers["content-type"]
         body = "".join(r.iter_text())
@@ -125,7 +127,9 @@ def test_search_stream_answerable(client):
 
 
 def test_search_stream_weather_refuses(client):
-    with client.stream("POST", "/api/search/stream", json={"query": "what is today's weather"}) as r:
+    with client.stream(
+        "POST", "/api/search/stream", json={"query": "what is today's weather"}
+    ) as r:
         body = "".join(r.iter_text())
 
     frames = _parse_sse(body)

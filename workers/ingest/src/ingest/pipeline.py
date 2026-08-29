@@ -69,9 +69,7 @@ class IngestionWorker:
         media = self._media_for(message)
         current_stage = "fetch_metadata"
         try:
-            self._update_job(
-                message.job_id, status="downloading", progress=10, stage=current_stage
-            )
+            self._update_job(message.job_id, status="downloading", progress=10, stage=current_stage)
             with TemporaryDirectory(prefix=f"ingest-{message.video_id}-") as tmp:
                 work_dir = Path(tmp)
 

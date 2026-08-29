@@ -34,7 +34,9 @@ def test_search_service_uses_mock_when_unconfigured(monkeypatch):
 def test_search_stream_uses_mock_when_unconfigured(monkeypatch):
     monkeypatch.setattr(settings, "pinecone_api_key", "")
 
-    items = list(search_service.search_videos_stream(SearchRequest(query="what is today's weather")))
+    items = list(
+        search_service.search_videos_stream(SearchRequest(query="what is today's weather"))
+    )
 
     assert isinstance(items[-1], SearchResponse)
     assert items[-1].refused is True

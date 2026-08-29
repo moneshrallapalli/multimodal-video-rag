@@ -219,12 +219,8 @@ Worker `_update_job` and store `enqueue` set `gsi_partition="all"` on every item
 architecture diagram.
 **Change:**
 ```python
-vpc.add_gateway_endpoint(
-    "S3Endpoint", service=ec2.GatewayVpcEndpointAwsService.S3
-)
-vpc.add_gateway_endpoint(
-    "DynamoDBEndpoint", service=ec2.GatewayVpcEndpointAwsService.DYNAMODB
-)
+vpc.add_gateway_endpoint("S3Endpoint", service=ec2.GatewayVpcEndpointAwsService.S3)
+vpc.add_gateway_endpoint("DynamoDBEndpoint", service=ec2.GatewayVpcEndpointAwsService.DYNAMODB)
 ```
 **Verify:** `cdk synth` succeeds; new resources appear.
 **Commit:** `feat(infra): add S3 and DynamoDB VPC gateway endpoints`
