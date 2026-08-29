@@ -31,7 +31,7 @@ export function IngestForm({ onSubmit }: { onSubmit: (req: IngestRequest) => Pro
   }
 
   return (
-    <Card>
+    <Card className="rounded-2xl border-border/80 shadow-sm">
       <CardHeader>
         <CardTitle className="text-base">Ingest a YouTube talk</CardTitle>
       </CardHeader>

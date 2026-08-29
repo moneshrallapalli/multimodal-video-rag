@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from api.ingestion_store import DynamoIngestionStore
+from api.ingestion_store import DynamoIngestionStore, _item_to_job
 from botocore.exceptions import ClientError
 
 
@@ -71,6 +71,8 @@ def test_enqueue_writes_job_and_sends_sqs_message():
     assert response.job.youtube_url == "https://youtu.be/QkdBXUikRQc"
     assert response.job.status == "queued"
     assert response.job.progress == 0
+    assert response.job.stage == "queued"
+    assert response.job.stages_seen == ["queued"]
     assert len(sqs.messages) == 1
 
     message = json.loads(sqs.messages[0]["MessageBody"])
@@ -139,3 +141,20 @@ def test_list_jobs_falls_back_to_scan_when_gsi_missing():
     jobs = store.list_jobs().jobs
 
     assert len(jobs) == 1
+
+
+def test_item_to_job_reads_legacy_items_without_stage():
+    job = _item_to_job(
+        {
+            "job_id": "yt_legacy",
+            "youtube_url": "https://youtu.be/legacy",
+            "video_id": "legacy",
+            "status": "completed",
+            "progress": 100,
+            "created_at": "2026-06-01T10:00:00+00:00",
+            "updated_at": "2026-06-01T11:00:00+00:00",
+        }
+    )
+
+    assert job.stage is None
+    assert job.stages_seen == []

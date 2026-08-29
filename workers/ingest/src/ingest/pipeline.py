@@ -67,8 +67,11 @@ class IngestionWorker:
         if self._already_completed(message.job_id):
             return
         media = self._media_for(message)
+        current_stage = "fetch_metadata"
         try:
-            self._update_job(message.job_id, status="downloading", progress=10)
+            self._update_job(
+                message.job_id, status="downloading", progress=10, stage=current_stage
+            )
             with TemporaryDirectory(prefix=f"ingest-{message.video_id}-") as tmp:
                 work_dir = Path(tmp)
 
@@ -76,17 +79,27 @@ class IngestionWorker:
                 self._upload_json(
                     metadata_key(message.video_id), metadata.model_dump_json(indent=2)
                 )
+                current_stage = "download_video"
                 self._update_job(
                     message.job_id,
                     status="downloading",
                     progress=25,
                     title=metadata.title,
+                    stage=current_stage,
                 )
 
                 source_path = media.download_video(message.youtube_url, work_dir)
+                current_stage = "extract_audio"
+                self._update_job(
+                    message.job_id, status="downloading", progress=40, stage=current_stage
+                )
                 audio_path = media.extract_audio(source_path, work_dir)
                 self._upload_file(audio_path, audio_key(message.video_id), "audio/mp4")
 
+                current_stage = "extract_frames"
+                self._update_job(
+                    message.job_id, status="downloading", progress=50, stage=current_stage
+                )
                 frames = media.extract_frames(source_path, work_dir)
                 frame_keys: list[str] = []
                 for index, frame in enumerate(frames, start=1):
@@ -100,13 +113,23 @@ class IngestionWorker:
 
                 captions: list[str] | None = None
                 if self.captioner and frames:
+                    current_stage = "caption_frames"
+                    self._update_job(
+                        message.job_id,
+                        status="downloading",
+                        progress=60,
+                        stage=current_stage,
+                    )
                     captions = self.captioner.caption_frames([f.path for f in frames])
                     self._upload_json(
                         f"videos/{message.video_id}/frames/captions.json",
                         json.dumps(captions, indent=2),
                     )
 
-                self._update_job(message.job_id, status="transcribing", progress=70)
+                current_stage = "transcribe"
+                self._update_job(
+                    message.job_id, status="transcribing", progress=70, stage=current_stage
+                )
                 transcript = media.transcribe_audio(audio_path, message.video_id)
                 self._upload_json(
                     transcript_key(message.video_id),
@@ -115,7 +138,10 @@ class IngestionWorker:
 
                 summary: IndexingSummary | None = None
                 if self.indexer:
-                    self._update_job(message.job_id, status="embedding", progress=85)
+                    current_stage = "embed_upsert"
+                    self._update_job(
+                        message.job_id, status="embedding", progress=85, stage=current_stage
+                    )
                     summary = self.indexer.index_video(
                         metadata=metadata,
                         transcript=transcript,
@@ -131,12 +157,23 @@ class IngestionWorker:
                         # Persist the fitted BM25 stats so query-time hybrid
                         # retrieval can re-encode user queries without re-reading
                         # the transcript corpus.
+                        current_stage = "refresh_bm25"
+                        self._update_job(
+                            message.job_id,
+                            status="embedding",
+                            progress=92,
+                            stage=current_stage,
+                        )
                         self._upload_json(
                             bm25_stats_key(message.video_id),
                             json.dumps(summary.bm25_stats),
                         )
                         self._refresh_corpus_bm25_stats()
 
+                current_stage = "write_catalog"
+                self._update_job(
+                    message.job_id, status="embedding", progress=96, stage=current_stage
+                )
                 self._put_video_record(
                     message,
                     metadata,
@@ -145,15 +182,23 @@ class IngestionWorker:
                     frame_interval_seconds=self._frame_interval_seconds(media, message),
                     indexing_summary=summary,
                 )
+                current_stage = "completed"
                 self._update_job(
                     message.job_id,
                     status="completed",
                     progress=100,
                     title=metadata.title,
                     error=None,
+                    stage=current_stage,
                 )
         except Exception as exc:
-            self._update_job(message.job_id, status="failed", progress=0, error=str(exc)[:500])
+            self._update_job(
+                message.job_id,
+                status="failed",
+                progress=0,
+                error=str(exc)[:500],
+                stage=current_stage,
+            )
             raise
 
     def _media_for(self, message: IngestJobMessage) -> MediaProcessor:
@@ -217,6 +262,7 @@ class IngestionWorker:
         progress: int,
         title: str | None = None,
         error: str | None = None,
+        stage: str | None = None,
     ) -> None:
         now = utc_now_iso()
         names = {"#status": "status"}
@@ -226,6 +272,15 @@ class IngestionWorker:
             ":updated_at": now,
         }
         assignments = ["#status = :status", "progress = :progress", "updated_at = :updated_at"]
+        if stage is not None:
+            names["#stage"] = "stage"
+            values[":stage"] = stage
+            values[":empty_stages"] = []
+            values[":stage_item"] = [stage]
+            assignments.append("#stage = :stage")
+            assignments.append(
+                "stages_seen = list_append(if_not_exists(stages_seen, :empty_stages), :stage_item)"
+            )
         if title is not None:
             names["#title"] = "title"
             values[":title"] = title

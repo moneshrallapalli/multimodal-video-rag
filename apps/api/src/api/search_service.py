@@ -8,15 +8,18 @@ shape so the frontend can still run.
 from __future__ import annotations
 
 import logging
+import uuid
+from collections.abc import Iterator
+from datetime import UTC, datetime
 from functools import lru_cache
 
 from graph import QueryPipeline
 from graph.models import GraphConfig
 from shared import settings
 from shared.bm25 import BM25Encoder
-from shared.schemas import SearchRequest, SearchResponse
+from shared.schemas import PipelineEvent, SearchRequest, SearchResponse
 
-from .mock_data import NO_ANSWER_MESSAGE, mock_search
+from .mock_data import mock_search, mock_search_stream
 from .reranking import LambdaCrossEncoderReranker, LocalCrossEncoderReranker
 
 logger = logging.getLogger("video_rag.api.search")
@@ -37,15 +40,56 @@ def search_videos(req: SearchRequest) -> SearchResponse:
             len(req.query),
             req.video_ids or [],
         )
-        return SearchResponse(
-            query=req.query,
-            intent="no_answer",
-            answer=NO_ANSWER_MESSAGE,
-            refused=True,
-            refusal_reason="pipeline_error",
-            confidence=0.0,
-            results=[],
+        return _pipeline_error_response(req)
+
+
+def search_videos_stream(req: SearchRequest) -> Iterator[PipelineEvent | SearchResponse]:
+    """Same search as `search_videos`, yielding live node events then the response."""
+    if not real_search_enabled():
+        yield from mock_search_stream(req)
+        return
+    try:
+        yield from _pipeline().run_stream(req)
+    except Exception:
+        logger.exception(
+            "search_pipeline_error query_len=%s video_ids=%s",
+            len(req.query),
+            req.video_ids or [],
         )
+        yield _pipeline_error_event()
+        yield _pipeline_error_response(req)
+
+
+_PIPELINE_ERROR_MESSAGE = (
+    "The search backend could not reach Pinecone or Bedrock. "
+    "This is a connection failure, not a weak-evidence refusal. "
+    "Confirm the API is running with network access and that the web app is "
+    "proxying to that process."
+)
+
+
+def _pipeline_error_event() -> PipelineEvent:
+    return PipelineEvent(
+        run_id=str(uuid.uuid4()),
+        ts=datetime.now(UTC).isoformat(timespec="milliseconds"),
+        node="pipeline",
+        status="failed",
+        duration_ms=0.0,
+        summary="Pinecone or Bedrock unreachable",
+        payload={"reason": "pipeline_error"},
+    )
+
+
+def _pipeline_error_response(req: SearchRequest) -> SearchResponse:
+    return SearchResponse(
+        query=req.query,
+        intent="no_answer",
+        answer=_PIPELINE_ERROR_MESSAGE,
+        refused=True,
+        refusal_reason="pipeline_error",
+        confidence=0.0,
+        results=[],
+    )
 
 
 def real_search_enabled() -> bool:

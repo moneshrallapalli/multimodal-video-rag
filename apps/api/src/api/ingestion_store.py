@@ -36,6 +36,13 @@ def _coerce_int(value: Any, default: int = 0) -> int:
     return default
 
 
+def _stages_seen(item: dict[str, Any]) -> list[str]:
+    raw = item.get("stages_seen") or []
+    if isinstance(raw, (set, frozenset)):
+        return [str(stage) for stage in raw]
+    return [str(stage) for stage in raw]
+
+
 def _item_to_job(item: dict[str, Any]) -> Job:
     return Job(
         id=str(item["job_id"]),
@@ -47,6 +54,8 @@ def _item_to_job(item: dict[str, Any]) -> Job:
         created_at=str(item["created_at"]),
         updated_at=str(item["updated_at"]),
         error=item.get("error"),
+        stage=item.get("stage"),
+        stages_seen=_stages_seen(item),
     )
 
 
@@ -99,6 +108,8 @@ class DynamoIngestionStore:
             "created_at": now,
             "updated_at": now,
             "error": None,
+            "stage": "queued",
+            "stages_seen": ["queued"],
             # GSI partition: all jobs in one queryable bucket; sort key is created_at.
             "gsi_partition": _JOBS_GSI_PARTITION,
         }

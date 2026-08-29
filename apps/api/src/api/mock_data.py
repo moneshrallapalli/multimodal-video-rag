@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from itertools import count
 from threading import Lock
+from uuid import uuid4
 
 from shared.ingestion import normalize_youtube_url
 from shared.schemas import (
@@ -13,6 +15,8 @@ from shared.schemas import (
     IngestResponse,
     Job,
     JobsResponse,
+    PipelineEvent,
+    PipelineEventStatus,
     QueryIntent,
     SearchRequest,
     SearchResponse,
@@ -496,6 +500,146 @@ def mock_search(req: SearchRequest) -> SearchResponse:
     )
 
 
+def mock_search_stream(req: SearchRequest) -> Iterator[PipelineEvent | SearchResponse]:
+    """Emit a node-by-node log of the same mock_search decision path.
+
+    Used only when real LangGraph search is unconfigured. Payloads come from
+    the mock result, not a second invented architecture.
+    """
+    response = mock_search(req)
+    run_id = str(uuid4())
+    transcript = [item for item in response.results if item.modality == "transcript"]
+    visual = [item for item in response.results if item.modality != "transcript"]
+
+    def emit(
+        node: str,
+        status: PipelineEventStatus,
+        summary: str,
+        payload: dict[str, object] | None = None,
+    ) -> PipelineEvent:
+        return PipelineEvent(
+            run_id=run_id,
+            ts=datetime.now(UTC).isoformat(timespec="milliseconds"),
+            node=node,
+            status=status,
+            duration_ms=0.0,
+            summary=summary,
+            payload=payload or {},
+        )
+
+    def hit_payload(rows: list[SearchResult]) -> dict:
+        return {
+            "hit_count": len(rows),
+            "top_score": max((row.score for row in rows), default=0.0),
+            "hits": [
+                {
+                    "video_id": row.video_id,
+                    "start_seconds": row.start_seconds,
+                    "snippet": row.snippet[:240],
+                    "score": row.score,
+                    "modality": row.modality,
+                }
+                for row in rows[:4]
+            ],
+        }
+
+    yield emit("validate_query", "started", "validate_query started")
+    yield emit("validate_query", "ok", "query accepted", {"query": req.query})
+    yield emit("classify_intent", "started", "classify_intent started")
+    yield emit(
+        "classify_intent",
+        "ok",
+        f"intent={response.intent}",
+        {"intent": response.intent},
+    )
+    yield emit("retrieve_transcript", "started", "retrieve_transcript started")
+    yield emit(
+        "retrieve_transcript",
+        "ok",
+        f"{len(transcript)} hits · top {hit_payload(transcript)['top_score']:.2f}",
+        hit_payload(transcript),
+    )
+    yield emit("retrieve_visual", "started", "retrieve_visual started")
+    yield emit(
+        "retrieve_visual",
+        "ok",
+        f"{len(visual)} hits · top {hit_payload(visual)['top_score']:.2f}",
+        hit_payload(visual),
+    )
+    yield emit("fuse_results", "started", "fuse_results started")
+    yield emit(
+        "fuse_results",
+        "ok",
+        f"{len(response.results)} fused",
+        {"fused_count": len(response.results), "reranked": False},
+    )
+    yield emit("apply_retrieval_gate", "started", "apply_retrieval_gate started")
+    if response.refused:
+        yield emit(
+            "apply_retrieval_gate",
+            "refused",
+            "refused · retrieval_gate",
+            {
+                "passed": False,
+                "reason": response.refusal_reason or "retrieval_gate",
+                "transcript_score": hit_payload(transcript)["top_score"],
+                "visual_score": hit_payload(visual)["top_score"],
+            },
+        )
+        yield emit(
+            "rewrite_query",
+            "skipped",
+            "skipped (raw query path)",
+            {"rewritten_query": None},
+        )
+        yield emit("build_context", "started", "build_context started")
+        yield emit("build_context", "skipped", "context skipped", {"line_count": 0})
+        yield emit("generate_answer", "started", "generate_answer started")
+        yield emit(
+            "generate_answer",
+            "skipped",
+            "generate skipped",
+            {"refused": True, "confidence": 0.0, "answer_preview": ""},
+        )
+    else:
+        yield emit(
+            "apply_retrieval_gate",
+            "ok",
+            "passed",
+            {
+                "passed": True,
+                "reason": None,
+                "transcript_score": hit_payload(transcript)["top_score"],
+                "visual_score": hit_payload(visual)["top_score"],
+            },
+        )
+        yield emit(
+            "rewrite_query",
+            "skipped",
+            "skipped (raw query path)",
+            {"rewritten_query": None},
+        )
+        yield emit("build_context", "started", "build_context started")
+        yield emit(
+            "build_context",
+            "ok",
+            f"{len(response.results)} context lines",
+            {"line_count": len(response.results)},
+        )
+        yield emit("generate_answer", "started", "generate_answer started")
+        yield emit(
+            "generate_answer",
+            "ok",
+            f"grounded · {response.confidence:.2f}",
+            {
+                "refused": False,
+                "confidence": response.confidence,
+                "answer_preview": (response.answer or "")[:180],
+            },
+        )
+    yield response
+
+
 # ── In-memory ingestion jobs (admin console) ──────────────────────────
 
 
@@ -520,6 +664,8 @@ _JOBS: list[Job] = [
         created_at=_ago(95),
         updated_at=_ago(90),
         error="yt-dlp: video temporarily unavailable (mock)",
+        stage="download_video",
+        stages_seen=["queued", "fetch_metadata", "download_video"],
     ),
     Job(
         id="job_001",
@@ -531,6 +677,20 @@ _JOBS: list[Job] = [
         created_at=_ago(180),
         updated_at=_ago(168),
         error=None,
+        stage="completed",
+        stages_seen=[
+            "queued",
+            "fetch_metadata",
+            "download_video",
+            "extract_audio",
+            "extract_frames",
+            "caption_frames",
+            "transcribe",
+            "embed_upsert",
+            "refresh_bm25",
+            "write_catalog",
+            "completed",
+        ],
     ),
 ]
 
@@ -552,6 +712,8 @@ def add_job(youtube_url: str) -> IngestResponse:
         progress=0,
         created_at=now,
         updated_at=now,
+        stage="queued",
+        stages_seen=["queued"],
     )
     with _jobs_lock:
         _JOBS.insert(0, job)

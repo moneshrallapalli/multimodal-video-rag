@@ -5,15 +5,18 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { ApiError, api } from "@/lib/api";
+import { isActiveJob } from "@/lib/ingest-pipeline";
 import type { IngestRequest, Job } from "@/lib/types";
 
 import { AdminLogin } from "./admin-login";
 import { IngestForm } from "./ingest-form";
+import { IngestPipelinePanel } from "./ingest-pipeline-panel";
 import { JobsTable } from "./jobs-table";
 
 export function AdminConsole() {
   const [authed, setAuthed] = useState<boolean | null>(null); // null = checking
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
     api
@@ -32,17 +35,19 @@ export function AdminConsole() {
     }
   }, []);
 
+  const hasActive = jobs.some(isActiveJob);
+
   useEffect(() => {
     if (!authed) return;
     // Fetch immediately (next tick) and then poll; both run as timer callbacks so
     // state is only updated from a subscription, not synchronously in the effect body.
     const initial = setTimeout(refreshJobs, 0);
-    const id = setInterval(refreshJobs, 5000);
+    const id = setInterval(refreshJobs, hasActive ? 2000 : 5000);
     return () => {
       clearTimeout(initial);
       clearInterval(id);
     };
-  }, [authed, refreshJobs]);
+  }, [authed, refreshJobs, hasActive]);
 
   async function handleLogin(password: string) {
     try {
@@ -62,13 +67,15 @@ export function AdminConsole() {
     } finally {
       setAuthed(false);
       setJobs([]);
+      setSelectedId(null);
     }
   }
 
   async function handleIngest(req: IngestRequest) {
     try {
       const r = await api.ingest(req);
-      setJobs((prev) => [r.job, ...prev]);
+      setJobs((prev) => [r.job, ...prev.filter((job) => job.id !== r.job.id)]);
+      setSelectedId(r.job.id);
       toast.success("Job queued");
     } catch {
       toast.error("Could not queue the job");
@@ -91,7 +98,15 @@ export function AdminConsole() {
         </Button>
       </div>
       <IngestForm onSubmit={handleIngest} />
-      <JobsTable jobs={jobs} />
+      <IngestPipelinePanel
+        key={selectedId ?? jobs[0]?.id ?? "none"}
+        job={jobs.find((job) => job.id === selectedId) ?? jobs[0] ?? null}
+      />
+      <JobsTable
+        jobs={jobs}
+        selectedId={selectedId ?? jobs[0]?.id ?? null}
+        onSelect={setSelectedId}
+      />
     </div>
   );
 }

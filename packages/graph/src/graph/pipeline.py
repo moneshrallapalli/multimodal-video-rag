@@ -4,17 +4,29 @@ from __future__ import annotations
 
 import logging
 import re
-from collections.abc import Callable
+import time
+from collections.abc import Callable, Iterator
+from datetime import UTC, datetime
+from threading import Lock
 from typing import Any
+from uuid import uuid4
 
 from langgraph.graph import END, StateGraph
 from shared import settings
 from shared.bm25 import BM25Encoder
 from shared.embedding import BedrockEmbedder
 from shared.pinecone_client import PineconeIndexClient, hybrid_blend
-from shared.schemas import QueryIntent, SearchRequest, SearchResponse, SearchResult
+from shared.schemas import (
+    PipelineEvent,
+    PipelineEventStatus,
+    QueryIntent,
+    SearchRequest,
+    SearchResponse,
+    SearchResult,
+)
 
 from .answering import AnswerGenerator, BedrockAnswerGenerator
+from .events import preview_text, retrieve_payload
 from .models import GraphConfig, RetrievalCandidate
 from .retrieval import (
     CrossEncoderReranker,
@@ -59,6 +71,11 @@ _TIMESTAMP_KEYWORDS = {"when", "timestamp", "minute", "second"}
 
 logger = logging.getLogger("video_rag.graph")
 
+# Live sinks keyed by run id. Nodes read `_pipeline_trace_id` from graph state
+# so parallel LangGraph workers can emit without sharing instance mutables.
+_TRACE_SINKS: dict[str, Callable[[PipelineEvent], None]] = {}
+_TRACE_LOCK = Lock()
+
 
 class QueryPipeline:
     def __init__(
@@ -95,27 +112,66 @@ class QueryPipeline:
         self.graph = self._build_graph()
 
     def run(self, request: SearchRequest) -> SearchResponse:
-        state = self.graph.invoke(
-            {
-                "query": request.query.strip(),
-                "video_ids": request.video_ids,
-                "top_k": request.top_k,
-                "errors": [],
-            }
-        )
+        state = self.graph.invoke(self._initial_state(request))
         return self._to_search_response(state)
+
+    def run_stream(self, request: SearchRequest) -> Iterator[PipelineEvent | SearchResponse]:
+        """Run the same compiled graph as `run()`, yielding one event per node.
+
+        Wrappers emit `started` then a terminal status. `rewrite_query` is
+        skipped on the common path (the node is not in the graph that turn).
+        The last yielded value is the SearchResponse from this same run.
+        """
+        run_id = str(uuid4())
+        pending: list[PipelineEvent] = []
+
+        def sink(event: PipelineEvent) -> None:
+            with _TRACE_LOCK:
+                pending.append(event)
+
+        _TRACE_SINKS[run_id] = sink
+        try:
+            last: dict[str, Any] | None = None
+            for values in self.graph.stream(
+                self._initial_state(request, trace_id=run_id),
+                stream_mode="values",
+            ):
+                last = values
+                yield from _drain_events(pending)
+            yield from _drain_events(pending)
+            yield self._to_search_response(last or self._initial_state(request))
+        finally:
+            _TRACE_SINKS.pop(run_id, None)
+
+    def _initial_state(
+        self, request: SearchRequest, *, trace_id: str | None = None
+    ) -> dict[str, Any]:
+        state: dict[str, Any] = {
+            "query": request.query.strip(),
+            "video_ids": request.video_ids,
+            "top_k": request.top_k,
+            "errors": [],
+        }
+        if trace_id:
+            state["_pipeline_trace_id"] = trace_id
+        return state
 
     def _build_graph(self):
         graph = StateGraph(GraphState)
-        graph.add_node("validate_query", self._validate_query)
-        graph.add_node("classify_intent", self._classify_intent)
-        graph.add_node("rewrite_query", self._rewrite_query)
-        graph.add_node("retrieve_transcript", self._retrieve_transcript)
-        graph.add_node("retrieve_visual", self._retrieve_visual)
-        graph.add_node("fuse_results", self._fuse_results)
-        graph.add_node("apply_retrieval_gate", self._apply_retrieval_gate)
-        graph.add_node("build_context", self._build_context)
-        graph.add_node("generate_answer", self._generate_answer)
+        graph.add_node("validate_query", self._traced("validate_query", self._validate_query))
+        graph.add_node("classify_intent", self._traced("classify_intent", self._classify_intent))
+        graph.add_node("rewrite_query", self._traced("rewrite_query", self._rewrite_query))
+        graph.add_node(
+            "retrieve_transcript", self._traced("retrieve_transcript", self._retrieve_transcript)
+        )
+        graph.add_node("retrieve_visual", self._traced("retrieve_visual", self._retrieve_visual))
+        graph.add_node("fuse_results", self._traced("fuse_results", self._fuse_results))
+        graph.add_node(
+            "apply_retrieval_gate",
+            self._traced("apply_retrieval_gate", self._apply_retrieval_gate),
+        )
+        graph.add_node("build_context", self._traced("build_context", self._build_context))
+        graph.add_node("generate_answer", self._traced("generate_answer", self._generate_answer))
         graph.set_entry_point("validate_query")
         graph.add_edge("validate_query", "classify_intent")
         # Fan out: both retrievals run in the same superstep (parallel I/O —
@@ -415,6 +471,210 @@ class QueryPipeline:
         if self.transcript_bm25_resolver is not None:
             return self.transcript_bm25_resolver(single_id)
         return self.transcript_bm25
+
+    def _traced(self, name: str, fn: Callable[[GraphState], GraphState]):
+        def wrapped(state: GraphState) -> GraphState:
+            trace_id = state.get("_pipeline_trace_id")
+            started = time.perf_counter()
+            self._emit_event(
+                trace_id,
+                node=name,
+                status="started",
+                duration_ms=None,
+                summary=f"{name} started",
+                payload={},
+            )
+            try:
+                result = fn(state)
+            except Exception as exc:
+                duration_ms = round((time.perf_counter() - started) * 1000, 2)
+                self._emit_event(
+                    trace_id,
+                    node=name,
+                    status="failed",
+                    duration_ms=duration_ms,
+                    summary=f"{name} failed",
+                    payload={"error": exc.__class__.__name__},
+                )
+                raise
+            duration_ms = round((time.perf_counter() - started) * 1000, 2)
+            status, summary, payload = self._event_from_result(name, state, result)
+            self._emit_event(
+                trace_id,
+                node=name,
+                status=status,
+                duration_ms=duration_ms,
+                summary=summary,
+                payload=payload,
+            )
+            if name == "apply_retrieval_gate":
+                merged: GraphState = {**state, **result}
+                if self._after_gate(merged) != "rewrite_query" and not merged.get(
+                    "rewrite_attempted"
+                ):
+                    self._emit_event(
+                        trace_id,
+                        node="rewrite_query",
+                        status="skipped",
+                        duration_ms=0.0,
+                        summary="skipped (raw query path)",
+                        payload={"rewritten_query": None},
+                    )
+            return result
+
+        wrapped.__name__ = getattr(fn, "__name__", name)
+        return wrapped
+
+    def _emit_event(
+        self,
+        trace_id: str | None,
+        *,
+        node: str,
+        status: PipelineEventStatus,
+        duration_ms: float | None,
+        summary: str,
+        payload: dict[str, Any],
+    ) -> None:
+        if not trace_id:
+            return
+        sink = _TRACE_SINKS.get(trace_id)
+        if sink is None:
+            return
+        sink(
+            PipelineEvent(
+                run_id=trace_id,
+                ts=datetime.now(UTC).isoformat(timespec="milliseconds"),
+                node=node,
+                status=status,
+                duration_ms=duration_ms,
+                summary=summary,
+                payload=payload,
+            )
+        )
+
+    def _event_from_result(
+        self, name: str, state: GraphState, result: GraphState
+    ) -> tuple[PipelineEventStatus, str, dict[str, Any]]:
+        merged: GraphState = {**state, **result}
+        if name == "validate_query":
+            if result.get("refused"):
+                return (
+                    "refused",
+                    "empty query",
+                    {"reason": result.get("refusal_reason")},
+                )
+            return "ok", "query accepted", {"query": merged.get("query", "")}
+        if name == "classify_intent":
+            intent = result.get("intent", "hybrid")
+            return "ok", f"intent={intent}", {"intent": intent}
+        if name in {"retrieve_transcript", "retrieve_visual"}:
+            key = "transcript_hits" if name == "retrieve_transcript" else "visual_hits"
+            should = (
+                state.get("should_retrieve_transcript")
+                if name == "retrieve_transcript"
+                else state.get("should_retrieve_visual")
+            )
+            if state.get("refused") or not should:
+                return "skipped", f"{name} skipped", retrieve_payload([])
+            payload = retrieve_payload(list(result.get(key, [])))
+            status: PipelineEventStatus = "retry" if state.get("rewrite_attempted") else "ok"
+            return (
+                status,
+                f"{payload['hit_count']} hits · top {payload['top_score']:.2f}",
+                payload,
+            )
+        if name == "fuse_results":
+            fused = list(result.get("fused", []))
+            reranked = self._cross_encoder_would_run(state)
+            payload = {"fused_count": len(fused), "reranked": reranked}
+            summary = f"{len(fused)} fused" + (" · reranked" if reranked else "")
+            return "ok", summary, payload
+        if name == "apply_retrieval_gate":
+            transcript_score = max_source_score(
+                [_candidate(data) for data in state.get("transcript_hits", [])]
+            )
+            visual_score = max_source_score(
+                [_candidate(data) for data in state.get("visual_hits", [])]
+            )
+            if state.get("refused") and state.get("refusal_reason") != "retrieval_gate":
+                return (
+                    "skipped",
+                    "gate skipped",
+                    {
+                        "passed": False,
+                        "reason": state.get("refusal_reason"),
+                        "transcript_score": transcript_score,
+                        "visual_score": visual_score,
+                    },
+                )
+            refused = bool(result.get("refused"))
+            reason = result.get("refusal_reason") if refused else None
+            payload = {
+                "passed": not refused,
+                "reason": reason,
+                "transcript_score": transcript_score,
+                "visual_score": visual_score,
+            }
+            if refused:
+                return "refused", f"refused · {reason}", payload
+            return "ok", f"passed · t={transcript_score:.2f} v={visual_score:.2f}", payload
+        if name == "rewrite_query":
+            rewritten = result.get("rewritten_query")
+            if rewritten:
+                return "ok", "rewritten", {"rewritten_query": rewritten}
+            return "failed", "rewrite produced no query", {"rewritten_query": None}
+        if name == "build_context":
+            if state.get("refused"):
+                return "skipped", "context skipped", {"line_count": 0}
+            context = result.get("context") or ""
+            lines = [line for line in context.splitlines() if line]
+            return "ok", f"{len(lines)} context lines", {"line_count": len(lines)}
+        if name == "generate_answer":
+            if state.get("refused"):
+                return (
+                    "skipped",
+                    "generate skipped",
+                    {"refused": True, "confidence": 0.0, "answer_preview": ""},
+                )
+            if result.get("refused"):
+                return (
+                    "refused",
+                    "ungrounded",
+                    {
+                        "refused": True,
+                        "confidence": float(result.get("confidence", 0.0) or 0.0),
+                        "answer_preview": preview_text(result.get("answer")),
+                    },
+                )
+            confidence = float(merged.get("confidence", 0.0) or 0.0)
+            return (
+                "ok",
+                f"grounded · {confidence:.2f}",
+                {
+                    "refused": False,
+                    "confidence": confidence,
+                    "answer_preview": preview_text(result.get("answer")),
+                },
+            )
+        return "ok", name, {}
+
+    def _cross_encoder_would_run(self, state: GraphState) -> bool:
+        """Same eligibility check as `_fuse_results`, used only for event payload."""
+        if not self.config.enable_cross_encoder_rerank:
+            return False
+        transcript = [_candidate(data) for data in state.get("transcript_hits", [])]
+        visual = [_candidate(data) for data in state.get("visual_hits", [])]
+        modalities = {candidate.modality for candidate in (*transcript, *visual)}
+        has_mixed = len(modalities) > 1
+        intent_eligible = state.get("intent") in {"transcript", "summary"}
+        return bool(intent_eligible or has_mixed)
+
+
+def _drain_events(pending: list[PipelineEvent]) -> list[PipelineEvent]:
+    with _TRACE_LOCK:
+        items = list(pending)
+        pending.clear()
+    return items
 
 
 def _candidate(data: dict[str, Any]) -> RetrievalCandidate:

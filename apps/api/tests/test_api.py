@@ -84,6 +84,65 @@ def test_search_no_answer(client):
     assert data["results"] == []
 
 
+def _parse_sse(body: str) -> list[tuple[str, dict]]:
+    import json
+
+    frames: list[tuple[str, dict]] = []
+    for block in body.split("\n\n"):
+        event = "message"
+        data_lines: list[str] = []
+        for line in block.splitlines():
+            if line.startswith("event:"):
+                event = line[6:].strip()
+            elif line.startswith("data:"):
+                data_lines.append(line[5:].strip())
+        if not data_lines:
+            continue
+        raw = "\n".join(data_lines)
+        frames.append((event, json.loads(raw) if raw else {}))
+    return frames
+
+
+def test_search_stream_answerable(client):
+    with client.stream("POST", "/api/search/stream", json={"query": "how to negotiate salary"}) as r:
+        assert r.status_code == 200
+        assert "text/event-stream" in r.headers["content-type"]
+        body = "".join(r.iter_text())
+
+    frames = _parse_sse(body)
+    names = [event for event, _ in frames]
+    assert "node" in names
+    assert "final" in names
+    assert names[-1] == "done"
+    nodes = [payload["node"] for event, payload in frames if event == "node"]
+    assert "retrieve_transcript" in nodes
+    assert "retrieve_visual" in nodes
+    assert "fuse_results" in nodes
+    final = next(payload for event, payload in frames if event == "final")
+    assert final["refused"] is False
+    assert final["results"]
+    assert final["answer"]
+
+
+def test_search_stream_weather_refuses(client):
+    with client.stream("POST", "/api/search/stream", json={"query": "what is today's weather"}) as r:
+        body = "".join(r.iter_text())
+
+    frames = _parse_sse(body)
+    gate = [
+        payload
+        for event, payload in frames
+        if event == "node"
+        and payload["node"] == "apply_retrieval_gate"
+        and payload["status"] != "started"
+    ]
+    assert gate[-1]["status"] == "refused"
+    final = next(payload for event, payload in frames if event == "final")
+    assert final["refused"] is True
+    assert final["intent"] == "no_answer"
+    assert final["results"] == []
+
+
 def test_search_visual_intent(client):
     r = client.post("/api/search", json={"query": "show me the slide with the backlog board"})
     data = r.json()
@@ -116,6 +175,8 @@ def test_admin_flow(client):
     job = r.json()["job"]
     assert job["status"] == "queued"
     assert job["video_id"] == "QkdBXUikRQc"
+    assert job["stage"] == "queued"
+    assert job["stages_seen"] == ["queued"]
 
     # the new job is at the top of the list
     assert client.get("/api/admin/jobs").json()["jobs"][0]["id"] == job["id"]

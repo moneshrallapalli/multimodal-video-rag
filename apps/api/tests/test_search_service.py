@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from api import search_service
 from shared import settings
-from shared.schemas import SearchRequest, SearchResponse
+from shared.schemas import PipelineEvent, SearchRequest, SearchResponse
 
 
 class FakePipeline:
@@ -29,6 +29,52 @@ def test_search_service_uses_mock_when_unconfigured(monkeypatch):
 
     assert response.refused is True
     assert response.intent == "no_answer"
+
+
+def test_search_stream_uses_mock_when_unconfigured(monkeypatch):
+    monkeypatch.setattr(settings, "pinecone_api_key", "")
+
+    items = list(search_service.search_videos_stream(SearchRequest(query="what is today's weather")))
+
+    assert isinstance(items[-1], SearchResponse)
+    assert items[-1].refused is True
+    assert any(
+        isinstance(item, PipelineEvent)
+        and item.node == "apply_retrieval_gate"
+        and item.status == "refused"
+        for item in items[:-1]
+    )
+
+
+def test_search_stream_uses_graph_when_configured(monkeypatch):
+    class FakePipeline:
+        def run_stream(self, req: SearchRequest):
+            yield PipelineEvent(
+                run_id="run-1",
+                ts="2026-08-29T00:00:00.000+00:00",
+                node="classify_intent",
+                status="ok",
+                duration_ms=1.0,
+                summary="intent=transcript",
+                payload={"intent": "transcript"},
+            )
+            yield SearchResponse(
+                query=req.query,
+                intent="transcript",
+                answer="streamed graph answer",
+                confidence=0.8,
+                results=[],
+            )
+
+    monkeypatch.setattr(settings, "pinecone_api_key", "key")
+    monkeypatch.setattr(search_service, "_pipeline", lambda: FakePipeline())
+
+    items = list(search_service.search_videos_stream(SearchRequest(query="self sabotage")))
+
+    assert isinstance(items[0], PipelineEvent)
+    assert items[0].payload["intent"] == "transcript"
+    assert isinstance(items[1], SearchResponse)
+    assert items[1].answer == "streamed graph answer"
 
 
 def test_search_service_uses_graph_when_configured(monkeypatch):
@@ -58,8 +104,32 @@ def test_search_service_returns_safe_refusal_on_graph_error(monkeypatch, caplog)
     assert response.refused is True
     assert response.intent == "no_answer"
     assert response.results == []
+    assert response.refusal_reason == "pipeline_error"
+    assert "Pinecone or Bedrock" in (response.answer or "")
     # Critical: the failure must emit `search_pipeline_error` so the CloudWatch
     # metric filter can distinguish API failures from legitimate refusals.
+    assert any("search_pipeline_error" in record.message for record in caplog.records)
+
+
+def test_search_stream_emits_failed_event_on_graph_error(monkeypatch, caplog):
+    class BrokenPipeline:
+        def run_stream(self, req: SearchRequest):
+            raise RuntimeError("pinecone down")
+
+    monkeypatch.setattr(settings, "pinecone_api_key", "key")
+    monkeypatch.setattr(search_service, "_pipeline", lambda: BrokenPipeline())
+
+    import logging
+
+    with caplog.at_level(logging.ERROR, logger="video_rag.api.search"):
+        items = list(search_service.search_videos_stream(SearchRequest(query="self sabotage")))
+
+    assert isinstance(items[0], PipelineEvent)
+    assert items[0].node == "pipeline"
+    assert items[0].status == "failed"
+    assert isinstance(items[1], SearchResponse)
+    assert items[1].refusal_reason == "pipeline_error"
+    assert items[1].refused is True
     assert any("search_pipeline_error" in record.message for record in caplog.records)
 
 

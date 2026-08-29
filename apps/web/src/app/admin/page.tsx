@@ -6,15 +6,16 @@ export const metadata: Metadata = { title: "Admin" };
 
 export default function AdminPage() {
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-10">
-      <h1 className="text-2xl font-semibold tracking-tight">Admin console</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Submit YouTube talks for ingestion and track job status. Admin-only — the public
-        surface can only search the already-indexed library.
-      </p>
-      <div className="mt-6">
-        <AdminConsole />
-      </div>
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
+      <section className="mb-8 rounded-2xl border border-border/80 bg-card/70 p-6 shadow-sm backdrop-blur-sm sm:p-8">
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Admin console</h1>
+        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+          Queue a YouTube talk and watch the worker path: download, frames, Whisper,
+          Titan embeddings, and Pinecone upsert. The public search surface only sees
+          videos that finish this graph.
+        </p>
+      </section>
+      <AdminConsole />
     </div>
   );
 }

@@ -35,7 +35,7 @@ export function ResultCard({
         }
       }}
       className={cn(
-        "group relative flex cursor-pointer gap-4 rounded-xl border border-border bg-card p-3 transition-colors duration-200 hover:border-primary/50 hover:bg-accent/40",
+        "group relative flex cursor-pointer gap-4 rounded-2xl border border-border bg-card p-3 shadow-sm transition-[border-color,box-shadow,background-color] duration-200 hover:border-primary/40 hover:shadow-md",
         active && "bg-accent/30",
       )}
     >

@@ -54,72 +54,78 @@
 
 :root {
   --radius: 0.625rem;
-  /* VideoRAG: emerald accent on a very-light-green canvas */
-  --background: oklch(0.982 0.018 155.8);
-  --foreground: oklch(0.225 0.015 160);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.225 0.015 160);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.225 0.015 160);
-  --primary: oklch(0.596 0.145 163.2);
-  --primary-foreground: oklch(0.985 0.01 160);
-  --secondary: oklch(0.95 0.04 162);
-  --secondary-foreground: oklch(0.37 0.08 163);
-  --muted: oklch(0.965 0.015 160);
-  --muted-foreground: oklch(0.52 0.035 160);
-  --accent: oklch(0.93 0.055 162);
-  --accent-foreground: oklch(0.37 0.08 163);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.9 0.035 162);
-  --input: oklch(0.9 0.035 162);
-  --ring: oklch(0.696 0.17 162.48);
-  --chart-1: oklch(0.765 0.177 163.2);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.596 0.145 163.2);
-  --chart-4: oklch(0.508 0.118 165.6);
-  --chart-5: oklch(0.432 0.095 166.9);
-  --sidebar: oklch(0.99 0.01 160);
-  --sidebar-foreground: oklch(0.225 0.015 160);
-  --sidebar-primary: oklch(0.596 0.145 163.2);
-  --sidebar-primary-foreground: oklch(0.985 0.01 160);
-  --sidebar-accent: oklch(0.93 0.055 162);
-  --sidebar-accent-foreground: oklch(0.37 0.08 163);
-  --sidebar-border: oklch(0.9 0.035 162);
-  --sidebar-ring: oklch(0.696 0.17 162.48);
+  /* Refire palette */
+  --refire-abyss: #003135;
+  --refire-deep: #024950;
+  --refire-rust: #964734;
+  --refire-cyan: #0fa4af;
+  --refire-ice: #afdde5;
+  /* VideoRAG: ice canvas, teal structure, rust primary */
+  --background: #e6f2f4;
+  --foreground: var(--refire-abyss);
+  --card: #f4fafb;
+  --card-foreground: var(--refire-abyss);
+  --popover: #f4fafb;
+  --popover-foreground: var(--refire-abyss);
+  --primary: var(--refire-rust);
+  --primary-foreground: #f8fbfc;
+  --secondary: color-mix(in srgb, var(--refire-ice) 72%, white);
+  --secondary-foreground: var(--refire-deep);
+  --muted: color-mix(in srgb, var(--refire-ice) 55%, white);
+  --muted-foreground: color-mix(in srgb, var(--refire-deep) 72%, var(--refire-abyss));
+  --accent: color-mix(in srgb, var(--refire-cyan) 18%, var(--refire-ice));
+  --accent-foreground: var(--refire-deep);
+  --destructive: #c43d3d;
+  --border: color-mix(in srgb, var(--refire-ice) 55%, var(--refire-cyan));
+  --input: color-mix(in srgb, var(--refire-ice) 55%, var(--refire-cyan));
+  --ring: var(--refire-cyan);
+  --chart-1: var(--refire-cyan);
+  --chart-2: var(--refire-rust);
+  --chart-3: var(--refire-deep);
+  --chart-4: var(--refire-abyss);
+  --chart-5: var(--refire-ice);
+  --sidebar: #f4fafb;
+  --sidebar-foreground: var(--refire-abyss);
+  --sidebar-primary: var(--refire-rust);
+  --sidebar-primary-foreground: #f8fbfc;
+  --sidebar-accent: color-mix(in srgb, var(--refire-cyan) 18%, var(--refire-ice));
+  --sidebar-accent-foreground: var(--refire-deep);
+  --sidebar-border: color-mix(in srgb, var(--refire-ice) 55%, var(--refire-cyan));
+  --sidebar-ring: var(--refire-cyan);
 }
 
 .dark {
-  --background: oklch(0.16 0.012 165);
-  --foreground: oklch(0.97 0.01 160);
-  --card: oklch(0.205 0.015 165);
-  --card-foreground: oklch(0.97 0.01 160);
-  --popover: oklch(0.205 0.015 165);
-  --popover-foreground: oklch(0.97 0.01 160);
-  --primary: oklch(0.696 0.17 162.48);
-  --primary-foreground: oklch(0.19 0.03 165);
-  --secondary: oklch(0.27 0.03 165);
-  --secondary-foreground: oklch(0.97 0.01 160);
-  --muted: oklch(0.27 0.02 165);
-  --muted-foreground: oklch(0.72 0.03 160);
-  --accent: oklch(0.3 0.04 164);
-  --accent-foreground: oklch(0.97 0.01 160);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.696 0.17 162.48);
-  --chart-1: oklch(0.765 0.177 163.2);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.596 0.145 163.2);
-  --chart-4: oklch(0.508 0.118 165.6);
-  --chart-5: oklch(0.432 0.095 166.9);
-  --sidebar: oklch(0.205 0.015 165);
-  --sidebar-foreground: oklch(0.97 0.01 160);
-  --sidebar-primary: oklch(0.696 0.17 162.48);
-  --sidebar-primary-foreground: oklch(0.19 0.03 165);
-  --sidebar-accent: oklch(0.3 0.04 164);
-  --sidebar-accent-foreground: oklch(0.97 0.01 160);
-  --sidebar-border: oklch(1 0 0 / 12%);
-  --sidebar-ring: oklch(0.696 0.17 162.48);
+  --background: var(--refire-abyss);
+  --foreground: var(--refire-ice);
+  --card: var(--refire-deep);
+  --card-foreground: var(--refire-ice);
+  --popover: var(--refire-deep);
+  --popover-foreground: var(--refire-ice);
+  --primary: var(--refire-rust);
+  --primary-foreground: #f8fbfc;
+  --secondary: color-mix(in srgb, var(--refire-deep) 88%, var(--refire-cyan));
+  --secondary-foreground: var(--refire-ice);
+  --muted: color-mix(in srgb, var(--refire-deep) 75%, var(--refire-abyss));
+  --muted-foreground: color-mix(in srgb, var(--refire-ice) 72%, var(--refire-deep));
+  --accent: color-mix(in srgb, var(--refire-cyan) 22%, var(--refire-deep));
+  --accent-foreground: var(--refire-ice);
+  --destructive: #e85d5d;
+  --border: color-mix(in srgb, var(--refire-cyan) 22%, var(--refire-deep));
+  --input: color-mix(in srgb, var(--refire-cyan) 28%, var(--refire-deep));
+  --ring: var(--refire-cyan);
+  --chart-1: var(--refire-cyan);
+  --chart-2: var(--refire-rust);
+  --chart-3: var(--refire-ice);
+  --chart-4: color-mix(in srgb, var(--refire-deep) 70%, white);
+  --chart-5: color-mix(in srgb, var(--refire-abyss) 80%, white);
+  --sidebar: var(--refire-deep);
+  --sidebar-foreground: var(--refire-ice);
+  --sidebar-primary: var(--refire-rust);
+  --sidebar-primary-foreground: #f8fbfc;
+  --sidebar-accent: color-mix(in srgb, var(--refire-cyan) 22%, var(--refire-deep));
+  --sidebar-accent-foreground: var(--refire-ice);
+  --sidebar-border: color-mix(in srgb, var(--refire-cyan) 22%, var(--refire-deep));
+  --sidebar-ring: var(--refire-cyan);
 }
 
 @layer base {
@@ -128,6 +134,17 @@
   }
   body {
     @apply bg-background text-foreground;
+    background-image:
+      radial-gradient(
+        ellipse 80% 50% at 50% -20%,
+        color-mix(in srgb, var(--refire-cyan) 22%, transparent),
+        transparent
+      ),
+      radial-gradient(
+        ellipse 60% 40% at 100% 0%,
+        color-mix(in srgb, var(--refire-ice) 55%, transparent),
+        transparent
+      );
   }
   html {
     @apply font-sans;
@@ -164,6 +181,296 @@
     oklch(1 0 0 / 7%) 50%,
     transparent 65%
   );
+}
+
+/* Live pipeline cockpit — dark teal instrument panel; cyan flow + rust highlights. */
+.pipeline-cockpit {
+  --pipe-surface: var(--refire-deep);
+  --pipe-surface-muted: var(--refire-abyss);
+  --pipe-border: color-mix(in srgb, var(--refire-cyan) 28%, var(--refire-deep));
+  --pipe-text: var(--refire-ice);
+  --pipe-text-muted: color-mix(in srgb, var(--refire-ice) 62%, var(--refire-deep));
+  --pipe-ok: var(--refire-cyan);
+  --pipe-live: var(--refire-rust);
+  --pipe-active: var(--refire-cyan);
+  --pipe-retry: color-mix(in srgb, var(--refire-rust) 55%, var(--refire-ice));
+  --pipe-fail: #e85d5d;
+  --pipe-accent: var(--refire-cyan);
+  --pipe-accent-deep: var(--refire-ice);
+  --pipe-edge: color-mix(in srgb, var(--refire-ice) 32%, var(--refire-deep));
+  --pipe-edge-live: var(--refire-ice);
+  --pipe-node-bg: var(--refire-abyss);
+  --pipe-node-ring-idle: color-mix(in srgb, var(--refire-ice) 38%, var(--refire-deep));
+  --pipe-node-dot-idle: color-mix(in srgb, var(--refire-ice) 52%, var(--refire-deep));
+
+  color: var(--pipe-text);
+  background: linear-gradient(
+    165deg,
+    var(--refire-deep) 0%,
+    color-mix(in srgb, var(--refire-deep) 82%, var(--refire-abyss)) 52%,
+    var(--refire-abyss) 100%
+  );
+  border: 1px solid var(--pipe-border);
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--refire-abyss) 55%, transparent),
+    0 12px 32px color-mix(in srgb, var(--refire-abyss) 72%, transparent);
+}
+
+.pipe-section-label {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--pipe-text-muted);
+}
+
+.pipe-metric-label {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pipe-text-muted);
+}
+
+.pipe-status-detail {
+  color: var(--pipe-text-muted);
+}
+
+.pipe-col-label {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: var(--pipe-text-muted);
+}
+
+.pipe-tint-blue {
+  color: var(--pipe-accent);
+}
+.pipe-tint-gold {
+  color: var(--refire-rust);
+}
+.pipe-tint-purple {
+  color: var(--pipe-accent-deep);
+}
+.pipe-tint-red {
+  color: var(--pipe-fail);
+}
+
+.pipe-node-core {
+  position: relative;
+  display: grid;
+  width: 1.75rem;
+  height: 1.75rem;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--pipe-node-bg);
+  box-shadow:
+    inset 0 0 0 1px var(--pipe-node-ring-idle),
+    0 1px 2px color-mix(in srgb, var(--refire-abyss) 45%, transparent);
+  transition:
+    box-shadow 180ms var(--ease-out-quint),
+    transform 180ms var(--ease-out-quint);
+}
+
+.pipe-node-core:hover {
+  transform: translateY(-1px);
+}
+
+.pipe-node-ring,
+.pipe-node-dot {
+  position: absolute;
+  border-radius: 999px;
+}
+
+.pipe-node-ring {
+  inset: 4px;
+  box-shadow: inset 0 0 0 1.5px var(--pipe-node-ring-idle);
+}
+
+.pipe-node-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--pipe-node-dot-idle);
+}
+
+.pipe-node-started {
+  box-shadow:
+    inset 0 0 0 1.5px var(--pipe-active),
+    0 0 0 3px color-mix(in srgb, var(--refire-cyan) 28%, transparent),
+    0 4px 12px color-mix(in srgb, var(--refire-cyan) 32%, transparent);
+}
+.pipe-node-started .pipe-node-ring {
+  box-shadow: inset 0 0 0 1.5px var(--pipe-active);
+}
+.pipe-node-started .pipe-node-dot {
+  background: var(--pipe-active);
+}
+
+.pipe-node-ok,
+.pipe-node-retry {
+  box-shadow:
+    inset 0 0 0 1.5px var(--pipe-ok),
+    0 0 0 3px color-mix(in srgb, var(--refire-cyan) 24%, transparent),
+    0 4px 10px color-mix(in srgb, var(--refire-cyan) 22%, transparent);
+}
+.pipe-node-ok .pipe-node-ring,
+.pipe-node-retry .pipe-node-ring {
+  box-shadow: inset 0 0 0 1.5px var(--pipe-ok);
+}
+.pipe-node-ok .pipe-node-dot,
+.pipe-node-retry .pipe-node-dot {
+  background: var(--pipe-ok);
+}
+
+.pipe-node-retry {
+  box-shadow:
+    inset 0 0 0 1.5px var(--pipe-retry),
+    0 0 0 3px color-mix(in srgb, var(--refire-rust) 24%, transparent);
+}
+.pipe-node-retry .pipe-node-ring {
+  box-shadow: inset 0 0 0 1.5px var(--pipe-retry);
+}
+.pipe-node-retry .pipe-node-dot {
+  background: var(--pipe-retry);
+}
+
+.pipe-node-skipped .pipe-node-dot {
+  background: var(--pipe-text-muted);
+}
+
+.pipe-node-refused,
+.pipe-node-failed {
+  box-shadow:
+    inset 0 0 0 1.5px var(--pipe-fail),
+    0 0 0 3px color-mix(in srgb, var(--pipe-fail) 22%, transparent);
+}
+.pipe-node-refused .pipe-node-ring,
+.pipe-node-failed .pipe-node-ring {
+  box-shadow: inset 0 0 0 1.5px var(--pipe-fail);
+}
+.pipe-node-refused .pipe-node-dot,
+.pipe-node-failed .pipe-node-dot {
+  background: var(--pipe-fail);
+}
+
+.pipe-node-source {
+  box-shadow:
+    inset 0 0 0 1.5px var(--pipe-accent),
+    0 0 0 3px color-mix(in srgb, var(--refire-cyan) 24%, transparent);
+}
+.pipe-node-source .pipe-node-ring {
+  box-shadow: inset 0 0 0 1.5px var(--pipe-accent);
+}
+.pipe-node-source .pipe-node-dot {
+  background: var(--pipe-accent);
+}
+
+.pipe-node-output {
+  box-shadow:
+    inset 0 0 0 1.5px var(--pipe-accent-deep),
+    0 0 0 3px color-mix(in srgb, var(--refire-ice) 22%, transparent);
+}
+.pipe-node-output .pipe-node-ring {
+  box-shadow: inset 0 0 0 1.5px var(--pipe-accent-deep);
+}
+.pipe-node-output .pipe-node-dot {
+  background: var(--pipe-accent-deep);
+}
+
+.pipe-node-selected {
+  box-shadow:
+    inset 0 0 0 1.5px var(--pipe-live),
+    0 0 0 4px color-mix(in srgb, var(--refire-rust) 28%, transparent);
+}
+
+.pipe-node-label {
+  color: var(--pipe-text);
+}
+
+.pipe-node-detail {
+  color: var(--pipe-text-muted);
+}
+
+.pipe-metric-ok {
+  color: var(--pipe-ok);
+}
+.pipe-metric-active {
+  color: var(--pipe-active);
+}
+.pipe-metric-retry {
+  color: var(--pipe-retry);
+}
+.pipe-metric-fail {
+  color: var(--pipe-fail);
+}
+.pipe-metric-muted {
+  color: var(--pipe-text-muted);
+}
+
+.pipe-log-time {
+  color: var(--pipe-text-muted);
+}
+.pipe-log-node-ok {
+  color: var(--pipe-ok);
+}
+.pipe-log-node-live {
+  color: var(--pipe-live);
+}
+.pipe-log-node-fail {
+  color: var(--pipe-fail);
+}
+.pipe-log-node-retry {
+  color: var(--pipe-retry);
+}
+.pipe-log-summary {
+  color: var(--pipe-text);
+}
+.pipe-log-summary-muted {
+  color: var(--pipe-text-muted);
+}
+.pipe-log-summary-fail {
+  color: color-mix(in srgb, var(--pipe-fail) 88%, var(--refire-ice));
+}
+
+.pipe-edge {
+  stroke: var(--pipe-edge);
+  stroke-width: 1.25;
+}
+
+.pipe-edge-live {
+  stroke: var(--pipe-edge-live);
+  stroke-width: 2.25;
+  stroke-opacity: 1;
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--refire-ice) 70%, transparent));
+}
+
+.pipe-edge-fail {
+  stroke: var(--pipe-fail);
+  stroke-opacity: 0.65;
+}
+
+.pipe-pulse-dot {
+  fill: var(--pipe-edge-live);
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--refire-ice) 80%, transparent));
+  offset-distance: 0%;
+  animation: pipe-pulse-travel 0.85s var(--ease-out-quint) forwards;
+}
+
+@keyframes pipe-pulse-travel {
+  from {
+    offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pipe-pulse-dot {
+    display: none;
+  }
 }
 
 /* Idle empty-state drift (player placeholder icon). */

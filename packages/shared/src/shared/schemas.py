@@ -9,6 +9,21 @@ from pydantic import BaseModel, Field
 Modality = Literal["visual", "transcript", "visual_caption"]
 QueryIntent = Literal["visual", "transcript", "hybrid", "timestamp", "summary", "no_answer"]
 JobStatus = Literal["queued", "downloading", "transcribing", "embedding", "completed", "failed"]
+# Fine-grained worker checkpoint for the admin ingest graph. Coarse `status`
+# stays the badge/progress contract; `stage` is the node currently running.
+IngestStage = Literal[
+    "queued",
+    "fetch_metadata",
+    "download_video",
+    "extract_audio",
+    "extract_frames",
+    "caption_frames",
+    "transcribe",
+    "embed_upsert",
+    "refresh_bm25",
+    "write_catalog",
+    "completed",
+]
 
 
 # ── Public: demo library + search ─────────────────────────────────────
@@ -73,6 +88,34 @@ class SearchResponse(BaseModel):
     results: list[SearchResult] = Field(default_factory=list)
 
 
+PipelineEventStatus = Literal["started", "ok", "skipped", "retry", "failed", "refused"]
+
+
+class PipelineHitSnippet(BaseModel):
+    """A retrieval hit safe to show in the live pipeline pane."""
+
+    video_id: str
+    start_seconds: float
+    snippet: str
+    score: float | None = None
+    modality: str | None = None
+
+
+class PipelineEvent(BaseModel):
+    """One live node event from a QueryPipeline run.
+
+    `payload` is JSON-safe and contains snippets/scores only (no secrets).
+    """
+
+    run_id: str
+    ts: str
+    node: str
+    status: PipelineEventStatus
+    duration_ms: float | None = None
+    summary: str = ""
+    payload: dict[str, Any] = Field(default_factory=dict)
+
+
 # ── Admin: auth + ingestion ───────────────────────────────────────────
 
 
@@ -102,6 +145,8 @@ class Job(BaseModel):
     created_at: str
     updated_at: str
     error: str | None = None
+    stage: str | None = None
+    stages_seen: list[str] = Field(default_factory=list)
 
 
 class IngestResponse(BaseModel):

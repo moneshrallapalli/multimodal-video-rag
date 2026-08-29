@@ -167,7 +167,23 @@ def test_worker_process_writes_artifacts_and_completes_job():
     worker.process(_message())
 
     statuses = [update["ExpressionAttributeValues"][":status"] for update in jobs.updates]
-    assert statuses == ["downloading", "downloading", "transcribing", "embedding", "completed"]
+    stages = [update["ExpressionAttributeValues"][":stage"] for update in jobs.updates]
+    assert "downloading" in statuses
+    assert "transcribing" in statuses
+    assert "embedding" in statuses
+    assert statuses[-1] == "completed"
+    assert stages[0] == "fetch_metadata"
+    assert stages[-1] == "completed"
+    assert stages == [
+        "fetch_metadata",
+        "download_video",
+        "extract_audio",
+        "extract_frames",
+        "transcribe",
+        "embed_upsert",
+        "write_catalog",
+        "completed",
+    ]
     assert indexer.calls[0]["metadata"].title == "Tiny Test Talk"
     assert indexer.calls[0]["transcript"].segments[0].text == "hello world"
     assert len(indexer.calls[0]["frames"]) == 2
@@ -213,6 +229,7 @@ def test_worker_marks_failed_and_reraises_on_retryable_error():
     failed = jobs.updates[-1]["ExpressionAttributeValues"]
     assert failed[":status"] == "failed"
     assert failed[":error"] == "download exploded"
+    assert failed[":stage"] == "download_video"
 
 
 def test_worker_skips_already_completed_job_on_redelivery():
@@ -265,6 +282,8 @@ def test_worker_uploads_bm25_stats_when_present():
     assert "videos/QkdBXUikRQc/vectors/bm25_stats.json" in s3.objects
     stored = json.loads(s3.objects["videos/QkdBXUikRQc/vectors/bm25_stats.json"])
     assert stored == bm25_stats
+    stages = [update["ExpressionAttributeValues"][":stage"] for update in jobs.updates]
+    assert "refresh_bm25" in stages
 
 
 def test_worker_refreshes_corpus_bm25_stats_when_bm25_present():
@@ -337,6 +356,8 @@ def test_worker_generates_captions_and_passes_to_indexer():
     assert len(captioner.calls[0]) == 2
     assert indexer.calls[0]["captions"] == ["A person speaking", "A slide with text"]
     assert "videos/QkdBXUikRQc/frames/captions.json" in s3.objects
+    stages = [update["ExpressionAttributeValues"][":stage"] for update in jobs.updates]
+    assert "caption_frames" in stages
 
 
 def test_worker_proceeds_when_lookup_fails_transiently():

@@ -49,3 +49,5 @@ class GraphState(TypedDict, total=False):
     refused: bool
     refusal_reason: RefusalReason
     rewrite_attempted: bool
+    # Present only during run_stream(); nodes read it to emit live events.
+    _pipeline_trace_id: str

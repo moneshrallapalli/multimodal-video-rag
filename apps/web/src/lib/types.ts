@@ -17,6 +17,18 @@ export type JobStatus =
   | "embedding"
   | "completed"
   | "failed";
+export type IngestStage =
+  | "queued"
+  | "fetch_metadata"
+  | "download_video"
+  | "extract_audio"
+  | "extract_frames"
+  | "caption_frames"
+  | "transcribe"
+  | "embed_upsert"
+  | "refresh_bm25"
+  | "write_catalog"
+  | "completed";
 
 export interface VideoArtifactStats {
   transcript_segments: number | null;
@@ -63,8 +75,35 @@ export interface SearchResponse {
   intent: QueryIntent;
   answer: string | null;
   refused: boolean;
+  refusal_reason?: string | null;
   confidence: number;
   results: SearchResult[];
+}
+
+export type PipelineEventStatus =
+  | "started"
+  | "ok"
+  | "skipped"
+  | "retry"
+  | "failed"
+  | "refused";
+
+export interface PipelineHitSnippet {
+  video_id: string;
+  start_seconds: number;
+  snippet: string;
+  score?: number | null;
+  modality?: string | null;
+}
+
+export interface PipelineEvent {
+  run_id: string;
+  ts: string;
+  node: string;
+  status: PipelineEventStatus;
+  duration_ms: number | null;
+  summary: string;
+  payload: Record<string, unknown>;
 }
 
 export interface IngestRequest {
@@ -83,6 +122,8 @@ export interface Job {
   created_at: string;
   updated_at: string;
   error: string | null;
+  stage?: IngestStage | null;
+  stages_seen?: string[];
 }
 
 export interface JobsResponse {
