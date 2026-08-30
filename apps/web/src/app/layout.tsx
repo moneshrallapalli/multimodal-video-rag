@@ -21,10 +21,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: `${brand.name} — ${brand.tagline}`,
-    template: `%s · ${brand.name}`,
+    default: brand.name,
+    template: `%s · ${brand.shortMark}`,
   },
   description: brand.description,
+  authors: [{ name: brand.author, url: brand.portfolioUrl }],
 };
 
 export default function RootLayout({
